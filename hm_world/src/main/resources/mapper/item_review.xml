@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ssafy.hm.repo.ItemReviewRepo">
+
+	<insert id="insert" parameterType="com.ssafy.hm.dto.ItemReview" useGeneratedKeys="true" keyProperty="itemReviewId">
+		insert into item_review (user_id, item_id, item_review_comment)
+		values (#{userId}, #{itemId}, #{itemReviewComment});
+	</insert>
+
+	<select id="selectByItem" parameterType="int" resultType="com.ssafy.hm.dto.ItemReview">
+		select item_review_id as itemReviewId, user_id as userId, item_id as itemId, item_review_comment as itemReviewComment
+		from item_review
+		where item_id = #{itemId};
+	</select>
+
+</mapper>
