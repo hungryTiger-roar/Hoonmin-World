@@ -10,7 +10,7 @@ CREATE TABLE attraction (
     att_pic VARCHAR(255),    
     att_capacity INT,
     att_comment TEXT,
-    att_able boolean
+    att_able boolean default true
 );
 
 CREATE TABLE item (
@@ -40,6 +40,9 @@ CREATE TABLE account (
 CREATE TABLE orders (
     order_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id VARCHAR(50),
+    order_received boolean NOT NULL default false,
+    order_time DATETIME NOT NULL DEFAULT current_timestamp,
+    order_received_time DATETIME NULL,
     
     CONSTRAINT fk_orders_user
         FOREIGN KEY (user_id) REFERENCES account(user_id)
@@ -69,6 +72,8 @@ CREATE TABLE item_review (
     user_id VARCHAR(50),
     item_id INT,
     item_review_comment TEXT,
+    item_rating float not null default 1,
+    item_time DATETIME NOT NULL DEFAULT current_timestamp,
 
     CONSTRAINT fk_item_review_user
         FOREIGN KEY (user_id) REFERENCES account(user_id)
@@ -86,6 +91,8 @@ CREATE TABLE attraction_review (
     att_id INT,
     user_id VARCHAR(50),
     att_review_comment TEXT,
+    att_rating float not null default 1,
+    att_time DATETIME NOT NULL DEFAULT current_timestamp,
 
     CONSTRAINT fk_att_review_attraction
         FOREIGN KEY (att_id) REFERENCES attraction(att_id)

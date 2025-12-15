@@ -22,10 +22,7 @@
 
 	<update id="update" parameterType="com.ssafy.hm.dto.Attraction">
 		update attraction
-		set att_name = #{attName},
-		    att_pic = #{attPic},
-		    att_capacity = #{attCapacity},
-		    att_comment = #{attComment}
+		set att_able = NOT att_able
 		where att_id = #{attId};
 	</update>
 

@@ -10,9 +10,16 @@
 	</insert>
 
 	<select id="selectByUser" parameterType="string" resultType="com.ssafy.hm.dto.Orders">
-		select order_id as orderId, user_id as userId
+		select order_id as orderId, user_id as userId, order_received as orderReceived, order_time as orderTime, order_received_time as orderReceivedTime
 		from orders
-		where user_id = #{userId};
+		where user_id = #{userId}
+    	order by order_time desc;
 	</select>
+	
+	<update id="receiveOrder" parameterType="int">
+	    update orders
+	    set order_received = true, order_received_time = current_timestamp
+	    where order_id = #{orderId}
+	</update>
 
 </mapper>

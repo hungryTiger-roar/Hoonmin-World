@@ -1,19 +1,29 @@
 package com.ssafy.hm.dto;
 
+import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 public class AttractionReview {
 	private Integer attReviewId;
 	private Integer attId;
 	private String userId;
 	private String attReviewComment;
+	private Float attRating;
+	
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+	private LocalDateTime attTime;
 
 	public AttractionReview() {
 	}
 
-	public AttractionReview(Integer attReviewId, Integer attId, String userId, String attReviewComment) {
+	public AttractionReview(Integer attReviewId, Integer attId, String userId, String attReviewComment, Float attRating, LocalDateTime attTime) {
 		this.attReviewId = attReviewId;
 		this.attId = attId;
 		this.userId = userId;
 		this.attReviewComment = attReviewComment;
+		this.attRating = attRating;
+		this.attTime = attTime;
 	}
 
 	public Integer getAttReviewId() {
@@ -48,9 +58,26 @@ public class AttractionReview {
 		this.attReviewComment = attReviewComment;
 	}
 
+	public Float getAttRating() {
+		return attRating;
+	}
+
+	public void setAttRating(Float attRating) {
+		this.attRating = attRating;
+	}
+
+	public LocalDateTime getAttTime() {
+		return attTime;
+	}
+
+	public void setAttTime(LocalDateTime attTime) {
+		this.attTime = attTime;
+	}
+
 	@Override
 	public String toString() {
 		return "AttractionReview [attReviewId=" + attReviewId + ", attId=" + attId + ", userId=" + userId
-				+ ", attReviewComment=" + attReviewComment + "]";
+				+ ", attReviewComment=" + attReviewComment + ", attRating=" + attRating + ", attTime=" + attTime + "]";
 	}
+
 }
