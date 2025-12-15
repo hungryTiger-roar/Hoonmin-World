@@ -4,13 +4,25 @@ set @@transaction_isolation="read-committed";
 
 create database HMworld;
 use HMworld;
+CREATE TABLE home_image(
+	home_id INT AUTO_INCREMENT PRIMARY KEY,
+    home_image VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE buy_image(
+	buy_id INT AUTO_INCREMENT PRIMARY KEY,
+    buy_image VARCHAR(255) NOT NULL
+);
+
 CREATE TABLE attraction (
     att_id INT AUTO_INCREMENT PRIMARY KEY,
     att_name VARCHAR(100),
     att_pic VARCHAR(255),    
     att_capacity INT,
     att_comment TEXT,
-    att_able boolean default true
+    att_able boolean default true,
+    att_category VARCHAR(100),
+    att_total INT default 0
 );
 
 CREATE TABLE item (
@@ -19,7 +31,9 @@ CREATE TABLE item (
     item_price INT default 0,
     item_count INT DEFAULT 0,
     item_pic VARCHAR(255),
-    item_comment TEXT
+    item_comment TEXT,
+    item_category VARCHAR(100),
+    item_time DATETIME NOT NULL DEFAULT current_timestamp
 );
 
 CREATE TABLE account (
