@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ssafy.hm.repo.BuyImageRepo">
+
+	<insert id="insert" parameterType="com.ssafy.hm.dto.BuyImage"
+	        useGeneratedKeys="true" keyProperty="buyId">
+		insert into buy_image (buy_image)
+		values (#{buyImage});
+	</insert>
+
+	<select id="selectAll" resultType="com.ssafy.hm.dto.BuyImage">
+		select buy_id as buyId,
+		       buy_image as buyImage
+		from buy_image;
+	</select>
+
+	<delete id="delete" parameterType="int">
+		delete from buy_image
+		where buy_id = #{buyId};
+	</delete>
+
+</mapper>

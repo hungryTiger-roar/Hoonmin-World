@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ssafy.hm.repo.ItemRepo">
+
+	<select id="selectAll" resultType="com.ssafy.hm.dto.Item">
+		select item_id as itemId, item_name as itemName, item_price as itemPrice, 
+		item_count as itemCount, item_pic as itemPic, item_comment as itemComment, item_category as itemCategory, item_time as itemTime
+		from item;
+	</select>
+
+	<select id="selectById" parameterType="int" resultType="com.ssafy.hm.dto.Item">
+		select item_id as itemId, item_name as itemName, item_price as itemPrice, item_count as itemCount, 
+		item_pic as itemPic, item_comment as itemComment, item_category as itemCategory, item_time as itemTime
+		from item
+		where item_id = #{itemId};
+	</select>
+
+	<insert id="insert" parameterType="com.ssafy.hm.dto.Item" useGeneratedKeys="true" keyProperty="itemId">
+		insert into item (item_name, item_price, item_count, item_pic, item_comment)
+		values (#{itemName}, #{itemPrice}, #{itemCount}, #{itemPic}, #{itemComment});
+	</insert>
+
+	<update id="update" parameterType="com.ssafy.hm.dto.Item">
+		update item
+		set item_name = #{itemName},
+		    item_price = #{itemPrice},
+		    item_count = #{itemCount},
+		    item_pic = #{itemPic},
+		    item_comment = #{itemComment}
+		where item_id = #{itemId};
+	</update>
+	
+	<update id="updateCategory" parameterType="com.ssafy.hm.dto.Item">
+		update item
+		set item_category = #{itemCategory}
+		where item_id = #{itemId};
+	</update>
+
+	<delete id="delete" parameterType="int">
+		delete from item where item_id = #{itemId};
+	</delete>
+
+</mapper>

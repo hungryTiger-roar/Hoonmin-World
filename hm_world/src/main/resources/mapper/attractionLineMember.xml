@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.hm.repo.AttractionLineMemberRepo">
+
+    <insert id="insert" parameterType="AttractionLineMember">
+        INSERT INTO attraction_line_member (line_id, user_id)
+        VALUES (#{lineId}, #{userId})
+    </insert>
+
+    <insert id="insertAll" parameterType="list">
+        INSERT INTO attraction_line_member (line_id, user_id)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.lineId}, #{item.userId})
+        </foreach>
+    </insert>
+
+    <select id="selectByLineId" parameterType="int" resultType="AttractionLineMember">
+        SELECT id, line_id AS lineId, user_id AS userId
+        FROM attraction_line_member
+        WHERE line_id = #{lineId}
+    </select>
+    
+    <!-- [수정] @Param 이름과 정확히 매칭 -->
+    <delete id="deleteMember">
+        DELETE FROM attraction_line_member
+        WHERE line_id = #{lineId}
+          AND user_id = #{userId}
+    </delete>
+
+    <!-- [수정] parameterType 제거 -->
+    <select id="countMembers" resultType="int">
+        SELECT COUNT(*)
+        FROM attraction_line_member
+        WHERE line_id = #{lineId}
+    </select>
+</mapper>

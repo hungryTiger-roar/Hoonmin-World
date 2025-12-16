@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ssafy.hm.repo.AttractionRepo">
+
+	<select id="selectAll" resultType="com.ssafy.hm.dto.Attraction">
+		select att_id as attId, att_name as attName, att_pic as attPic, 
+		att_capacity as attCapacity, att_comment as attComment, att_able as attAble, att_category as attCategory, att_total as attTotal
+		from attraction;
+	</select>
+
+	<select id="selectById" parameterType="int" resultType="com.ssafy.hm.dto.Attraction">
+		select att_id as attId, att_name as attName, att_pic as attPic, att_capacity as attCapacity, 
+		att_comment as attComment, att_able as attAble, att_category as attCategory, att_total as attTotal
+		from attraction
+		where att_id = #{attId};
+	</select>
+
+	<insert id="insert" parameterType="com.ssafy.hm.dto.Attraction" useGeneratedKeys="true" keyProperty="attId">
+		insert into attraction (att_name, att_pic, att_capacity, att_comment, att_category )
+		values (#{attName}, #{attPic}, #{attCapacity}, #{attComment}, #{attCategory});
+	</insert>
+
+	<update id="updateAble" parameterType="com.ssafy.hm.dto.Attraction">
+		update attraction
+		set att_able = NOT att_able
+		where att_id = #{attId};
+	</update>
+	
+	<update id="updateCategory" parameterType="com.ssafy.hm.dto.Attraction">
+		update attraction
+		set att_category = #{attCategory}
+		where att_id = #{attId};
+	</update>
+	
+	<update id="updateTotal" parameterType="com.ssafy.hm.dto.Attraction">
+		update attraction
+		set att_total = att_total + 1
+		where att_id = #{attId};
+	</update>
+
+	<delete id="delete" parameterType="int">
+		delete from attraction where att_id = #{attId};
+	</delete>
+
+</mapper>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ssafy.hm.repo.HomeBoardRepo">
+    <!-- 전체 조회 -->
+    <select id="selectAll" resultType="com.ssafy.hm.dto.HomeBoard">
+        SELECT
+            board_id      AS boardId,
+            board_title   AS boardTitle,
+            board_content AS boardContent,
+            board_date    AS boardDate
+        FROM home_board
+        ORDER BY board_date DESC
+    </select>
+
+    <!-- 단건 조회 -->
+    <select id="selectById" parameterType="int"
+            resultType="com.ssafy.hm.dto.HomeBoard">
+        SELECT
+            board_id      AS boardId,
+            board_title   AS boardTitle,
+            board_content AS boardContent,
+            board_date    AS boardDate
+        FROM home_board
+        WHERE board_id = #{boardId}
+    </select>
+
+    <!-- 등록 -->
+    <insert id="insert" parameterType="com.ssafy.hm.dto.HomeBoard">
+        INSERT INTO home_board (board_title, board_content)
+        VALUES (#{boardTitle}, #{boardContent})
+    </insert>
+
+    <!-- 삭제 -->
+    <delete id="delete" parameterType="int">
+        DELETE FROM home_board
+        WHERE board_id = #{boardId}
+    </delete>
+</mapper>

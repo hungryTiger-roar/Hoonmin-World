@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ssafy.hm.repo.FriendRepo">
+
+	<insert id="insert" parameterType="com.ssafy.hm.dto.Friend" useGeneratedKeys="true" keyProperty="id">
+		insert into friend (user_id, friend_id)
+		values (#{userId}, #{friendId});
+	</insert>
+
+	<select id="selectByUser" parameterType="string" resultType="com.ssafy.hm.dto.Friend">
+	    SELECT
+	        f.id,
+	        f.user_id   AS userId,
+	        f.friend_id AS friendId,
+	        a.ticket    AS friendTicket,
+	        f.friend_party AS friendParty
+	    FROM friend f
+	    JOIN account a ON f.friend_id = a.user_id
+	    WHERE f.user_id = #{userId}
+	    ORDER BY a.ticket DESC, f.friend_party DESC, f.id ASC	
+	</select>
+	
+	<select id="selectByUserTicket" parameterType="string" resultType="com.ssafy.hm.dto.Friend">
+	    SELECT
+	        f.id,
+	        f.user_id   AS userId,
+	        f.friend_id AS friendId,
+	        a.ticket    AS friendTicket,
+	        f.friend_party AS friendParty
+	    FROM friend f
+	    JOIN account a ON f.friend_id = a.user_id
+	    WHERE f.user_id = #{userId} and a.ticket = 1
+	    ORDER BY a.ticket DESC, f.friend_party DESC, f.id ASC	
+	</select>
+
+	<delete id="delete" parameterType="int">
+		delete from friend where id = #{id};
+	</delete>
+
+</mapper>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ssafy.hm.repo.AttractionLineRepo">
+
+	<insert id="insert" parameterType="com.ssafy.hm.dto.AttractionLine" useGeneratedKeys="true" keyProperty="lineId">
+		insert into attraction_line (att_id)
+		values (#{attId});
+	</insert>
+
+	<select id="selectByAttraction" parameterType="int" resultType="com.ssafy.hm.dto.AttractionLine">
+		SELECT line_id AS lineId, att_id AS attId
+        FROM attraction_line
+        WHERE line_id = #{lineId}
+	</select>
+
+	<delete id="delete" parameterType="int">
+		delete from attraction_line where line_id = #{lineId};
+	</delete>
+
+</mapper>
