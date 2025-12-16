@@ -36,6 +36,12 @@
 		    ticket = #{ticket}
 		where user_id = #{userId};
 	</update>
+	
+	<update id="updateAttId" parameterType="map">
+		update account
+		set att_id = #{attId}
+		where user_id = #{userId};
+	</update>
 
 	<delete id="delete" parameterType="string">
 		delete from account where user_id = #{userId};

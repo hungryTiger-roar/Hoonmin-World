@@ -41,6 +41,14 @@ public class HomeBoardController {
                 ? ResponseEntity.ok().build()
                 : ResponseEntity.badRequest().build();
     }
+    
+    @PatchMapping("/{boardId}")
+    @Operation(summary = "홈 게시판 글 수정")
+    public ResponseEntity<?> update(@PathVariable int boardId, @RequestBody HomeBoard board) {
+        board.setBoardId(boardId);
+        boolean updated = homeBoardService.updateBoard(board);
+        return updated ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
+    }
 
     @DeleteMapping("/{boardId}")
     @Operation(summary = "홈 게시판 글 삭제")

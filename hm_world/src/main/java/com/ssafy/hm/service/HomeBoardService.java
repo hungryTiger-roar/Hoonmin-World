@@ -10,6 +10,8 @@ public interface HomeBoardService {
     HomeBoard getBoard(int boardId);
 
     boolean writeBoard(HomeBoard board);
+    
+    boolean updateBoard(HomeBoard board);
 
     boolean removeBoard(int boardId);
 }

@@ -15,4 +15,21 @@
 		where item_id = #{itemId};
 	</select>
 
+	<select id="selectById" parameterType="int" resultType="com.ssafy.hm.dto.ItemReview">
+		select item_review_id as itemReviewId, user_id as userId, item_id as itemId, item_review_comment as itemReviewComment, item_rating as itemRating, item_time as itemTime
+		from item_review
+		where item_review_id = #{itemReviewId};
+	</select>
+
+	<update id="updateCommentAndRating" parameterType="com.ssafy.hm.dto.ItemReview">
+		update item_review
+		set item_review_comment = #{itemReviewComment},
+		    item_rating = #{itemRating}
+		where item_review_id = #{itemReviewId};
+	</update>
+
+	<delete id="delete" parameterType="int">
+		delete from item_review where item_review_id = #{itemReviewId};
+	</delete>
+
 </mapper>

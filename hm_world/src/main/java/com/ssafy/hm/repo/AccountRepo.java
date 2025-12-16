@@ -16,4 +16,5 @@ public interface AccountRepo {
 	Account selectById(String userId);
 	List<Account> selectAll();
 	Account login(Map<String, String> params);
+	int updateAttId(@org.apache.ibatis.annotations.Param("userId") String userId, @org.apache.ibatis.annotations.Param("attId") Integer attId);
 }

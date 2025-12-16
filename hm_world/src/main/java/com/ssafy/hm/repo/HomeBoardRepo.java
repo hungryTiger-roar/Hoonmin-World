@@ -15,5 +15,7 @@ public interface HomeBoardRepo {
 
     int insert(HomeBoard board);
 
+    int update(HomeBoard board);
+
     int delete(int boardId);
 }

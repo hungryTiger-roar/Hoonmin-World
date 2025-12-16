@@ -32,6 +32,11 @@ public class HomeBoardServiceImpl implements HomeBoardService {
     }
 
     @Override
+    public boolean updateBoard(HomeBoard board) {
+        return homeBoardRepo.update(board) == 1;
+    }
+
+    @Override
     public boolean removeBoard(int boardId) {
         return homeBoardRepo.delete(boardId) == 1;
     }

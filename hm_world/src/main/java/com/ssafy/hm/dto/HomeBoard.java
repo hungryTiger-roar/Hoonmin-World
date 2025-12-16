@@ -12,6 +12,9 @@ public class HomeBoard {
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime boardTime;
 
+	public HomeBoard() {
+	}
+
 	public HomeBoard(Integer boardId, String boardTitle, String boardContent, LocalDateTime boardTime) {
 		this.boardId = boardId;
 		this.boardTitle = boardTitle;

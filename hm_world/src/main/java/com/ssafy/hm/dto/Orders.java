@@ -1,6 +1,7 @@
 package com.ssafy.hm.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
@@ -8,6 +9,8 @@ public class Orders {
     private Integer orderId;
     private String userId;
     private Boolean orderReceived;
+    private Integer orderStore;
+    private List<OrderDetail> details;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime orderTime;
@@ -18,10 +21,11 @@ public class Orders {
     public Orders() {}
 
     public Orders(Integer orderId, String userId, Boolean orderReceived,
-                  LocalDateTime orderTime, LocalDateTime orderReceivedTime) {
+                  Integer orderStore, LocalDateTime orderTime, LocalDateTime orderReceivedTime) {
         this.orderId = orderId;
         this.userId = userId;
         this.orderReceived = orderReceived;
+        this.orderStore = orderStore;
         this.orderTime = orderTime;
         this.orderReceivedTime = orderReceivedTime;
     }
@@ -50,6 +54,22 @@ public class Orders {
         this.orderReceived = orderReceived;
     }
 
+    public Integer getOrderStore() {
+        return orderStore;
+    }
+
+    public void setOrderStore(Integer orderStore) {
+        this.orderStore = orderStore;
+    }
+
+    public List<OrderDetail> getDetails() {
+        return details;
+    }
+
+    public void setDetails(List<OrderDetail> details) {
+        this.details = details;
+    }
+
     public LocalDateTime getOrderTime() {
         return orderTime;
     }
@@ -70,7 +90,9 @@ public class Orders {
     public String toString() {
         return "Orders [orderId=" + orderId + ", userId=" + userId
                 + ", orderReceived=" + orderReceived
+                + ", orderStore=" + orderStore
                 + ", orderTime=" + orderTime
-                + ", orderReceivedTime=" + orderReceivedTime + "]";
+                + ", orderReceivedTime=" + orderReceivedTime
+                + ", details=" + details + "]";
     }
 }

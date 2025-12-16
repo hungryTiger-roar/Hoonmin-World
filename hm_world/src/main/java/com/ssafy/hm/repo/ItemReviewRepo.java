@@ -10,4 +10,7 @@ import com.ssafy.hm.dto.ItemReview;
 public interface ItemReviewRepo {
 	int insert(ItemReview review);
 	List<ItemReview> selectByItem(Integer itemId);
+	ItemReview selectById(Integer itemReviewId);
+	int updateCommentAndRating(ItemReview review);
+	int delete(Integer itemReviewId);
 }

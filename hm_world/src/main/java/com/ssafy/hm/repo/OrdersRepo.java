@@ -10,4 +10,7 @@ import com.ssafy.hm.dto.Orders;
 public interface OrdersRepo {
 	int insert(Orders orders);
 	List<Orders> selectByUser(String userId);
+	List<Orders> selectAll();
+	int receiveOrder(Integer orderId);
+	int delete(Integer orderId);
 }

@@ -9,7 +9,7 @@
             board_id      AS boardId,
             board_title   AS boardTitle,
             board_content AS boardContent,
-            board_date    AS boardDate
+            board_date    AS boardTime
         FROM home_board
         ORDER BY board_date DESC
     </select>
@@ -21,7 +21,7 @@
             board_id      AS boardId,
             board_title   AS boardTitle,
             board_content AS boardContent,
-            board_date    AS boardDate
+            board_date    AS boardTime
         FROM home_board
         WHERE board_id = #{boardId}
     </select>
@@ -31,6 +31,14 @@
         INSERT INTO home_board (board_title, board_content)
         VALUES (#{boardTitle}, #{boardContent})
     </insert>
+    
+    <update id="update" parameterType="com.ssafy.hm.dto.HomeBoard">
+        UPDATE home_board
+        SET board_title = #{boardTitle},
+            board_content = #{boardContent},
+            board_date = current_timestamp
+        WHERE board_id = #{boardId}
+    </update>
 
     <!-- 삭제 -->
     <delete id="delete" parameterType="int">

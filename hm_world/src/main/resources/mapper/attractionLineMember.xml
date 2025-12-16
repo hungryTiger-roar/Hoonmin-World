@@ -24,6 +24,18 @@
         WHERE line_id = #{lineId}
     </select>
     
+    <select id="selectByLineIdAndUserId" parameterType="map" resultType="AttractionLineMember">
+        SELECT id, line_id AS lineId, user_id AS userId
+        FROM attraction_line_member
+        WHERE line_id = #{lineId}
+          AND user_id = #{userId}
+    </select>
+    
+    <delete id="deleteByLineId" parameterType="int">
+        DELETE FROM attraction_line_member
+        WHERE line_id = #{lineId}
+    </delete>
+    
     <!-- [수정] @Param 이름과 정확히 매칭 -->
     <delete id="deleteMember">
         DELETE FROM attraction_line_member

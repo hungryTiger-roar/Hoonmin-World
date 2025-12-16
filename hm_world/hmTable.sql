@@ -61,6 +61,7 @@ CREATE TABLE account (
 CREATE TABLE orders (
     order_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id VARCHAR(50),
+    order_store INT NOT NULL,
     order_received boolean NOT NULL default false,
     order_time DATETIME NOT NULL DEFAULT current_timestamp,
     order_received_time DATETIME NULL,
@@ -93,7 +94,7 @@ CREATE TABLE item_review (
     user_id VARCHAR(50),
     item_id INT,
     item_review_comment TEXT,
-    item_rating float not null default 1,
+    item_rating float not null default 5,
     item_time DATETIME NOT NULL DEFAULT current_timestamp,
 
     CONSTRAINT fk_item_review_user
@@ -112,7 +113,7 @@ CREATE TABLE attraction_review (
     att_id INT,
     user_id VARCHAR(50),
     att_review_comment TEXT,
-    att_rating float not null default 1,
+    att_rating float not null default 5,
     att_time DATETIME NOT NULL DEFAULT current_timestamp,
 
     CONSTRAINT fk_att_review_attraction
@@ -168,3 +169,29 @@ CREATE TABLE friend (
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
+
+INSERT INTO account (user_id, pw, name, phone, birth, att_id, ticket) VALUES
+('aa', '11', '김민수', '010-1111-1111', '1995-01-12', NULL, FALSE),
+('bb', '11', '이서연', '010-2222-2222', '1998-03-25', NULL, TRUE),
+('cc', '11', '박준호', '010-3333-3333', '1992-07-08', NULL, FALSE),
+('dd', '11', '최은지', '010-4444-4444', '2000-11-19', NULL, TRUE),
+('ee', '11', '정하늘', '010-5555-5555', '1997-05-02', NULL, FALSE),
+('ff', '11', '한지민', '010-6666-6666', '1994-09-14', NULL, FALSE),
+('gg', '11', '오세훈', '010-7777-7777', '1990-12-30', NULL, TRUE),
+('hh', '11', '유나',   '010-8888-8888', '2001-04-10', NULL, FALSE),
+('ii', '11', '강동원', '010-9999-9999', '1989-06-21', NULL, TRUE),
+('jj', '11', '문채원', '010-1010-1010', '1996-08-17', NULL, FALSE);
+
+INSERT INTO item 
+(item_name, item_price, item_count, item_pic, item_comment, item_category)
+VALUES
+('놀이공원 티켓', 50000, 100, 'ticket.png', '하루 종일 자유이용 가능한 티켓', '티켓'),
+('패스트패스', 30000, 50, 'fastpass.png', '대기 없이 바로 이용 가능한 패스', '티켓'),
+('토끼 인형', 15000, 30, 'rabbit_doll.png', '귀여운 토끼 캐릭터 인형', '굿즈'),
+('롤러코스터 미니어처', 20000, 20, 'coaster_model.png', '인기 롤러코스터 미니 모형', '굿즈'),
+('놀이공원 머그컵', 12000, 40, 'mug.png', '훈민월드 로고 머그컵', '굿즈'),
+('치즈 핫도그', 6000, 200, 'hotdog.png', '바삭한 치즈 핫도그', '푸드'),
+('츄러스', 5000, 150, 'churros.png', '달콤한 시나몬 츄러스', '푸드'),
+('콜라', 3000, 300, 'cola.png', '시원한 탄산음료', '음료'),
+('아이스크림', 4000, 120, 'icecream.png', '여름에 인기 많은 아이스크림', '푸드'),
+('캐릭터 풍선', 8000, 60, 'balloon.png', '아이들에게 인기 많은 캐릭터 풍선', '굿즈');

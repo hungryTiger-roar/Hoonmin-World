@@ -1,8 +1,11 @@
 package com.ssafy.hm.dto;
 
+import java.util.List;
+
 public class AttractionLine {
 	private Integer lineId;
 	private Integer attId;
+	private List<AttractionLineMember> members;
 
 	public AttractionLine() {
 	}
@@ -28,9 +31,17 @@ public class AttractionLine {
 		this.attId = attId;
 	}
 
+	public List<AttractionLineMember> getMembers() {
+		return members;
+	}
+
+	public void setMembers(List<AttractionLineMember> members) {
+		this.members = members;
+	}
+
 
 	@Override
 	public String toString() {
-		return "AttractionLine [lineId=" + lineId + ", attId=" + attId + "]";
+		return "AttractionLine [lineId=" + lineId + ", attId=" + attId + ", members=" + members + "]";
 	}
 }
