@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,6 +42,12 @@ public class ReviewController {
 	@Operation(summary = "상품 리뷰 조회")
 	public ResponseEntity<List<ItemReview>> getItemReviews(@PathVariable Integer itemId) {
 		return ResponseEntity.ok(reviewService.getItemReviews(itemId));
+	}
+
+	@GetMapping("/items/{itemId}/available")
+	@Operation(summary = "상품 리뷰 가능 체크")
+	public ResponseEntity<Boolean> canAddItemReview(@PathVariable Integer itemId, @RequestParam String userId) {
+		return ResponseEntity.ok(reviewService.canAddItemReview(userId, itemId));
 	}
 	
 	@GetMapping("/items/review/{itemReviewId}")
@@ -76,6 +83,12 @@ public class ReviewController {
 	@Operation(summary = "어트랙션 리뷰 조회")
 	public ResponseEntity<List<AttractionReview>> getAttractionReviews(@PathVariable Integer attId) {
 		return ResponseEntity.ok(reviewService.getAttractionReviews(attId));
+	}
+
+	@GetMapping("/attractions/{attId}/available")
+	@Operation(summary = "어트랙션 리뷰 가능 체크")
+	public ResponseEntity<Boolean> canAddAttractionReview(@PathVariable Integer attId, @RequestParam String userId) {
+		return ResponseEntity.ok(reviewService.canAddAttractionReview(userId, attId));
 	}
 
 	@GetMapping("/attractions/review/{attReviewId}")

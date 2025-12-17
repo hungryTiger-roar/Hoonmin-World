@@ -9,22 +9,44 @@ import com.ssafy.hm.dto.AttractionReview;
 import com.ssafy.hm.dto.ItemReview;
 import com.ssafy.hm.repo.AttractionReviewRepo;
 import com.ssafy.hm.repo.ItemReviewRepo;
+import com.ssafy.hm.repo.OrderDetailRepo;
 
 @Service
 public class ReviewServiceImpl implements ReviewService {
 
 	private final ItemReviewRepo itemReviewRepo;
 	private final AttractionReviewRepo attractionReviewRepo;
+	private final OrderDetailRepo orderDetailRepo;
 
-	public ReviewServiceImpl(ItemReviewRepo itemReviewRepo, AttractionReviewRepo attractionReviewRepo) {
+	public ReviewServiceImpl(ItemReviewRepo itemReviewRepo, AttractionReviewRepo attractionReviewRepo,
+			OrderDetailRepo orderDetailRepo) {
 		this.itemReviewRepo = itemReviewRepo;
 		this.attractionReviewRepo = attractionReviewRepo;
+		this.orderDetailRepo = orderDetailRepo;
 	}
 
 	@Override
 	@Transactional
 	public boolean addItemReview(ItemReview review) {
-		return itemReviewRepo.insert(review) == 1;
+		Integer detailId = orderDetailRepo.selectUnreviewedDetailId(review.getUserId(), review.getItemId());
+		if (detailId == null) {
+			return false;
+		}
+		if (itemReviewRepo.insert(review) != 1) {
+			return false;
+		}
+		if (orderDetailRepo.markReviewed(detailId) != 1) {
+			throw new IllegalStateException("Failed to mark order detail as reviewed");
+		}
+		return true;
+	}
+
+	@Override
+	public boolean canAddItemReview(String userId, Integer itemId) {
+		if (userId == null || itemId == null) {
+			return false;
+		}
+		return orderDetailRepo.selectUnreviewedDetailId(userId, itemId) != null;
 	}
 
 	@Override
@@ -52,7 +74,19 @@ public class ReviewServiceImpl implements ReviewService {
 	@Override
 	@Transactional
 	public boolean addAttractionReview(AttractionReview review) {
+		if (!canAddAttractionReview(review.getUserId(), review.getAttId())) {
+			return false;
+		}
 		return attractionReviewRepo.insert(review) == 1;
+	}
+
+	@Override
+	public boolean canAddAttractionReview(String userId, Integer attId) {
+		if (userId == null || attId == null) {
+			return false;
+		}
+		int todayCount = attractionReviewRepo.selectTodayCountByUserAtt(userId, attId);
+		return todayCount == 0;
 	}
 
 	@Override

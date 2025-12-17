@@ -21,6 +21,14 @@
 		where att_review_id = #{attReviewId};
 	</select>
 
+	<select id="selectTodayCountByUserAtt" resultType="int">
+		select count(*)
+		from attraction_review
+		where user_id = #{userId}
+			and att_id = #{attId}
+			and date(att_time) = curdate();
+	</select>
+
 	<update id="updateCommentAndRating" parameterType="com.ssafy.hm.dto.AttractionReview">
 		update attraction_review
 		set att_review_comment = #{attReviewComment},

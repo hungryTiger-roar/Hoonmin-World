@@ -77,6 +77,7 @@ CREATE TABLE order_detail (
     order_id INT,
     item_id INT,
     order_quantity INT NOT NULL,
+    detail_review boolean not null default false,
 
     CONSTRAINT fk_detail_order
         FOREIGN KEY (order_id) REFERENCES orders(order_id)

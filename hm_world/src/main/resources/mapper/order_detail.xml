@@ -10,9 +10,28 @@
 	</insert>
 
 	<select id="selectByOrder" parameterType="int" resultType="com.ssafy.hm.dto.OrderDetail">
-		select detail_id as detailId, order_id as orderId, item_id as itemId, order_quantity as orderQuantity
+		select detail_id as detailId, order_id as orderId, item_id as itemId,
+			order_quantity as orderQuantity, detail_review as detailReview
 		from order_detail
 		where order_id = #{orderId};
 	</select>
+
+	<select id="selectUnreviewedDetailId" resultType="int">
+		select d.detail_id
+		from order_detail d
+		join orders o on d.order_id = o.order_id
+		where o.user_id = #{userId}
+			and d.item_id = #{itemId}
+			and (d.detail_review = false or d.detail_review is null)
+		order by d.detail_id desc
+		limit 1;
+	</select>
+
+	<update id="markReviewed" parameterType="int">
+		update order_detail
+		set detail_review = true
+		where detail_id = #{detailId}
+			and (detail_review = false or detail_review is null);
+	</update>
 
 </mapper>

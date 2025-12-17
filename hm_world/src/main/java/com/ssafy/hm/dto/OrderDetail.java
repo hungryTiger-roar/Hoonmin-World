@@ -5,6 +5,7 @@ public class OrderDetail {
 	private Integer orderId;
 	private Integer itemId;
 	private Integer orderQuantity;
+	private Boolean detailReview = false;
 
 	public OrderDetail() {
 	}
@@ -14,6 +15,7 @@ public class OrderDetail {
 		this.orderId = orderId;
 		this.itemId = itemId;
 		this.orderQuantity = orderQuantity;
+		this.detailReview = false;
 	}
 
 	public Integer getDetailId() {
@@ -48,9 +50,17 @@ public class OrderDetail {
 		this.orderQuantity = orderQuantity;
 	}
 
+	public Boolean getDetailReview() {
+		return detailReview;
+	}
+
+	public void setDetailReview(Boolean detailReview) {
+		this.detailReview = detailReview;
+	}
+
 	@Override
 	public String toString() {
 		return "OrderDetail [detailId=" + detailId + ", orderId=" + orderId + ", itemId=" + itemId
-				+ ", orderQuantity=" + orderQuantity + "]";
+				+ ", orderQuantity=" + orderQuantity + ", detailReview=" + detailReview + "]";
 	}
 }
