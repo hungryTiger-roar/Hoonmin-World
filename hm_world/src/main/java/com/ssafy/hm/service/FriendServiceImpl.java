@@ -39,4 +39,9 @@ public class FriendServiceImpl implements FriendService {
 	public List<Friend> getFriendsTicket(String userId) {
 		return friendRepo.selectByUserTicket(userId);
 	}
+
+	@Override
+	public List<Friend> getFriendsTicketNoAtt(String userId) {
+		return friendRepo.selectByUserTicketNoAtt(userId);
+	}
 }

@@ -35,6 +35,21 @@
 	    ORDER BY a.ticket DESC, f.friend_party DESC, f.id ASC	
 	</select>
 
+	<select id="selectByUserTicketNoAtt" parameterType="string" resultType="com.ssafy.hm.dto.Friend">
+	    SELECT
+	        f.id,
+	        f.user_id   AS userId,
+	        f.friend_id AS friendId,
+	        a.ticket    AS friendTicket,
+	        f.friend_party AS friendParty
+	    FROM friend f
+	    JOIN account a ON f.friend_id = a.user_id
+	    WHERE f.user_id = #{userId}
+	    	and a.ticket = 1
+	    	and a.att_id is null
+	    ORDER BY a.ticket DESC, f.friend_party DESC, f.id ASC	
+	</select>
+
 	<delete id="delete" parameterType="int">
 		delete from friend where id = #{id};
 	</delete>

@@ -54,4 +54,10 @@ public class FriendController {
 	public ResponseEntity<List<Friend>> listWithTicket(@PathVariable String userId) {
 		return ResponseEntity.ok(friendService.getFriendsTicket(userId));
 	}
+
+	@GetMapping("/user/{userId}/ticket/available")
+	@Operation(summary = "사용자별 티켓 구매, 어트랙션 예약 안한 친구 목록 조회")
+	public ResponseEntity<List<Friend>> listWithTicketNoAtt(@PathVariable String userId) {
+		return ResponseEntity.ok(friendService.getFriendsTicketNoAtt(userId));
+	}
 }

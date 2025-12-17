@@ -9,4 +9,5 @@ public interface FriendService {
 	boolean removeFriend(Integer id);
 	List<Friend> getFriends(String userId);
 	List<Friend> getFriendsTicket(String userId);
+	List<Friend> getFriendsTicketNoAtt(String userId);
 }

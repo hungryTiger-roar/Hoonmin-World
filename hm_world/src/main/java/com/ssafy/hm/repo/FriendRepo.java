@@ -11,5 +11,6 @@ public interface FriendRepo {
 	int insert(Friend friend);
 	List<Friend> selectByUser(String userId);
 	List<Friend> selectByUserTicket(String userId);
+	List<Friend> selectByUserTicketNoAtt(String userId);
 	int delete(Integer id);
 }
