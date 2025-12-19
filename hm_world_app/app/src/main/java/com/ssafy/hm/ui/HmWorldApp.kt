@@ -1,10 +1,16 @@
 package com.ssafy.hm.ui
 
 import android.widget.Toast
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -16,6 +22,10 @@ import com.ssafy.hm.ui.screens.admin.AdminDashboardScreen
 import com.ssafy.hm.ui.screens.auth.LoginScreen
 import com.ssafy.hm.ui.screens.auth.SignUpScreen
 import com.ssafy.hm.ui.screens.customer.CustomerRootScreen
+import com.ssafy.hm.ui.theme.AuroraBlue
+import com.ssafy.hm.ui.theme.AuroraGlow
+import com.ssafy.hm.ui.theme.AuroraPink
+import com.ssafy.hm.ui.theme.AuroraPurple
 import com.ssafy.hm.ui.state.AuthViewModel
 import com.ssafy.hm.ui.state.AuthViewModelFactory
 import com.ssafy.hm.ui.state.CatalogViewModel
@@ -48,14 +58,12 @@ fun HmWorldApp() {
     val friendState by friendVm.state.collectAsState()
     val lineState by lineVm.state.collectAsState()
 
-    // 초기 로드
     LaunchedEffect(Unit) {
         authVm.tryAutoLogin()
         homeVm.refresh()
         catalogVm.refresh()
     }
 
-    // 로그인 후 분기: staff는 관리자, 그 외 고객
     LaunchedEffect(authState.account) {
         authState.account?.let { acct ->
             orderVm.setUser(acct.userId)
@@ -71,9 +79,13 @@ fun HmWorldApp() {
         }
     }
 
-    // 에러 토스트
     LaunchedEffect(authState.error) {
         authState.error?.let { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() }
+    }
+    LaunchedEffect(authState.registrationCompleted) {
+        if (authState.registrationCompleted) {
+            Toast.makeText(context, "회원가입이 완료되었습니다.", Toast.LENGTH_SHORT).show()
+        }
     }
     LaunchedEffect(homeState.error ?: catalogState.error ?: orderState.error ?: friendState.error ?: lineState.error) {
         (homeState.error ?: catalogState.error ?: orderState.error ?: friendState.error ?: lineState.error)?.let {
@@ -81,21 +93,36 @@ fun HmWorldApp() {
         }
     }
 
-    AppNavHost(
-        navController = navController,
-        authVm = authVm,
-        homeVm = homeVm,
-        catalogVm = catalogVm,
-        orderVm = orderVm,
-        friendVm = friendVm,
-        lineVm = lineVm,
-        homeState = homeState,
-        catalogState = catalogState,
-        orderState = orderState,
-        friendState = friendState,
-        lineState = lineState,
-        loading = authState.loading
+    val gradient = Brush.verticalGradient(
+        listOf(
+            AuroraPurple,
+            AuroraGlow,
+            AuroraPink.copy(alpha = 0.85f),
+            AuroraBlue.copy(alpha = 0.8f)
+        )
     )
+
+    androidx.compose.foundation.layout.Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(gradient)
+    ) {
+        AppNavHost(
+            navController = navController,
+            authVm = authVm,
+            homeVm = homeVm,
+            catalogVm = catalogVm,
+            orderVm = orderVm,
+            friendVm = friendVm,
+            lineVm = lineVm,
+            homeState = homeState,
+            catalogState = catalogState,
+            orderState = orderState,
+            friendState = friendState,
+            lineState = lineState,
+            loading = authState.loading
+        )
+    }
 }
 
 @Composable
@@ -126,16 +153,14 @@ private fun AppNavHost(
         composable(NavRoutes.SignUp.route) {
             SignUpScreen(
                 onBack = { navController.popBackStack() },
-                onSubmit = { account ->
-                    authVm.register(account)
-                    Toast.makeText(context, "회원가입 완료", Toast.LENGTH_SHORT).show()
-                },
+                onSubmit = { account -> authVm.register(account) },
+                onCheckId = { id -> authVm.isIdAvailable(id) },
                 loading = loading
             )
         }
         composable(NavRoutes.AdminDashboard.route) {
             AdminDashboardScreen(
-                state = com.ssafy.hm.ui.state.MainUiState( // 임시 매핑으로 관리자 현황 표시
+                state = com.ssafy.hm.ui.state.MainUiState(
                     data = com.ssafy.hm.ui.state.HomeData(
                         homeImages = homeState.homeImages,
                         buyImages = homeState.buyImages,

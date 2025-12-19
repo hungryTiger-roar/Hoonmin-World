@@ -2,16 +2,15 @@ package com.ssafy.hm.ui.screens.auth
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
@@ -20,14 +19,14 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,8 +38,10 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ssafy.hm.R
-import androidx.compose.material3.OutlinedTextFieldDefaults
-
+import com.ssafy.hm.ui.theme.AuroraBlue
+import com.ssafy.hm.ui.theme.AuroraGlow
+import com.ssafy.hm.ui.theme.AuroraPink
+import com.ssafy.hm.ui.theme.AuroraPurple
 
 @Composable
 fun LoginScreen(
@@ -51,106 +52,112 @@ fun LoginScreen(
     var id by remember { mutableStateOf("") }
     var pw by remember { mutableStateOf("") }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = Color(0xFFF7F6FF)
+    val gradient = Brush.verticalGradient(
+        listOf(
+            AuroraPurple,
+            AuroraGlow,
+            AuroraPink.copy(alpha = 0.9f),
+            AuroraBlue.copy(alpha = 0.8f)
+        )
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(gradient),
+        contentAlignment = Alignment.Center
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.SpaceBetween
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp),
+            color = Color.White.copy(alpha = 0.14f),
+            shape = RoundedCornerShape(24.dp)
         ) {
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp)
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color(0xFF6A5AE0), Color(0xFF8C7BFF))
-                        ),
-                        shape = RoundedCornerShape(bottomStart = 40.dp, bottomEnd = 40.dp)
-                    ),
-                contentAlignment = Alignment.Center
+                    .padding(horizontal = 20.dp, vertical = 28.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(
+                    modifier = Modifier
+                        .height(96.dp)
+                        .background(Color.White.copy(alpha = 0.1f), shape = CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
                     Image(
                         painter = painterResource(id = R.drawable.ic_launcher_foreground),
                         contentDescription = null
                     )
-                    Text("훈민월드", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                    Text("즐거움이 시작되는 곳", color = Color(0xFFEDE7FF), fontSize = 14.sp)
                 }
-            }
+                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("환상적인 훈민월드", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                    Text("보랏빛 오로라로 물든 테마파크에 오신 것을 환영해요.", color = Color(0xFFEDE7FF), fontSize = 14.sp)
+                }
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
                 OutlinedTextField(
                     value = id,
                     onValueChange = { id = it },
-                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
-                    label = { Text("아이디") },
+                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = Color.White) },
+                    label = { Text("아이디", color = Color.White) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF6A5AE0),
-                        focusedLabelColor = Color(0xFF6A5AE0)
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent,
+                        focusedLabelColor = AuroraPink,
+                        unfocusedLabelColor = Color.White.copy(alpha = 0.8f),
+                        cursorColor = Color.White,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedContainerColor = Color.White.copy(alpha = 0.1f),
+                        unfocusedContainerColor = Color.White.copy(alpha = 0.08f)
                     )
                 )
                 OutlinedTextField(
                     value = pw,
                     onValueChange = { pw = it },
-                    leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
-                    label = { Text("비밀번호") },
+                    leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = Color.White) },
+                    label = { Text("비밀번호", color = Color.White) },
                     visualTransformation = PasswordVisualTransformation(),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF6A5AE0),
-                        focusedLabelColor = Color(0xFF6A5AE0)
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent,
+                        focusedLabelColor = AuroraPink,
+                        unfocusedLabelColor = Color.White.copy(alpha = 0.8f),
+                        cursorColor = Color.White,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedContainerColor = Color.White.copy(alpha = 0.1f),
+                        unfocusedContainerColor = Color.White.copy(alpha = 0.08f)
                     )
                 )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "아이디 찾기",
-                        color = Color.Gray,
-                        modifier = Modifier.clickable { }
-                    )
-                    Text(
-                        text = "비밀번호 찾기",
-                        color = Color.Gray,
-                        modifier = Modifier.clickable { }
-                    )
-                }
                 Button(
                     onClick = { onLogin(id, pw) },
                     enabled = !loading,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(52.dp)
+                        .height(52.dp),
+                    shape = RoundedCornerShape(14.dp)
                 ) {
-                    Text("훈민월드 입장하기", fontWeight = FontWeight.Bold)
+                    Text("로그인", fontWeight = FontWeight.Bold)
                 }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    Text("처음이신가요? ", color = Color.Gray)
-                    TextButton(onClick = onSignUp) { Text("훈민월드 회원 되기") }
+                    TextButton(onClick = onSignUp) { Text("회원가입 하러가기", color = Color.White) }
                 }
             }
-
-            Spacer(modifier = Modifier.height(32.dp))
         }
 
         if (loading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = Color(0xFF6A5AE0))
+                CircularProgressIndicator(color = Color.White)
             }
         }
     }

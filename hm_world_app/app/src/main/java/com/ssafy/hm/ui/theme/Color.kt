@@ -2,10 +2,10 @@ package com.ssafy.hm.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
-
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+// Fantastical purple palette
+val AuroraPurple = Color(0xFF7C3AED)
+val AuroraPurpleDark = Color(0xFF5B21B6)
+val AuroraGlow = Color(0xFF9F7AEA)
+val AuroraPink = Color(0xFFF472B6)
+val AuroraBlue = Color(0xFF60A5FA)
+val AuroraMist = Color(0xFFF4F0FF)
