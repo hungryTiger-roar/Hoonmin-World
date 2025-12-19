@@ -6,6 +6,7 @@ import com.ssafy.hm.data.model.Friend
 import com.ssafy.hm.data.repository.FriendRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class FriendState(
@@ -31,12 +32,14 @@ class FriendViewModel(
     fun loadFriends() {
         val user = currentUser ?: return
         viewModelScope.launch {
-            try {
+            runCatching {
                 val friends = friendRepo.getFriends(user)
                 val avail = friendRepo.getFriendsWithTicketAvailable(user)
-                _state.value = _state.value.copy(friends = friends, availableFriends = avail)
-            } catch (e: Exception) {
-                _state.value = _state.value.copy(error = e.message)
+                Pair(friends, avail)
+            }.onSuccess { (friends, avail) ->
+                _state.update { it.copy(friends = friends, availableFriends = avail) }
+            }.onFailure { e ->
+                _state.update { it.copy(error = e.message) }
             }
         }
     }
@@ -44,28 +47,26 @@ class FriendViewModel(
     fun addFriend(friendId: String) {
         val user = currentUser ?: return
         viewModelScope.launch {
-            try {
+            runCatching {
                 friendRepo.addFriend(Friend(id = 0, userId = user, friendId = friendId, friendParty = false))
+            }.onSuccess {
                 loadFriends()
-                _state.value = _state.value.copy(toast = "친구 추가")
-            } catch (e: Exception) {
-                _state.value = _state.value.copy(error = e.message)
+                _state.update { it.copy(toast = "儦𨁈筋 黺𥯆?") }
+            }.onFailure { e ->
+                _state.update { it.copy(error = e.message) }
             }
         }
     }
 
     fun removeFriend(id: Int) {
         viewModelScope.launch {
-            try {
-                friendRepo.removeFriend(id)
-                loadFriends()
-            } catch (e: Exception) {
-                _state.value = _state.value.copy(error = e.message)
-            }
+            runCatching { friendRepo.removeFriend(id) }
+                .onSuccess { loadFriends() }
+                .onFailure { e -> _state.update { it.copy(error = e.message) } }
         }
     }
 
     fun clearToast() {
-        _state.value = _state.value.copy(toast = null)
+        _state.update { it.copy(toast = null) }
     }
 }

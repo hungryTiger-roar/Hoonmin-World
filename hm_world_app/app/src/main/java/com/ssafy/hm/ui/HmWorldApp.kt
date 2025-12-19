@@ -17,8 +17,18 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.ssafy.hm.ui.navigation.NavRoutes
 import com.ssafy.hm.ui.screens.admin.AdminDashboardScreen
+import com.ssafy.hm.ui.screens.admin.AdminBuyCarouselListScreen
+import com.ssafy.hm.ui.screens.admin.AdminBuyCarouselScreen
+import com.ssafy.hm.ui.screens.admin.AdminAttractionEditScreen
+import com.ssafy.hm.ui.screens.admin.AdminAttractionListScreen
+import com.ssafy.hm.ui.screens.admin.AdminHomeCarouselListScreen
+import com.ssafy.hm.ui.screens.admin.AdminHomeCarouselScreen
+import com.ssafy.hm.ui.screens.admin.AdminHomeManagementScreen
+import com.ssafy.hm.ui.screens.admin.AdminNoticeEditScreen
+import com.ssafy.hm.ui.screens.admin.AdminNoticeListScreen
 import com.ssafy.hm.ui.screens.auth.LoginScreen
 import com.ssafy.hm.ui.screens.auth.SignUpScreen
 import com.ssafy.hm.ui.screens.customer.CustomerRootScreen
@@ -90,6 +100,12 @@ fun HmWorldApp() {
     LaunchedEffect(homeState.error ?: catalogState.error ?: orderState.error ?: friendState.error ?: lineState.error) {
         (homeState.error ?: catalogState.error ?: orderState.error ?: friendState.error ?: lineState.error)?.let {
             Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+        }
+    }
+    LaunchedEffect(homeState.toast) {
+        homeState.toast?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            homeVm.clearToast()
         }
     }
 
@@ -175,6 +191,120 @@ private fun AppNavHost(
                 onLogout = {
                     authVm.logout()
                     navController.navigate(NavRoutes.Login.route) { popUpTo(0) }
+                },
+                onOpenHomeManagement = {
+                    navController.navigate(NavRoutes.AdminHomeManagement.route)
+                }
+            )
+        }
+        composable(NavRoutes.AdminHomeManagement.route) {
+            AdminHomeManagementScreen(
+                onBack = { navController.popBackStack() },
+                onOpenHomeCarouselList = { navController.navigate(NavRoutes.AdminHomeCarouselList.route) },
+                onOpenNoticeList = { navController.navigate(NavRoutes.AdminNoticeList.route) },
+                onOpenBuyCarouselList = { navController.navigate(NavRoutes.AdminBuyCarouselList.route) },
+                onOpenAttractionList = { navController.navigate(NavRoutes.AdminAttractionList.route) }
+            )
+        }
+        composable(NavRoutes.AdminHomeCarouselList.route) {
+            AdminHomeCarouselListScreen(
+                images = homeState.homeImages,
+                onBack = { navController.popBackStack() },
+                onAddImage = { navController.navigate(NavRoutes.AdminHomeCarousel.route) },
+                onDeleteImage = { homeVm.deleteHomeImage(it) }
+            )
+        }
+        composable(NavRoutes.AdminHomeCarousel.route) {
+            AdminHomeCarouselScreen(
+                onBack = { navController.popBackStack() },
+                onUploaded = { homeVm.refresh() }
+            )
+        }
+        composable(NavRoutes.AdminBuyCarouselList.route) {
+            AdminBuyCarouselListScreen(
+                images = homeState.buyImages,
+                onBack = { navController.popBackStack() },
+                onAddImage = { navController.navigate(NavRoutes.AdminBuyCarousel.route) },
+                onDeleteImage = { homeVm.deleteBuyImage(it) }
+            )
+        }
+        composable(NavRoutes.AdminBuyCarousel.route) {
+            AdminBuyCarouselScreen(
+                onBack = { navController.popBackStack() },
+                onUploaded = { homeVm.refresh() }
+            )
+        }
+        composable(NavRoutes.AdminAttractionList.route) {
+            AdminAttractionListScreen(
+                attractions = catalogState.attractions,
+                onBack = { navController.popBackStack() },
+                onAdd = { navController.navigate(NavRoutes.AdminAttractionCreate.route) },
+                onEdit = { navController.navigate(NavRoutes.AdminAttractionEdit.create(it)) },
+                onDelete = { catalogVm.deleteAttraction(it) },
+                onToggleAble = { catalogVm.toggleAttractionAble(it) }
+            )
+        }
+        composable(NavRoutes.AdminAttractionCreate.route) {
+            AdminAttractionEditScreen(
+                attraction = null,
+                onBack = { navController.popBackStack() },
+                onSave = { att ->
+                    catalogVm.createAttraction(att)
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable(
+            route = NavRoutes.AdminAttractionEdit.route,
+            arguments = listOf(navArgument("attId") { type = androidx.navigation.NavType.IntType })
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getInt("attId") ?: 0
+            val attraction = catalogState.attractions.firstOrNull { it.attId == id }
+            AdminAttractionEditScreen(
+                attraction = attraction,
+                onBack = { navController.popBackStack() },
+                onSave = { updated ->
+                    catalogVm.updateAttraction(id, updated)
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable(NavRoutes.AdminNoticeList.route) {
+            AdminNoticeListScreen(
+                boards = homeState.boards,
+                onBack = { navController.popBackStack() },
+                onAdd = { navController.navigate(NavRoutes.AdminNoticeCreate.route) },
+                onEdit = { navController.navigate(NavRoutes.AdminNoticeEdit.create(it)) },
+                onDelete = { homeVm.deleteBoard(it) },
+                onRefresh = { homeVm.refresh() }
+            )
+        }
+        composable(NavRoutes.AdminNoticeCreate.route) {
+            AdminNoticeEditScreen(
+                title = "",
+                content = "",
+                isEdit = false,
+                onBack = { navController.popBackStack() },
+                onSave = { title, content ->
+                    homeVm.createBoard(title, content)
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable(
+            route = NavRoutes.AdminNoticeEdit.route,
+            arguments = listOf(navArgument("boardId") { type = androidx.navigation.NavType.IntType })
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getInt("boardId") ?: 0
+            val board = homeState.boards.firstOrNull { it.boardId == id }
+            AdminNoticeEditScreen(
+                title = board?.boardTitle ?: "",
+                content = board?.boardContent ?: "",
+                isEdit = true,
+                onBack = { navController.popBackStack() },
+                onSave = { title, content ->
+                    homeVm.updateBoard(id, title, content)
+                    navController.popBackStack()
                 }
             )
         }

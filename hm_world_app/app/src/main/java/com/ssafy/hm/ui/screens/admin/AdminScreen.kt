@@ -1,4 +1,4 @@
-package com.ssafy.hm.ui.screens.admin
+﻿package com.ssafy.hm.ui.screens.admin
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -36,7 +36,8 @@ import com.ssafy.hm.ui.state.MainUiState
 fun AdminDashboardScreen(
     state: MainUiState,
     onRefresh: () -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onOpenHomeManagement: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -44,7 +45,7 @@ fun AdminDashboardScreen(
             .background(Brush.verticalGradient(listOf(Color(0xFFF5F2FF), Color(0xFFEDE7FF))))
     ) {
         TopAppBar(
-            title = { Text("관리 직원 시스템", fontWeight = FontWeight.Bold) },
+            title = { Text("관리직원 대시보드", fontWeight = FontWeight.Bold) },
             actions = {
                 IconButton(onClick = onRefresh) { Icon(Icons.Default.Refresh, contentDescription = "refresh") }
                 TextButton(onClick = onLogout) { Text("로그아웃", color = Color(0xFF6A5AE0)) }
@@ -57,21 +58,21 @@ fun AdminDashboardScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("오늘의 현황", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Text("실시간 현황", fontWeight = FontWeight.Bold, fontSize = 18.sp)
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                StatCard("상품", state.data.items.size, Color(0xFF6A5AE0),modifier = Modifier.weight(1f))
-                StatCard("어트랙션", state.data.attractions.size, Color(0xFF8C7BFF),modifier = Modifier.weight(1f))
-                StatCard("공지", state.data.boards.size, Color(0xFF4FC3F7),modifier = Modifier.weight(1f))
+                StatCard("상품", state.data.items.size, Color(0xFF6A5AE0), modifier = Modifier.weight(1f))
+                StatCard("어트랙션", state.data.attractions.size, Color(0xFF8C7BFF), modifier = Modifier.weight(1f))
+                StatCard("공지", state.data.boards.size, Color(0xFF4FC3F7), modifier = Modifier.weight(1f))
             }
             Spacer(modifier = Modifier.height(8.dp))
             Text("바로가기", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            AdminCard("상품관리", "구매 관리 · 수령 확인", Color(0xFF6A5AE0))
-            AdminCard("어트랙션 관리", "대기 · 예약 · 노쇼 관리", Color(0xFF8C7BFF))
-            AdminCard("홈페이지 관리", "캐러셀 · 공지 · 상품 리스트", Color(0xFF4FC3F7))
-            AdminCard("알림 관리", "지금 보내기 · 예약 · 반복", Color(0xFF81C784))
+            AdminCard("상품관리", "구매 관리 · 수령 확인", Color(0xFF6A5AE0)) { }
+            AdminCard("어트랙션 관리", "대기 · 예약 · 노쇼 관리", Color(0xFF8C7BFF)) { }
+            AdminCard("홈페이지 관리", "캐러셀 · 공지 · 상품 리스트", Color(0xFF4FC3F7), onClick = onOpenHomeManagement)
+            AdminCard("알림 관리", "지금 보내기 · 예약 · 반복", Color(0xFF81C784)) { }
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                "세부 관리 화면은 카드 터치 후 확장 구현이 가능합니다.",
+                "각 관리 메뉴는 카드 터치 시 확장 구현 예정입니다.",
                 color = Color.DarkGray.copy(alpha = 0.6f),
                 fontSize = 12.sp
             )
@@ -98,11 +99,11 @@ private fun StatCard(title: String, count: Int, color: Color, modifier: Modifier
 }
 
 @Composable
-private fun AdminCard(title: String, desc: String, color: Color) {
+private fun AdminCard(title: String, desc: String, color: Color, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { },
+            .clickable { onClick() },
         shape = RoundedCornerShape(14.dp)
     ) {
         Row(

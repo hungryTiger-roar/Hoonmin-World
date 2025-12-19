@@ -18,9 +18,20 @@
 	</select>
 
 	<insert id="insert" parameterType="com.ssafy.hm.dto.Attraction" useGeneratedKeys="true" keyProperty="attId">
-		insert into attraction (att_name, att_pic, att_capacity, att_comment, att_category )
-		values (#{attName}, #{attPic}, #{attCapacity}, #{attComment}, #{attCategory});
+		insert into attraction (att_name, att_pic, att_capacity, att_comment, att_able, att_category)
+		values (#{attName}, #{attPic}, #{attCapacity}, #{attComment}, #{attAble}, #{attCategory});
 	</insert>
+
+	<update id="update" parameterType="com.ssafy.hm.dto.Attraction">
+		update attraction
+		set att_name = #{attName},
+		    att_pic = #{attPic},
+		    att_capacity = #{attCapacity},
+		    att_comment = #{attComment},
+		    att_able = #{attAble},
+		    att_category = #{attCategory}
+		where att_id = #{attId};
+	</update>
 
 	<update id="updateAble" parameterType="com.ssafy.hm.dto.Attraction">
 		update attraction

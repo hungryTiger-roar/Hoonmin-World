@@ -77,3 +77,15 @@ class LineViewModelFactory : ViewModelProvider.Factory {
         throw IllegalArgumentException("Unknown ViewModel class: $modelClass")
     }
 }
+
+class UploadViewModelFactory : ViewModelProvider.Factory {
+    private val uploadRepo = UploadRepository(NetworkModule.api)
+    private val homeRepo = HomeRepository(NetworkModule.api)
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(UploadViewModel::class.java)) {
+            return UploadViewModel(uploadRepo, homeRepo) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class: $modelClass")
+    }
+}

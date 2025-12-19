@@ -7,6 +7,7 @@ import com.ssafy.hm.data.model.Account
 import com.ssafy.hm.data.repository.AccountRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 
@@ -38,16 +39,17 @@ class AuthViewModel(
 
     fun login(id: String, pw: String?, auto: Boolean = false) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(loading = true, error = null, registrationCompleted = false)
-            try {
-                val account = if (pw == null) repo.getAccount(id) else repo.login(id, pw)
+            _uiState.update { it.copy(loading = true, error = null, registrationCompleted = false) }
+            runCatching {
+                if (pw == null) repo.getAccount(id) else repo.login(id, pw)
+            }.onSuccess { account ->
                 authStore.setUser(account.userId)
                 _uiState.value = AuthUiState(account = account, autoLogin = auto, registrationCompleted = false)
-            } catch (e: Exception) {
+            }.onFailure { e ->
                 val msg = if (e is HttpException && e.code() == 401) {
-                    "아이디, 비밀번호를 확인해주세요."
+                    "?勳澊?? 牍勲?氩堩樃毳??曥澑?挫＜?胳殧."
                 } else {
-                    e.message ?: "로그인에 실패했습니다."
+                    e.message ?: "搿滉犯?胳棎 ?ろ尐?堨姷?堧嫟."
                 }
                 _uiState.value = AuthUiState(error = msg, registrationCompleted = false)
             }
@@ -56,13 +58,17 @@ class AuthViewModel(
 
     fun register(account: Account) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(loading = true, error = null, registrationCompleted = false)
-            try {
-                val created = repo.register(account)
+            _uiState.update { it.copy(loading = true, error = null, registrationCompleted = false) }
+            runCatching {
+                repo.register(account)
+            }.onSuccess { created ->
                 authStore.setUser(created.userId)
                 _uiState.value = AuthUiState(account = created, registrationCompleted = true)
-            } catch (e: Exception) {
-                _uiState.value = AuthUiState(error = e.message ?: "회원가입에 실패했습니다.", registrationCompleted = false)
+            }.onFailure { e ->
+                _uiState.value = AuthUiState(
+                    error = e.message ?: "?岇洂臧€?呾棎 ?ろ尐?堨姷?堧嫟.",
+                    registrationCompleted = false
+                )
             }
         }
     }
@@ -70,10 +76,10 @@ class AuthViewModel(
     suspend fun isIdAvailable(id: String): Boolean {
         return try {
             repo.getAccount(id)
-            false // 이미 존재
+            false // ?措? 臁挫灛
         } catch (e: HttpException) {
             if (e.code() == 404) {
-                true // 존재하지 않음
+                true // 臁挫灛?橃? ?婌潓
             } else {
                 throw e
             }
