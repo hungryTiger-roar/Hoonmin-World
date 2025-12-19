@@ -13,6 +13,11 @@ sealed class NavRoutes(val route: String) {
         fun create(attId: Int) = "admin/attraction/edit/$attId"
     }
     data object AdminAttractionCreate : NavRoutes("admin/attraction/create")
+    data object AdminItemList : NavRoutes("admin/item/list")
+    data object AdminItemEdit : NavRoutes("admin/item/edit/{itemId}") {
+        fun create(itemId: Int) = "admin/item/edit/$itemId"
+    }
+    data object AdminItemCreate : NavRoutes("admin/item/create")
     data object AdminBuyCarouselList : NavRoutes("admin/buy-carousel/list")
     data object AdminBuyCarousel : NavRoutes("admin/buy-carousel")
     data object AdminNoticeList : NavRoutes("admin/notice/list")
