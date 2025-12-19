@@ -31,6 +31,8 @@ import com.ssafy.hm.ui.state.FriendState
 import com.ssafy.hm.ui.state.HomeState
 import com.ssafy.hm.ui.state.LineState
 import com.ssafy.hm.ui.state.OrderState
+import com.ssafy.hm.data.model.HomeBoard
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,7 +50,7 @@ fun CustomerRootScreen(
     onUpdateCart: (Item, Int) -> Unit,
     onCreateOrder: (Int) -> Unit,
     onReceiveOrder: (Int) -> Unit,
-    onDeleteBoard: (Int) -> Unit,
+    onBoardClick: (HomeBoard) -> Unit,
     onReserveAttraction: (Int, List<String>) -> Unit,
     onAddFriend: (String) -> Unit,
     onRemoveFriend: (Int) -> Unit,
@@ -80,17 +82,6 @@ fun CustomerRootScreen(
     val navIcons = listOf(Icons.Default.Info, Icons.Default.AddShoppingCart, Icons.Default.Info, Icons.Default.Map, Icons.Default.Person)
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("훈민월드") },
-                actions = {
-                    if (tab == 1) {
-                        IconButton(onClick = { showCart = true }) { Icon(Icons.Default.AddShoppingCart, contentDescription = "cart") }
-                    }
-                    TextButton(onClick = onLogout) { Text("로그아웃", color = Color(0xFF6A5AE0)) }
-                }
-            )
-        },
         bottomBar = {
             NavigationBar {
                 navItems.forEachIndexed { idx, label ->
@@ -110,18 +101,24 @@ fun CustomerRootScreen(
                 }
             }
         }
-    ) { _ ->
+    ) { innerPadding ->
         when (tab) {
-            0 -> AttractionTab(catalogState.attractions, onLoadAttraction)
-            1 -> ProductTab(catalogState.items, onLoadItem, onAddCart)
+            0 -> AttractionTab(catalogState.attractions, onLoadAttraction, innerPadding)
+            1 -> ProductTab(
+                list = catalogState.items,
+                buyImages = catalogState.buyImages,
+                onSelect = onLoadItem,
+                onAddCart = onAddCart,
+                paddingValues = innerPadding
+            )
             2 -> HomeTab(
                 images = homeState.homeImages,
                 boards = homeState.boards,
                 orderState = orderState,
-                lineState = lineState,
-                onDeleteBoard = onDeleteBoard
+                paddingValues = innerPadding,
+                onBoardClick = onBoardClick
             )
-            3 -> MapTab()
+            3 -> MapTab(innerPadding)
             else -> ProfileTab(
                 orders = orderState.orders,
                 details = orderState.orderDetails,
@@ -130,7 +127,8 @@ fun CustomerRootScreen(
                 availableFriends = friendState.availableFriends,
                 onAddFriend = onAddFriend,
                 onRemoveFriend = onRemoveFriend,
-                onLogout = onLogout
+                onLogout = onLogout,
+                paddingValues = innerPadding
             )
         }
 

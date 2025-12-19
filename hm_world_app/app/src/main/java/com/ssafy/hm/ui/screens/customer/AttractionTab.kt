@@ -3,6 +3,7 @@ package com.ssafy.hm.ui.screens.customer
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,9 +36,11 @@ import com.ssafy.hm.data.model.Attraction
 import com.ssafy.hm.data.model.AttractionReview
 
 @Composable
-fun AttractionTab(list: List<Attraction>, onSelect: (Int) -> Unit) {
+fun AttractionTab(list: List<Attraction>, onSelect: (Int) -> Unit, paddingValues: PaddingValues) {
     var query by remember { mutableStateOf("") }
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(modifier = Modifier
+        .fillMaxSize()
+        .padding(paddingValues)) {
         OutlinedTextField(
             value = query,
             onValueChange = { query = it },
@@ -47,7 +50,7 @@ fun AttractionTab(list: List<Attraction>, onSelect: (Int) -> Unit) {
             label = { Text("어트랙션 검색") }
         )
         LazyColumn(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            items(list.filter { it.attName.contains(query, true) }) { att ->
+            items(list.filter { it.attName?.contains(query, true) == true }) { att ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()

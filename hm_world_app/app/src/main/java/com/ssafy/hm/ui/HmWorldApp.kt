@@ -31,6 +31,7 @@ import com.ssafy.hm.ui.state.AuthViewModelFactory
 import com.ssafy.hm.ui.state.CatalogViewModel
 import com.ssafy.hm.ui.state.CatalogViewModelFactory
 import com.ssafy.hm.ui.state.FriendViewModel
+import com.ssafy.hm.data.model.HomeBoard
 import com.ssafy.hm.ui.state.FriendViewModelFactory
 import com.ssafy.hm.ui.state.HomeViewModel
 import com.ssafy.hm.ui.state.HomeViewModelFactory
@@ -38,6 +39,9 @@ import com.ssafy.hm.ui.state.LineViewModel
 import com.ssafy.hm.ui.state.LineViewModelFactory
 import com.ssafy.hm.ui.state.OrderViewModel
 import com.ssafy.hm.ui.state.OrderViewModelFactory
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import com.ssafy.hm.ui.screens.customer.HomeBoardScreen
 
 @Composable
 fun HmWorldApp() {
@@ -196,7 +200,7 @@ private fun AppNavHost(
                 onUpdateCart = { item, qty -> orderVm.updateCart(item, qty) },
                 onCreateOrder = { orderVm.createOrder(it) },
                 onReceiveOrder = { orderVm.receiveOrder(it) },
-                onDeleteBoard = { homeVm.deleteBoard(it) },
+                onBoardClick = { board: HomeBoard -> navController.navigate(NavRoutes.NoticeDetail.create(board.boardId)) },
                 onReserveAttraction = { attId, userIds -> lineVm.createLine(attId, userIds) },
                 onAddFriend = { friendVm.addFriend(it) },
                 onRemoveFriend = { friendVm.removeFriend(it) },
@@ -205,6 +209,22 @@ private fun AppNavHost(
                     orderVm.clearToast(); friendVm.clearToast()
                 }
             )
+        }
+        composable(
+            route = NavRoutes.NoticeDetail.route,
+            arguments = listOf(navArgument("id") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val boardId = backStackEntry.arguments?.getInt("id")
+            val board = boardId?.let { homeVm.getBoardById(it) }
+            if (board != null) {
+                HomeBoardScreen(board = board, onBack = { navController.popBackStack() })
+            } else {
+                // Handle case where board is not found
+                LaunchedEffect(Unit) {
+                    Toast.makeText(context, "공지사항을 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
+                    navController.popBackStack()
+                }
+            }
         }
     }
 }

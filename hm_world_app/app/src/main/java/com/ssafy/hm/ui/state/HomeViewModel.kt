@@ -69,4 +69,8 @@ class HomeViewModel(
             }
         }
     }
+
+    fun getBoardById(id: Int): HomeBoard? {
+        return _state.value.boards.find { it.boardId == id }
+    }
 }
