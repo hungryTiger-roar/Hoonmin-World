@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -47,7 +48,7 @@ fun AdminBuyCarouselListScreen(
             }
         )
 
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(16.dp).navigationBarsPadding()) {
             Button(onClick = onAddImage, modifier = Modifier.fillMaxWidth()) {
                 Icon(Icons.Default.Add, contentDescription = "추가")
                 Spacer(modifier = Modifier.width(6.dp))

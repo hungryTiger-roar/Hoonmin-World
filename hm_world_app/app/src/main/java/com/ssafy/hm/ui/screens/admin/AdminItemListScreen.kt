@@ -35,20 +35,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.ssafy.hm.data.model.Attraction
+import com.ssafy.hm.data.model.Item
 import com.ssafy.hm.ui.theme.AuroraPurple
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdminAttractionListScreen(
-    attractions: List<Attraction>,
+fun AdminItemListScreen(
+    items: List<Item>,
     onBack: () -> Unit,
     onAdd: () -> Unit,
     onEdit: (Int) -> Unit,
-    onDelete: (Int) -> Unit,
-    onToggleAble: (Int) -> Unit
+    onDelete: (Int) -> Unit
 ) {
-    val pendingDelete = remember { mutableStateOf<Attraction?>(null) }
+    val pendingDelete = remember { mutableStateOf<Item?>(null) }
 
     if (pendingDelete.value != null) {
         val target = pendingDelete.value
@@ -57,7 +56,7 @@ fun AdminAttractionListScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        target?.let { onDelete(it.attId) }
+                        target?.let { onDelete(it.itemId) }
                         pendingDelete.value = null
                     }
                 ) { Text("확인") }
@@ -74,7 +73,7 @@ fun AdminAttractionListScreen(
 
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
-            title = { Text("놀이기구 관리", fontWeight = FontWeight.Bold) },
+            title = { Text("상품 관리", fontWeight = FontWeight.Bold) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
                     Icon(Icons.Default.ArrowBack, contentDescription = "뒤로가기")
@@ -90,12 +89,12 @@ fun AdminAttractionListScreen(
             ) {
                 Icon(Icons.Default.Add, contentDescription = "추가")
                 Spacer(modifier = Modifier.width(6.dp))
-                Text("놀이기구 추가")
+                Text("상품 추가")
             }
             Spacer(modifier = Modifier.height(12.dp))
             LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                items(attractions, key = { it.attId }) { attraction ->
-                    val cardColor = if (attraction.attAble) Color.White else Color(0xFFE0E0E0)
+                items(items, key = { it.itemId }) { item ->
+                    val cardColor = if (item.itemCount > 0) Color.White else Color(0xFFE0E0E0)
                     Card(modifier = Modifier.fillMaxWidth()) {
                         Column(
                             modifier = Modifier
@@ -105,31 +104,27 @@ fun AdminAttractionListScreen(
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             AsyncImage(
-                                model = attraction.attPic,
-                                contentDescription = "놀이기구 이미지",
+                                model = item.itemPic,
+                                contentDescription = "상품 이미지",
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(160.dp)
                             )
-                            attraction.attName?.let { Text(it, fontWeight = FontWeight.Bold) }
-                            Text("최대 정원: ${attraction.attCapacity}")
-                            Text(if (attraction.attAble) "운영 중단" else "운영 중", color = Color.DarkGray)
+                            Text(item.itemName, fontWeight = FontWeight.Bold)
+                            Text("가격: ${item.itemPrice}")
+                            Text("판매 수량: ${item.itemCount}")
+                            Text(item.itemComment.orEmpty())
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.End,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                SmallActionButton(
-                                    label = if (attraction.attAble) "운영 중" else "운영 중단",
-                                    containerColor = if (attraction.attAble) Color(0xFF5D8BD6) else Color(0xFFF3C247)
-                                ) { onToggleAble(attraction.attId) }
-                                Spacer(modifier = Modifier.width(8.dp))
-                                SmallActionButton(label = "수정") { onEdit(attraction.attId) }
+                                SmallActionButton(label = "수정") { onEdit(item.itemId) }
                                 Spacer(modifier = Modifier.width(8.dp))
                                 SmallActionButton(
                                     label = "삭제",
                                     containerColor = Color(0xFFD65D5D)
-                                ) { pendingDelete.value = attraction }
+                                ) { pendingDelete.value = item }
                             }
                         }
                     }

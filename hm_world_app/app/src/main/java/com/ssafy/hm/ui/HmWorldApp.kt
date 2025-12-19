@@ -19,12 +19,15 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.ssafy.hm.ui.navigation.NavRoutes
+import com.ssafy.hm.ui.screens.SplashScreen
 import com.ssafy.hm.ui.screens.admin.AdminDashboardScreen
 import com.ssafy.hm.ui.screens.admin.AdminBuyCarouselListScreen
 import com.ssafy.hm.ui.screens.admin.AdminBuyCarouselScreen
 import com.ssafy.hm.ui.screens.admin.AdminAttractionEditScreen
 import com.ssafy.hm.ui.screens.admin.AdminAttractionListScreen
 import com.ssafy.hm.ui.screens.admin.AdminHomeCarouselListScreen
+import com.ssafy.hm.ui.screens.admin.AdminItemEditScreen
+import com.ssafy.hm.ui.screens.admin.AdminItemListScreen
 import com.ssafy.hm.ui.screens.admin.AdminHomeCarouselScreen
 import com.ssafy.hm.ui.screens.admin.AdminHomeManagementScreen
 import com.ssafy.hm.ui.screens.admin.AdminNoticeEditScreen
@@ -162,7 +165,16 @@ private fun AppNavHost(
     loading: Boolean
 ) {
     val context = LocalContext.current
-    NavHost(navController = navController, startDestination = NavRoutes.Login.route) {
+    NavHost(navController = navController, startDestination = NavRoutes.Splash.route) {
+        composable(NavRoutes.Splash.route) {
+            SplashScreen()
+            LaunchedEffect(Unit) {
+                kotlinx.coroutines.delay(1000)
+                navController.navigate(NavRoutes.Login.route) {
+                    popUpTo(NavRoutes.Splash.route) { inclusive = true }
+                }
+            }
+        }
         composable(NavRoutes.Login.route) {
             LoginScreen(
                 onLogin = { id, pw -> authVm.login(id, pw) },
@@ -207,7 +219,8 @@ private fun AppNavHost(
                 onOpenHomeCarouselList = { navController.navigate(NavRoutes.AdminHomeCarouselList.route) },
                 onOpenNoticeList = { navController.navigate(NavRoutes.AdminNoticeList.route) },
                 onOpenBuyCarouselList = { navController.navigate(NavRoutes.AdminBuyCarouselList.route) },
-                onOpenAttractionList = { navController.navigate(NavRoutes.AdminAttractionList.route) }
+                onOpenAttractionList = { navController.navigate(NavRoutes.AdminAttractionList.route) },
+                onOpenItemList = { navController.navigate(NavRoutes.AdminItemList.route) }
             )
         }
         composable(NavRoutes.AdminHomeCarouselList.route) {
@@ -269,6 +282,40 @@ private fun AppNavHost(
                 onBack = { navController.popBackStack() },
                 onSave = { updated ->
                     catalogVm.updateAttraction(id, updated)
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable(NavRoutes.AdminItemList.route) {
+            AdminItemListScreen(
+                items = catalogState.items,
+                onBack = { navController.popBackStack() },
+                onAdd = { navController.navigate(NavRoutes.AdminItemCreate.route) },
+                onEdit = { navController.navigate(NavRoutes.AdminItemEdit.create(it)) },
+                onDelete = { catalogVm.deleteItem(it) }
+            )
+        }
+        composable(NavRoutes.AdminItemCreate.route) {
+            AdminItemEditScreen(
+                item = null,
+                onBack = { navController.popBackStack() },
+                onSave = { item ->
+                    catalogVm.createItem(item)
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable(
+            route = NavRoutes.AdminItemEdit.route,
+            arguments = listOf(navArgument("itemId") { type = androidx.navigation.NavType.IntType })
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getInt("itemId") ?: 0
+            val item = catalogState.items.firstOrNull { it.itemId == id }
+            AdminItemEditScreen(
+                item = item,
+                onBack = { navController.popBackStack() },
+                onSave = { updated ->
+                    catalogVm.updateItem(id, updated)
                     navController.popBackStack()
                 }
             )
