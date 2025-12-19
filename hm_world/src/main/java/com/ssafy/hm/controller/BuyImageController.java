@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -14,12 +15,11 @@ import com.ssafy.hm.dto.BuyImage;
 import com.ssafy.hm.service.BuyImageService;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/buy-images")
-@Tag(name = "구매 이미지", description = "구매 페이지 이미지 관리")
+@Tag(name = "buy image", description = "buy page carousel image management")
 public class BuyImageController {
 
 	private final BuyImageService buyImageService;
@@ -29,13 +29,13 @@ public class BuyImageController {
 	}
 
 	@GetMapping
-	@Operation(summary = "구매 이미지 전체 조회")
+	@Operation(summary = "list buy images")
 	public ResponseEntity<List<BuyImage>> list() {
 		return ResponseEntity.ok(buyImageService.getAll());
 	}
 
 	@PostMapping
-	@Operation(summary = "구매 이미지 등록")
+	@Operation(summary = "create buy image")
 	public ResponseEntity<?> create(@RequestBody BuyImage image) {
 		return buyImageService.create(image)
 				? ResponseEntity.ok(image)
@@ -43,7 +43,7 @@ public class BuyImageController {
 	}
 
 	@DeleteMapping("/{buyId}")
-	@Operation(summary = "구매 이미지 삭제")
+	@Operation(summary = "delete buy image")
 	public ResponseEntity<Void> delete(@PathVariable Integer buyId) {
 		return buyImageService.remove(buyId)
 				? ResponseEntity.noContent().build()

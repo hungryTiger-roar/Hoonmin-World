@@ -1,6 +1,8 @@
 package com.ssafy.hm.data.network
 
 import com.ssafy.hm.data.model.*
+import okhttp3.MultipartBody
+import okhttp3.ResponseBody
 import retrofit2.http.*
 
 interface HmApi {
@@ -32,6 +34,18 @@ interface HmApi {
     @GET("/buy-images")
     suspend fun getBuyImages(): List<BuyImage>
 
+    @POST("/buy-images")
+    suspend fun createBuyImage(@Body image: BuyImageRequest): BuyImage
+
+    @DELETE("/buy-images/{buyId}")
+    suspend fun deleteBuyImage(@Path("buyId") buyId: Int): Void
+
+    @POST("/home-images")
+    suspend fun createHomeImage(@Body image: HomeImage): HomeImage
+
+    @DELETE("/home-images/{homeId}")
+    suspend fun deleteHomeImage(@Path("homeId") homeId: Int): Void
+
     @GET("/board")
     suspend fun getBoards(): List<HomeBoard>
 
@@ -39,10 +53,10 @@ interface HmApi {
     suspend fun getBoard(@Path("boardId") boardId: Int): HomeBoard
 
     @POST("/board")
-    suspend fun createBoard(@Body board: HomeBoard): Void
+    suspend fun createBoard(@Body board: HomeBoardWriteRequest): Void
 
     @PATCH("/board/{boardId}")
-    suspend fun updateBoard(@Path("boardId") boardId: Int, @Body board: HomeBoard): Void
+    suspend fun updateBoard(@Path("boardId") boardId: Int, @Body board: HomeBoardWriteRequest): Void
 
     @DELETE("/board/{boardId}")
     suspend fun deleteBoard(@Path("boardId") boardId: Int): Void
@@ -120,6 +134,16 @@ interface HmApi {
     @POST("/attractions")
     suspend fun createAttraction(@Body attraction: Attraction): Attraction
 
+    @PUT("/attractions/{attId}")
+    suspend fun updateAttraction(@Path("attId") attId: Int, @Body attraction: Attraction): Attraction
+
+    @PATCH("/attractions/{attId}/able")
+    suspend fun toggleAttractionAble(@Path("attId") attId: Int): Void
+
     @DELETE("/attractions/{attId}")
     suspend fun deleteAttraction(@Path("attId") attId: Int): Void
+
+    @Multipart
+    @POST("/upload")
+    suspend fun uploadImage(@Part upload_file: MultipartBody.Part): ResponseBody
 }
