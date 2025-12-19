@@ -1,8 +1,10 @@
 package com.ssafy.hm.data.model
 
+import com.google.gson.annotations.SerializedName
+
 data class HomeBoard(
     val boardId: Int,
-    val boardTitle: String,
-    val boardContent: String,
-    val boardDate: String
+    val boardTitle: String?,
+    val boardContent: String?,
+    @SerializedName("board_date") val boardDate: String?
 )

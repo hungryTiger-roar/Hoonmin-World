@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssafy.hm.data.model.Attraction
 import com.ssafy.hm.data.model.AttractionReview
+import com.ssafy.hm.data.model.BuyImage
 import com.ssafy.hm.data.model.Item
 import com.ssafy.hm.data.model.ItemReview
 import com.ssafy.hm.data.repository.AttractionRepository
@@ -18,6 +19,7 @@ data class CatalogState(
     val error: String? = null,
     val attractions: List<Attraction> = emptyList(),
     val items: List<Item> = emptyList(),
+    val buyImages: List<BuyImage> = emptyList(),
     val selectedAttraction: Attraction? = null,
     val selectedItem: Item? = null,
     val attractionReviews: List<AttractionReview> = emptyList(),
@@ -39,7 +41,13 @@ class CatalogViewModel(
             try {
                 val attractions = attractionRepo.getAttractions()
                 val items = itemRepo.getItems()
-                _state.value = _state.value.copy(loading = false, attractions = attractions, items = items)
+                val buyImages = itemRepo.getBuyImages()
+                _state.value = _state.value.copy(
+                    loading = false,
+                    attractions = attractions,
+                    items = items,
+                    buyImages = buyImages
+                )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(loading = false, error = e.message)
             }

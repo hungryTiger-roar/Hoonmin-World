@@ -9,11 +9,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.padding
+
 @Composable
-fun MapTab() {
+fun MapTab(paddingValues: PaddingValues) {
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .padding(paddingValues)
             .background(Color(0xFFEFF1F5)),
         contentAlignment = Alignment.Center
     ) { Text("지도 API 연동 예정", color = Color.Gray) }

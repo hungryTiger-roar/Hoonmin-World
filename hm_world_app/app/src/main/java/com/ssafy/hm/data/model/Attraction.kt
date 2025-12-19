@@ -2,7 +2,7 @@ package com.ssafy.hm.data.model
 
 data class Attraction(
     val attId: Int,
-    val attName: String,
+    val attName: String?,
     val attPic: String?,
     val attCapacity: Int,
     val attComment: String?,

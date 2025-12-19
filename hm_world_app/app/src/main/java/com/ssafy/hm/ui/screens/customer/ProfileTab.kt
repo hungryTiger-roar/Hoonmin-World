@@ -32,6 +32,8 @@ import com.ssafy.hm.data.model.Friend
 import com.ssafy.hm.data.model.OrderDetail
 import com.ssafy.hm.data.model.Orders
 
+import androidx.compose.foundation.layout.PaddingValues
+
 @Composable
 fun ProfileTab(
     orders: List<Orders>,
@@ -41,13 +43,15 @@ fun ProfileTab(
     availableFriends: List<Friend>,
     onAddFriend: (String) -> Unit,
     onRemoveFriend: (Int) -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    paddingValues: PaddingValues
 ) {
     var friendSearch by remember { mutableStateOf("") }
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(paddingValues)
+            .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text("내 정보", fontWeight = FontWeight.Bold, fontSize = 20.sp)
@@ -83,7 +87,7 @@ fun ProfileTab(
             Button(onClick = { friendSearch = "" }) { Text("초기화") }
         }
         LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.heightIn(max = 140.dp)) {
-            items(friends.filter { it.friendId.contains(friendSearch, true) }) { fr ->
+            items(friends.filter { it.friendId?.contains(friendSearch, true) == true || friendSearch.isBlank() }) { fr ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
