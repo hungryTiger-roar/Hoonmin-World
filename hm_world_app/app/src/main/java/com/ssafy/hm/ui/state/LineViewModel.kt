@@ -7,6 +7,7 @@ import com.ssafy.hm.data.model.AttractionLineMember
 import com.ssafy.hm.data.repository.LineRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class LineState(
@@ -24,20 +25,24 @@ class LineViewModel(
 
     fun createLine(attId: Int, userIds: List<String>) {
         viewModelScope.launch {
-            try {
+            runCatching {
                 val req = AttractionLineCreateRequest(attId = attId, userIds = userIds)
                 val lineId = lineRepo.createLine(attId, req)
                 val members = lineRepo.getLineMembers(lineId)
-                val map = _state.value.lineMembers.toMutableMap()
-                map[lineId] = members
-                _state.value = _state.value.copy(lineMembers = map, toast = "줄서기 완료")
-            } catch (e: Exception) {
-                _state.value = _state.value.copy(error = e.message)
+                Pair(lineId, members)
+            }.onSuccess { (lineId, members) ->
+                _state.update {
+                    val map = it.lineMembers.toMutableMap()
+                    map[lineId] = members
+                    it.copy(lineMembers = map, toast = "ì¤„ì„œê¸??„ë£Œ")
+                }
+            }.onFailure { e ->
+                _state.update { it.copy(error = e.message) }
             }
         }
     }
 
     fun clearToast() {
-        _state.value = _state.value.copy(toast = null)
+        _state.update { it.copy(toast = null) }
     }
 }

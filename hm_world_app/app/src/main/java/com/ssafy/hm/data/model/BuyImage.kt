@@ -4,3 +4,7 @@ data class BuyImage(
     val buyId: Int,
     val buyImage: String
 )
+
+data class BuyImageRequest(
+    val buyImage: String
+)

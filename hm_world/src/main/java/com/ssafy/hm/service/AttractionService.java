@@ -6,6 +6,7 @@ import com.ssafy.hm.dto.Attraction;
 
 public interface AttractionService {
 	boolean create(Attraction attraction);
+	boolean update(Attraction attraction);
 	boolean updateAble(Attraction attraction);
 	boolean updateCategory(Attraction attraction); 
 	boolean updateTotal(Attraction attraction); 

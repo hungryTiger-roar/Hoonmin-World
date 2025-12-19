@@ -25,6 +25,12 @@ public class AttractionServiceImpl implements AttractionService {
 
 	@Override
 	@Transactional
+	public boolean update(Attraction attraction) {
+		return attractionRepo.update(attraction) == 1;
+	}
+
+	@Override
+	@Transactional
 	public boolean updateAble(Attraction attraction) {
 		return attractionRepo.updateAble(attraction) == 1;
 	}

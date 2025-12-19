@@ -9,6 +9,7 @@ import com.ssafy.hm.dto.Attraction;
 @Mapper
 public interface AttractionRepo {
 	int insert(Attraction attraction);
+	int update(Attraction attraction);
 	int updateAble(Attraction attraction);
 	int updateCategory(Attraction attraction); 
 	int updateTotal(Attraction attraction);
