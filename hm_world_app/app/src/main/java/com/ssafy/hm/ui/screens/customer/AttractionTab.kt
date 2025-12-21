@@ -27,11 +27,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.ssafy.hm.R
 import com.ssafy.hm.data.model.Attraction
 import com.ssafy.hm.data.model.AttractionReview
 
@@ -64,12 +66,15 @@ fun AttractionTab(list: List<Attraction>, onSelect: (Int) -> Unit, paddingValues
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         AsyncImage(
-                            model = att.attPic,
+                            model = att.attPic?.takeIf { it.isNotBlank() },
                             contentDescription = null,
                             modifier = Modifier
                                 .size(72.dp)
                                 .clip(RoundedCornerShape(10.dp)),
-                            contentScale = ContentScale.Crop
+                            contentScale = ContentScale.Crop,
+                            placeholder = painterResource(id = R.drawable.noimage),
+                            error = painterResource(id = R.drawable.noimage),
+                            fallback = painterResource(id = R.drawable.noimage)
                         )
                         Column {
                             Text(att.attName ?: "", fontWeight = FontWeight.Bold)

@@ -37,7 +37,10 @@ fun AdminDashboardScreen(
     state: MainUiState,
     onRefresh: () -> Unit,
     onLogout: () -> Unit,
-    onOpenHomeManagement: () -> Unit
+    onOpenOrderManagement: () -> Unit,
+    onOpenAttractionManagement: () -> Unit,
+    onOpenHomeManagement: () -> Unit,
+    onOpenNotificationManagement: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -61,21 +64,16 @@ fun AdminDashboardScreen(
             Text("실시간 현황", fontWeight = FontWeight.Bold, fontSize = 18.sp)
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
                 StatCard("상품", state.data.items.size, Color(0xFF6A5AE0), modifier = Modifier.weight(1f))
-                StatCard("어트랙션", state.data.attractions.size, Color(0xFF8C7BFF), modifier = Modifier.weight(1f))
+                StatCard("어트랙션", state.data.attractions.size, Color(0xFFFF7F41), modifier = Modifier.weight(1f))
                 StatCard("공지", state.data.boards.size, Color(0xFF4FC3F7), modifier = Modifier.weight(1f))
             }
             Spacer(modifier = Modifier.height(8.dp))
             Text("바로가기", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            AdminCard("상품관리", "구매 관리 · 수령 확인", Color(0xFF6A5AE0)) { }
-            AdminCard("어트랙션 관리", "대기 · 예약 · 노쇼 관리", Color(0xFF8C7BFF)) { }
+            AdminCard("상품관리", "구매 관리 · 수령 확인", Color(0xFF6A5AE0), onClick = onOpenOrderManagement)
+            AdminCard("어트랙션 관리", "대기 · 예약 · 노쇼 관리", Color(0xFFFF7F41), onClick = onOpenAttractionManagement)
             AdminCard("홈페이지 관리", "캐러셀 · 공지 · 상품 리스트", Color(0xFF4FC3F7), onClick = onOpenHomeManagement)
-            AdminCard("알림 관리", "지금 보내기 · 예약 · 반복", Color(0xFF81C784)) { }
+            AdminCard("알림 관리", "지금 보내기 · 예약 · 반복", Color(0xFF81C784), onClick = onOpenNotificationManagement)
             Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                "각 관리 메뉴는 카드 터치 시 확장 구현 예정입니다.",
-                color = Color.DarkGray.copy(alpha = 0.6f),
-                fontSize = 12.sp
-            )
         }
     }
 }

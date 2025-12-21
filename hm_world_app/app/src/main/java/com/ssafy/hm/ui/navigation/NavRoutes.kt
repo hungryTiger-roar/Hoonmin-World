@@ -1,14 +1,20 @@
 package com.ssafy.hm.ui.navigation
 
 sealed class NavRoutes(val route: String) {
+    // 앱 시작 시 잠깐 보여줄 스플래시 화면
     data object Splash : NavRoutes("splash")
     data object Login : NavRoutes("login")
     data object SignUp : NavRoutes("signup")
     data object AdminDashboard : NavRoutes("admin/dashboard")
+    data object AdminOrderManagement : NavRoutes("admin/order-management")
     data object AdminHomeManagement : NavRoutes("admin/home-management")
+    data object AdminNotificationManagement : NavRoutes("admin/notification-management")
     data object AdminHomeCarouselList : NavRoutes("admin/home-carousel/list")
     data object AdminHomeCarousel : NavRoutes("admin/home-carousel")
     data object AdminAttractionList : NavRoutes("admin/attraction/list")
+    data object AdminAttractionLine : NavRoutes("admin/attraction/line/{attId}") {
+        fun create(attId: Int) = "admin/attraction/line/$attId"
+    }
     data object AdminAttractionEdit : NavRoutes("admin/attraction/edit/{attId}") {
         fun create(attId: Int) = "admin/attraction/edit/$attId"
     }

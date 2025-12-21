@@ -2,7 +2,8 @@ package com.ssafy.hm.data.model
 
 data class AttractionLine(
     val lineId: Int,
-    val attId: Int
+    val attId: Int,
+    val members: List<AttractionLineMember> = emptyList()
 )
 
 data class AttractionLineMember(

@@ -181,7 +181,8 @@ INSERT INTO account (user_id, pw, name, phone, birth, att_id, ticket) VALUES
 ('gg', '11', '오세훈', '010-7777-7777', '1990-12-30', NULL, TRUE),
 ('hh', '11', '유나',   '010-8888-8888', '2001-04-10', NULL, FALSE),
 ('ii', '11', '강동원', '010-9999-9999', '1989-06-21', NULL, TRUE),
-('jj', '11', '문채원', '010-1010-1010', '1996-08-17', NULL, FALSE);
+('jj', '11', '문채원', '010-1010-1010', '1996-08-17', NULL, FALSE),
+('staff', '11', '관리자', '010-0000-0000', '1999-12-12', null, false);
 
 INSERT INTO item 
 (item_name, item_price, item_count, item_pic, item_comment, item_category)
@@ -196,3 +197,40 @@ VALUES
 ('콜라', 3000, 300, 'cola.png', '시원한 탄산음료', '음료'),
 ('아이스크림', 4000, 120, 'icecream.png', '여름에 인기 많은 아이스크림', '푸드'),
 ('캐릭터 풍선', 8000, 60, 'balloon.png', '아이들에게 인기 많은 캐릭터 풍선', '굿즈');
+
+INSERT INTO attraction
+(att_name, att_pic, att_capacity, att_comment, att_able, att_category, att_total)
+VALUES
+('빙글빙글 회전목마', 'http://192.168.55.21:8080/uploaded/binglebingle.jpg', 20, '아이부터 어른까지 누구나 즐길 수 있는 아기자기한 회전목마입니다.', true, '어린이', 0),
+('4D 슈팅 어드벤처', 'http://192.168.55.21:8080/uploaded/4dshot.jpg', 16, '움직이는 좌석과 실감나는 효과! 직접 쏘며 즐기는 4D 체험형 어트랙션.', true, '가족', 0),
+('범퍼카 레이스', 'http://192.168.55.21:8080/uploaded/bumbercar.jpg', 24, '친구들과 부딪히며 스트레스를 날릴 수 있는 인기 만점 범퍼카!', true, '어린이', 0),
+('스카이 레이싱', 'http://192.168.55.21:8080/uploaded/skyracing.jpg', 12, '하늘을 나는 듯한 스피드! 짜릿한 공중 레이싱 어트랙션.', true, '스릴', 0),
+('바이킹', 'http://192.168.55.21:8080/uploaded/viking.jpg', 32, '앞뒤로 크게 흔들리는 전통의 공포! 스릴을 즐기는 분께 추천.', true, '스릴', 0),
+('롤러코스터', 'http://192.168.55.21:8080/uploaded/rollercost.png', 20, '급강하와 급회전을 동시에! 놀이공원의 꽃, 롤러코스터.', true, '스릴', 0),
+('메가 스윙', 'http://192.168.55.21:8080/uploaded/megaswing.jpg', 16, '거대한 그네가 하늘 끝까지! 아찔한 높이를 경험하세요.', true, '스릴', 0),
+('워터 슬라이드', 'http://192.168.55.21:8080/uploaded/waterslide.jpg', 30, '시원한 물과 함께 즐기는 여름 한정 인기 어트랙션!', true, '가족', 0),
+('대관람차', 'http://192.168.55.21:8080/uploaded/ferriswhell.jpg', 40, '놀이공원을 한눈에! 연인과 함께 타기 좋은 로맨틱 어트랙션.', true, '가족', 0);
+
+-- orders/order_detail dummy data (snapshot)
+
+INSERT INTO orders (order_id, user_id, order_store, order_received, order_time, order_received_time) VALUES (1, 'aa', 1, 0, '2025-12-21 15:07:10', NULL);
+INSERT INTO orders (order_id, user_id, order_store, order_received, order_time, order_received_time) VALUES (2, 'bb', 3, 0, '2025-12-21 15:07:45', NULL);
+INSERT INTO orders (order_id, user_id, order_store, order_received, order_time, order_received_time) VALUES (3, 'dd', 1, 0, '2025-12-21 15:07:58', NULL);
+INSERT INTO orders (order_id, user_id, order_store, order_received, order_time, order_received_time) VALUES (4, 'ee', 2, 1, '2025-12-21 15:08:11', '2025-12-21 15:09:19');
+INSERT INTO orders (order_id, user_id, order_store, order_received, order_time, order_received_time) VALUES (5, 'ff', 1, 0, '2025-12-21 15:41:11', NULL);
+
+INSERT INTO order_detail (detail_id, order_id, item_id, order_quantity, detail_review) VALUES (1, 1, 1, 2, 0);
+INSERT INTO order_detail (detail_id, order_id, item_id, order_quantity, detail_review) VALUES (2, 1, 2, 2, 0);
+INSERT INTO order_detail (detail_id, order_id, item_id, order_quantity, detail_review) VALUES (3, 1, 4, 2, 0);
+INSERT INTO order_detail (detail_id, order_id, item_id, order_quantity, detail_review) VALUES (4, 2, 6, 2, 0);
+INSERT INTO order_detail (detail_id, order_id, item_id, order_quantity, detail_review) VALUES (5, 2, 2, 2, 0);
+INSERT INTO order_detail (detail_id, order_id, item_id, order_quantity, detail_review) VALUES (6, 2, 4, 2, 0);
+INSERT INTO order_detail (detail_id, order_id, item_id, order_quantity, detail_review) VALUES (7, 3, 6, 2, 0);
+INSERT INTO order_detail (detail_id, order_id, item_id, order_quantity, detail_review) VALUES (8, 3, 7, 2, 0);
+INSERT INTO order_detail (detail_id, order_id, item_id, order_quantity, detail_review) VALUES (9, 3, 5, 2, 0);
+INSERT INTO order_detail (detail_id, order_id, item_id, order_quantity, detail_review) VALUES (10, 4, 1, 2, 0);
+INSERT INTO order_detail (detail_id, order_id, item_id, order_quantity, detail_review) VALUES (11, 4, 7, 2, 0);
+INSERT INTO order_detail (detail_id, order_id, item_id, order_quantity, detail_review) VALUES (12, 4, 5, 2, 0);
+INSERT INTO order_detail (detail_id, order_id, item_id, order_quantity, detail_review) VALUES (13, 5, 3, 2, 0);
+INSERT INTO order_detail (detail_id, order_id, item_id, order_quantity, detail_review) VALUES (14, 5, 7, 2, 0);
+INSERT INTO order_detail (detail_id, order_id, item_id, order_quantity, detail_review) VALUES (15, 5, 5, 2, 0);
