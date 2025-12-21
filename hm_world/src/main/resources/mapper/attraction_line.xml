@@ -9,10 +9,17 @@
 		values (#{attId});
 	</insert>
 
-	<select id="selectByAttraction" parameterType="int" resultType="com.ssafy.hm.dto.AttractionLine">
+	<select id="selectById" parameterType="int" resultType="com.ssafy.hm.dto.AttractionLine">
 		SELECT line_id AS lineId, att_id AS attId
         FROM attraction_line
         WHERE line_id = #{lineId}
+	</select>
+
+	<select id="selectByAttId" parameterType="int" resultType="com.ssafy.hm.dto.AttractionLine">
+		SELECT line_id AS lineId, att_id AS attId
+        FROM attraction_line
+        WHERE att_id = #{attId}
+        ORDER BY line_id
 	</select>
 
 	<delete id="delete" parameterType="int">

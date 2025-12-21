@@ -56,6 +56,18 @@ class OrderViewModelFactory : ViewModelProvider.Factory {
     }
 }
 
+class AdminOrderViewModelFactory : ViewModelProvider.Factory {
+    private val orderRepo = OrderRepository(NetworkModule.api)
+    private val accountRepo = AccountRepository(NetworkModule.api)
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(AdminOrderViewModel::class.java)) {
+            return AdminOrderViewModel(orderRepo, accountRepo) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class: $modelClass")
+    }
+}
+
 class FriendViewModelFactory : ViewModelProvider.Factory {
     private val friendRepo = FriendRepository(NetworkModule.api)
     @Suppress("UNCHECKED_CAST")
@@ -73,6 +85,18 @@ class LineViewModelFactory : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(LineViewModel::class.java)) {
             return LineViewModel(lineRepo) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class: $modelClass")
+    }
+}
+
+class AdminAttractionLineViewModelFactory : ViewModelProvider.Factory {
+    private val lineRepo = LineRepository(NetworkModule.api)
+    private val accountRepo = AccountRepository(NetworkModule.api)
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(AdminAttractionLineViewModel::class.java)) {
+            return AdminAttractionLineViewModel(lineRepo, accountRepo) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class: $modelClass")
     }

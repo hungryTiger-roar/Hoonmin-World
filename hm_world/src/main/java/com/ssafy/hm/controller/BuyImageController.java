@@ -19,7 +19,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/buy-images")
-@Tag(name = "buy image", description = "buy page carousel image management")
+@Tag(name = "구매 캐러셀 이미지", description = "구매 페이지 캐러셀 이미지 관리")
 public class BuyImageController {
 
 	private final BuyImageService buyImageService;
@@ -29,13 +29,13 @@ public class BuyImageController {
 	}
 
 	@GetMapping
-	@Operation(summary = "list buy images")
+	@Operation(summary = "구매 캐러셀 이미지 목록 조회")
 	public ResponseEntity<List<BuyImage>> list() {
 		return ResponseEntity.ok(buyImageService.getAll());
 	}
 
 	@PostMapping
-	@Operation(summary = "create buy image")
+	@Operation(summary = "구매 캐러셀 이미지 등록")
 	public ResponseEntity<?> create(@RequestBody BuyImage image) {
 		return buyImageService.create(image)
 				? ResponseEntity.ok(image)
@@ -43,7 +43,7 @@ public class BuyImageController {
 	}
 
 	@DeleteMapping("/{buyId}")
-	@Operation(summary = "delete buy image")
+	@Operation(summary = "구매 캐러셀 이미지 삭제")
 	public ResponseEntity<Void> delete(@PathVariable Integer buyId) {
 		return buyImageService.remove(buyId)
 				? ResponseEntity.noContent().build()

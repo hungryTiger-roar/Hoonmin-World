@@ -78,6 +78,15 @@ public class AttractionLineServiceImpl implements AttractionLineService {
     }
 
     @Override
+    public List<AttractionLine> getLinesByAttraction(Integer attId) {
+        List<AttractionLine> lines = lineRepo.selectByAttId(attId);
+        for (AttractionLine line : lines) {
+            line.setMembers(memberRepo.selectByLineId(line.getLineId()));
+        }
+        return lines;
+    }
+
+    @Override
     public List<AttractionLineMember> getMembers(Integer lineId) {
         return memberRepo.selectByLineId(lineId);
     }
