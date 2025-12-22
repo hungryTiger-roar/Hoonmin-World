@@ -37,7 +37,7 @@ class OrderViewModel(
     fun addToCart(item: Item) {
         val updated = _state.value.cart.toMutableMap()
         updated[item] = (updated[item] ?: 0) + 1
-        _state.update { it.copy(cart = updated, toast = "${item.itemName} ?닿?") }
+        _state.update { it.copy(cart = updated, toast = "${item.itemName} 장바구니에 담겼습니다.") }
     }
 
     fun updateCart(item: Item, qty: Int) {
@@ -60,7 +60,7 @@ class OrderViewModel(
                 val req = OrderCreateRequest(userId = user, orderStore = store, details = details)
                 orderRepo.createOrder(req)
             }.onSuccess {
-                _state.update { it.copy(cart = emptyMap(), toast = "二쇰Ц?꾨즺") }
+                _state.update { it.copy(cart = emptyMap(), toast = "주문이 완료되었습니다.") }
                 loadOrders()
             }.onFailure { e ->
                 _state.update { it.copy(error = e.message) }
@@ -91,7 +91,7 @@ class OrderViewModel(
             runCatching { orderRepo.receiveOrder(orderId) }
                 .onSuccess {
                     loadOrders()
-                    _state.update { it.copy(toast = "?섎졊 ?꾨즺 泥섎━") }
+                    _state.update { it.copy(toast = "수령 완료 처리되었습니다.") }
                 }
                 .onFailure { e -> _state.update { it.copy(error = e.message) } }
         }

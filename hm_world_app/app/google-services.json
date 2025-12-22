@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "790633140702",
+    "project_id": "hmworld-3c26d",
+    "storage_bucket": "hmworld-3c26d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:790633140702:android:342f0e0de5612bb7d3cd4f",
+        "android_client_info": {
+          "package_name": "com.ssafy.hm"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCMfJhGmez6s4wjGNOAP9XDwnjDd2r2tbw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

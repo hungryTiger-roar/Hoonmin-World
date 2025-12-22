@@ -3,6 +3,7 @@ package com.ssafy.hm.data.network
 import com.ssafy.hm.data.model.*
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody
+import retrofit2.Response
 import retrofit2.http.*
 
 interface HmApi {
@@ -158,4 +159,28 @@ interface HmApi {
     @Multipart
     @POST("/upload")
     suspend fun uploadImage(@Part upload_file: MultipartBody.Part): ResponseBody
+
+    @POST("/notifications/token")
+    suspend fun registerFcmToken(@Body request: FcmTokenRequest): Void
+
+    @POST("/notifications/send")
+    suspend fun sendNotification(@Body request: NotificationSendRequest): Response<Unit>
+
+    @POST("/notifications/schedule")
+    suspend fun scheduleNotification(@Body request: NotificationScheduleRequest): Response<Unit>
+
+    @POST("/notifications/repeat")
+    suspend fun repeatNotification(@Body request: NotificationRepeatRequest): Response<Unit>
+
+    @GET("/notifications/scheduled")
+    suspend fun getScheduledNotifications(): List<PushNotification>
+
+    @GET("/notifications/repeat")
+    suspend fun getRepeatNotifications(): List<PushNotification>
+
+    @PUT("/notifications/{id}")
+    suspend fun updateNotification(@Path("id") id: Int, @Body request: NotificationUpdateRequest): Response<Unit>
+
+    @DELETE("/notifications/{id}")
+    suspend fun deleteNotification(@Path("id") id: Int): Response<Unit>
 }
