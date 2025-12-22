@@ -171,6 +171,31 @@ CREATE TABLE friend (
         ON UPDATE CASCADE
 );
 
+CREATE TABLE fcm_token (
+    token VARCHAR(255) PRIMARY KEY,
+    user_id VARCHAR(50) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_fcm_token_user
+        FOREIGN KEY (user_id) REFERENCES account(user_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+
+CREATE TABLE push_notification (
+    push_id INT AUTO_INCREMENT PRIMARY KEY,
+    push_title VARCHAR(200) NOT NULL,
+    push_body TEXT NOT NULL,
+    push_type VARCHAR(20) NOT NULL,
+    scheduled_at DATETIME NULL,
+    repeat_days VARCHAR(30) NULL,
+    repeat_time VARCHAR(5) NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    last_sent_at DATETIME NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
 INSERT INTO account (user_id, pw, name, phone, birth, att_id, ticket) VALUES
 ('aa', '11', '김민수', '010-1111-1111', '1995-01-12', NULL, FALSE),
 ('bb', '11', '이서연', '010-2222-2222', '1998-03-25', NULL, TRUE),
@@ -198,19 +223,28 @@ VALUES
 ('아이스크림', 4000, 120, 'icecream.png', '여름에 인기 많은 아이스크림', '푸드'),
 ('캐릭터 풍선', 8000, 60, 'balloon.png', '아이들에게 인기 많은 캐릭터 풍선', '굿즈');
 
+-- 경훈 홈 : 192.168.55.21 경훈 싸피 : 192.168.32.102
 INSERT INTO attraction
 (att_name, att_pic, att_capacity, att_comment, att_able, att_category, att_total)
 VALUES
-('빙글빙글 회전목마', 'http://192.168.55.21:8080/uploaded/binglebingle.jpg', 20, '아이부터 어른까지 누구나 즐길 수 있는 아기자기한 회전목마입니다.', true, '어린이', 0),
-('4D 슈팅 어드벤처', 'http://192.168.55.21:8080/uploaded/4dshot.jpg', 16, '움직이는 좌석과 실감나는 효과! 직접 쏘며 즐기는 4D 체험형 어트랙션.', true, '가족', 0),
-('범퍼카 레이스', 'http://192.168.55.21:8080/uploaded/bumbercar.jpg', 24, '친구들과 부딪히며 스트레스를 날릴 수 있는 인기 만점 범퍼카!', true, '어린이', 0),
-('스카이 레이싱', 'http://192.168.55.21:8080/uploaded/skyracing.jpg', 12, '하늘을 나는 듯한 스피드! 짜릿한 공중 레이싱 어트랙션.', true, '스릴', 0),
-('바이킹', 'http://192.168.55.21:8080/uploaded/viking.jpg', 32, '앞뒤로 크게 흔들리는 전통의 공포! 스릴을 즐기는 분께 추천.', true, '스릴', 0),
-('롤러코스터', 'http://192.168.55.21:8080/uploaded/rollercost.png', 20, '급강하와 급회전을 동시에! 놀이공원의 꽃, 롤러코스터.', true, '스릴', 0),
-('메가 스윙', 'http://192.168.55.21:8080/uploaded/megaswing.jpg', 16, '거대한 그네가 하늘 끝까지! 아찔한 높이를 경험하세요.', true, '스릴', 0),
-('워터 슬라이드', 'http://192.168.55.21:8080/uploaded/waterslide.jpg', 30, '시원한 물과 함께 즐기는 여름 한정 인기 어트랙션!', true, '가족', 0),
-('대관람차', 'http://192.168.55.21:8080/uploaded/ferriswhell.jpg', 40, '놀이공원을 한눈에! 연인과 함께 타기 좋은 로맨틱 어트랙션.', true, '가족', 0);
+('빙글빙글 회전목마', 'http://192.168.32.102:8080/uploaded/binglebingle.jpg', 20, '아이부터 어른까지 누구나 즐길 수 있는 아기자기한 회전목마입니다.', true, '어린이', 0),
+('4D 슈팅 어드벤처', 'http://192.168.32.102:8080/uploaded/4dshot.jpg', 16, '움직이는 좌석과 실감나는 효과! 직접 쏘며 즐기는 4D 체험형 어트랙션.', true, '가족', 0),
+('범퍼카 레이스', 'http://192.168.32.102:8080/uploaded/bumbercar.jpg', 24, '친구들과 부딪히며 스트레스를 날릴 수 있는 인기 만점 범퍼카!', true, '어린이', 0),
+('스카이 레이싱', 'http://192.168.32.102:8080/uploaded/skyracing.jpg', 12, '하늘을 나는 듯한 스피드! 짜릿한 공중 레이싱 어트랙션.', true, '스릴', 0),
+('바이킹', 'http://192.168.32.102:8080/uploaded/viking.jpg', 32, '앞뒤로 크게 흔들리는 전통의 공포! 스릴을 즐기는 분께 추천.', true, '스릴', 0),
+('롤러코스터', 'http://192.168.32.102:8080/uploaded/rollercost.png', 20, '급강하와 급회전을 동시에! 놀이공원의 꽃, 롤러코스터.', true, '스릴', 0),
+('메가 스윙', 'http://192.168.32.102:8080/uploaded/megaswing.jpg', 16, '거대한 그네가 하늘 끝까지! 아찔한 높이를 경험하세요.', true, '스릴', 0),
+('워터 슬라이드', 'http://192.168.32.102:8080/uploaded/waterslide.jpg', 30, '시원한 물과 함께 즐기는 여름 한정 인기 어트랙션!', true, '가족', 0),
+('대관람차', 'http://192.168.32.102:8080/uploaded/ferriswhell.jpg', 40, '놀이공원을 한눈에! 연인과 함께 타기 좋은 로맨틱 어트랙션.', true, '가족', 0);
 
+Insert into home_image (home_image) values
+('http://192.168.32.102:8080/uploaded/banner1.jpg'),
+('http://192.168.32.102:8080/uploaded/banner2.jpg'),
+('http://192.168.32.102:8080/uploaded/banner3.jpg');
+
+Insert into buy_image (buy_image) values
+('http://192.168.32.102:8080/uploaded/itembanner1.jpg'),
+('http://192.168.32.102:8080/uploaded/itembanner2.jpg');
 -- orders/order_detail dummy data (snapshot)
 
 INSERT INTO orders (order_id, user_id, order_store, order_received, order_time, order_received_time) VALUES (1, 'aa', 1, 0, '2025-12-21 15:07:10', NULL);
@@ -234,3 +268,19 @@ INSERT INTO order_detail (detail_id, order_id, item_id, order_quantity, detail_r
 INSERT INTO order_detail (detail_id, order_id, item_id, order_quantity, detail_review) VALUES (13, 5, 3, 2, 0);
 INSERT INTO order_detail (detail_id, order_id, item_id, order_quantity, detail_review) VALUES (14, 5, 7, 2, 0);
 INSERT INTO order_detail (detail_id, order_id, item_id, order_quantity, detail_review) VALUES (15, 5, 5, 2, 0);
+
+INSERT INTO home_board (board_title, board_content, board_date)
+VALUES
+('📢 놀이공원 오픈 안내', '훈민월드가 드디어 오픈했습니다! 다양한 어트랙션과 즐길 거리가 여러분을 기다립니다.', '2024-01-05 10:00:00'),
+('🎡 대관람차 점검 완료 안내', '대관람차 정기 점검이 완료되어 정상 운영을 시작합니다.', '2024-03-12 09:30:00'),
+('⚠️ 바이킹 임시 운행 중단 안내', '안전 점검으로 인해 바이킹 어트랙션 운행이 일시 중단됩니다.', '2024-06-18 14:00:00'),
+('🎉 여름 시즌 이벤트 시작!', '여름 시즌을 맞아 다양한 할인 이벤트와 공연이 진행됩니다.', '2024-07-01 11:00:00'),
+('🚧 워터 슬라이드 정비 공지', '시설 정비로 인해 워터 슬라이드 운영이 잠시 중단됩니다.', '2024-09-10 16:30:00'),
+('🎃 할로윈 특별 행사 안내', '할로윈 기간 동안 특별 퍼레이드와 코스튬 이벤트가 열립니다.', '2024-10-25 13:00:00'),
+('❄️ 겨울 시즌 운영 시간 변경 안내', '겨울 시즌에는 놀이공원 운영 시간이 단축됩니다.', '2024-12-05 10:00:00'),
+('🎆 새해맞이 불꽃놀이 안내', '2025년 새해를 맞아 대규모 불꽃놀이 행사가 진행됩니다.', '2024-12-31 23:00:00'),
+('👨‍👩‍👧‍👦 패밀리 데이 이벤트 안내', '가족 방문객을 위한 패밀리 데이 특별 혜택을 제공합니다.', '2025-03-15 12:00:00'),
+('🔔 놀이공원 정상 운영 안내', '현재 모든 어트랙션이 정상 운영 중입니다. 즐거운 관람 되세요!', '2025-12-22 09:00:00');
+
+
+

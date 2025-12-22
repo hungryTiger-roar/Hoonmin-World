@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -35,11 +37,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -47,11 +46,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.safeDrawing
 import com.ssafy.hm.data.model.Account
-import com.ssafy.hm.R
-import com.ssafy.hm.ui.theme.AuroraBlue
-import com.ssafy.hm.ui.theme.AuroraGlow
 import com.ssafy.hm.ui.theme.AuroraPink
 import com.ssafy.hm.ui.theme.AuroraPurple
 import kotlinx.coroutines.launch
@@ -79,32 +75,9 @@ fun SignUpScreen(
     var checking by remember { mutableStateOf(false) }
     val calendar = remember { Calendar.getInstance() }
 
-    val gradient = remember {
-        Brush.verticalGradient(
-            listOf(
-                AuroraPurple.copy(alpha = 0.7f),
-                AuroraGlow.copy(alpha = 0.7f),
-                AuroraPink.copy(alpha = 0.65f),
-                AuroraBlue.copy(alpha = 0.6f)
-            )
-        )
-    }
-
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.main),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop,
-            alpha = 0.20f
-        )
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(gradient)
-        )
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -113,8 +86,9 @@ fun SignUpScreen(
         Surface(
             modifier = Modifier
                 .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.safeDrawing)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
-            color = Color.White.copy(alpha = 0.22f),
+            color = Color.White.copy(alpha = 0.24f),
             shape = RoundedCornerShape(20.dp)
         ) {
             Column(
@@ -313,7 +287,7 @@ private fun RequiredLabel(text: String) {
 
 @Composable
 private fun textFieldColors() = OutlinedTextFieldDefaults.colors(
-    focusedBorderColor = Color.Transparent,
+    focusedBorderColor = Color.White,
     unfocusedBorderColor = Color.Transparent,
     focusedLabelColor = AuroraPink,
     unfocusedLabelColor = Color.White.copy(alpha = 0.8f),

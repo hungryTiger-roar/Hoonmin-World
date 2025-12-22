@@ -44,8 +44,8 @@ import androidx.compose.ui.unit.sp
 import com.ssafy.hm.data.model.Account
 import com.ssafy.hm.data.model.Attraction
 import com.ssafy.hm.data.model.AttractionLine
-import com.ssafy.hm.ui.theme.AuroraPurple
 import com.ssafy.hm.ui.state.NfcTagBus
+import com.ssafy.hm.ui.theme.AuroraPurple
 import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -74,7 +74,7 @@ fun AdminAttractionLineManagementScreen(
 
     fun fillBoarding() {
         if (capacity <= 0) {
-            Toast.makeText(context, "최대 탑승 인원을 확인해주세요.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "최대 탑승 인원을 확인해 주세요.", Toast.LENGTH_SHORT).show()
             return
         }
         val sorted = lines.sortedBy { it.lineId }
@@ -90,7 +90,7 @@ fun AdminAttractionLineManagementScreen(
             if (total >= capacity) break
         }
         if (selected.isEmpty()) {
-            Toast.makeText(context, "추가가능한 그룹이 없습니다", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "추가 가능한 그룹이 없습니다.", Toast.LENGTH_SHORT).show()
             return
         }
         boardingLineIds.clear()
@@ -125,10 +125,15 @@ fun AdminAttractionLineManagementScreen(
         if (target != null) {
             if (!readyMembers.contains(userId)) {
                 readyMembers.add(userId)
+                Toast.makeText(context, "NFC 확인 완료", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "이미 준비 완료된 인원입니다.", Toast.LENGTH_SHORT).show()
             }
+            missingDialogName = null
         } else {
             val name = latestAccounts[userId]?.name ?: userId
             missingDialogName = name
+            Toast.makeText(context, "탑승 명단에 없는 태그입니다.", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -145,7 +150,7 @@ fun AdminAttractionLineManagementScreen(
                 Button(onClick = { missingDialogName = null }) { Text("확인") }
             },
             title = { Text("탑승 명단 없음") },
-            text = { Text("${missingDialogName}님은 현재 탑승 명단에 없습니다") }
+            text = { Text("${missingDialogName}님이 현재 탑승 명단에 없습니다.") }
         )
     }
 
@@ -195,7 +200,9 @@ fun AdminAttractionLineManagementScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("배치 인원 ${boardingLineIds.sumOf { id -> lines.firstOrNull { it.lineId == id }?.members?.size ?: 0 }} / ${capacity}명")
+                    Text(
+                        "탑승 인원 ${boardingLineIds.sumOf { id -> lines.firstOrNull { it.lineId == id }?.members?.size ?: 0 }} / ${capacity}명"
+                    )
                     Row {
                         Button(
                             onClick = { fillBoarding() },
@@ -248,7 +255,7 @@ fun AdminAttractionLineManagementScreen(
                                 ) {
                                     Column {
                                         Text("$name · ${size}명", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                                        Text("연락처 끝자리 $phoneSuffix", fontSize = 12.sp, color = Color.Gray)
+                                        Text("연락처 뒷번호: $phoneSuffix", fontSize = 12.sp, color = Color.Gray)
                                     }
                                     Button(
                                         onClick = { onNoShowLine(line.lineId) },
@@ -261,8 +268,8 @@ fun AdminAttractionLineManagementScreen(
                                 if (expandedLineId == line.lineId) {
                                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                         line.members.forEach { member ->
-                                            val account = accounts[member.userId]
-                                            val memberName = account?.name ?: member.userId
+                                            val memberAccount = accounts[member.userId]
+                                            val memberName = memberAccount?.name ?: member.userId
                                             val ready = readyMembers.contains(member.userId)
                                             Row(
                                                 modifier = Modifier.fillMaxWidth(),

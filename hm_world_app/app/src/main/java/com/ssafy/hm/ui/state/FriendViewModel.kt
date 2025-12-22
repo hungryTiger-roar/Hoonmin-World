@@ -51,7 +51,7 @@ class FriendViewModel(
                 friendRepo.addFriend(Friend(id = 0, userId = user, friendId = friendId, friendParty = false))
             }.onSuccess {
                 loadFriends()
-                _state.update { it.copy(toast = "儦𨁈筋 黺𥯆?") }
+                _state.update { it.copy(toast = "친구가 추가되었습니다.") }
             }.onFailure { e ->
                 _state.update { it.copy(error = e.message) }
             }
