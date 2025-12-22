@@ -25,6 +25,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.navigationBarsPadding
 import com.ssafy.hm.data.model.Item
 import com.ssafy.hm.ui.state.CatalogState
 import com.ssafy.hm.ui.state.FriendState
@@ -51,6 +53,7 @@ fun CustomerRootScreen(
     onCreateOrder: (Int) -> Unit,
     onReceiveOrder: (Int) -> Unit,
     onBoardClick: (HomeBoard) -> Unit,
+    onTicketPurchaseClick: () -> Unit,
     onReserveAttraction: (Int, List<String>) -> Unit,
     onAddFriend: (String) -> Unit,
     onRemoveFriend: (Int) -> Unit,
@@ -78,12 +81,12 @@ fun CustomerRootScreen(
         }
     }
 
-    val navItems = listOf("어트랙션", "상품", "홈", "지도", "내정보")
+    val navItems = listOf("어트랙션 예약", "상품 구매", "홈", "지도", "내정보")
     val navIcons = listOf(Icons.Default.Info, Icons.Default.AddShoppingCart, Icons.Default.Info, Icons.Default.Map, Icons.Default.Person)
 
     Scaffold(
         bottomBar = {
-            NavigationBar {
+            NavigationBar(modifier = Modifier.navigationBarsPadding()) {
                 navItems.forEachIndexed { idx, label ->
                     NavigationBarItem(
                         selected = tab == idx,
@@ -116,7 +119,8 @@ fun CustomerRootScreen(
                 boards = homeState.boards,
                 orderState = orderState,
                 paddingValues = innerPadding,
-                onBoardClick = onBoardClick
+                onBoardClick = onBoardClick,
+                onTicketPurchaseClick = onTicketPurchaseClick
             )
             3 -> MapTab(innerPadding)
             else -> ProfileTab(
@@ -148,7 +152,7 @@ fun CustomerRootScreen(
         }
         catalogState.selectedAttraction?.let {
             AttractionDetailDialog(it, catalogState.attractionReviews, onReserve = {
-                onReserveAttraction(it.attId, friendState.availableFriends.map { f -> f.friendId })
+                onReserveAttraction(it.attId, friendState.availableFriends.map { f -> f.friend.friendId })
             }) { clearSelection() }
         }
         if (showChat) ChatbotOverlay { showChat = false }

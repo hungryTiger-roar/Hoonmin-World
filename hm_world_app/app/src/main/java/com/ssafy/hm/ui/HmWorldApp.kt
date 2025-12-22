@@ -59,6 +59,7 @@ import com.ssafy.hm.ui.state.LineViewModel
 import com.ssafy.hm.ui.state.LineViewModelFactory
 import com.ssafy.hm.ui.state.OrderViewModel
 import com.ssafy.hm.ui.state.OrderViewModelFactory
+import com.ssafy.hm.ui.screens.customer.TicketPurchaseScreen
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.ssafy.hm.ui.screens.customer.HomeBoardScreen
@@ -454,6 +455,7 @@ private fun AppNavHost(
                 onCreateOrder = { orderVm.createOrder(it) },
                 onReceiveOrder = { orderVm.receiveOrder(it) },
                 onBoardClick = { board: HomeBoard -> navController.navigate(NavRoutes.NoticeDetail.create(board.boardId)) },
+                onTicketPurchaseClick = { navController.navigate(NavRoutes.TicketPurchase.route) },
                 onReserveAttraction = { attId, userIds -> lineVm.createLine(attId, userIds) },
                 onAddFriend = { friendVm.addFriend(it) },
                 onRemoveFriend = { friendVm.removeFriend(it) },
@@ -478,6 +480,11 @@ private fun AppNavHost(
                     navController.popBackStack()
                 }
             }
+        }
+        composable(NavRoutes.TicketPurchase.route) {
+            TicketPurchaseScreen(
+                onBack = { navController.popBackStack() }
+            )
         }
     }
 }
