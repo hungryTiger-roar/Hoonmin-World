@@ -153,4 +153,41 @@ class CatalogViewModel(
                 }
         }
     }
+
+    fun createItem(item: Item) {
+        viewModelScope.launch {
+            runCatching { itemRepo.createItem(item) }
+                .onSuccess { created ->
+                    _state.update { it.copy(items = it.items + created) }
+                    refresh()
+                }
+                .onFailure { e -> _state.update { it.copy(error = e.message) } }
+        }
+    }
+
+    fun updateItem(itemId: Int, item: Item) {
+        viewModelScope.launch {
+            runCatching { itemRepo.updateItem(item.copy(itemId = itemId)) }
+                .onSuccess { updated ->
+                    _state.update {
+                        it.copy(items = it.items.map { it2 -> if (it2.itemId == itemId) updated else it2 })
+                    }
+                    refresh()
+                }
+                .onFailure { e -> _state.update { it.copy(error = e.message) } }
+        }
+    }
+
+    fun deleteItem(itemId: Int) {
+        viewModelScope.launch {
+            val prev = _state.value
+            _state.update { it.copy(items = it.items.filterNot { it.itemId == itemId }) }
+            runCatching { itemRepo.deleteItem(itemId) }
+                .onSuccess { refresh() }
+                .onFailure { e ->
+                    _state.value = prev.copy(error = e.message)
+                    refresh()
+                }
+        }
+    }
 }

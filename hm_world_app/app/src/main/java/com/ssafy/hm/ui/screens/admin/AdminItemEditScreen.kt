@@ -32,7 +32,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -50,31 +49,33 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.ssafy.hm.data.model.Attraction
-import com.ssafy.hm.ui.theme.AuroraPurple
+import com.ssafy.hm.data.model.Item
 import com.ssafy.hm.ui.state.UploadViewModel
 import com.ssafy.hm.ui.state.UploadViewModelFactory
+import com.ssafy.hm.ui.theme.AuroraPurple
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 import java.io.FileOutputStream
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdminAttractionEditScreen(
-    attraction: Attraction?,
+fun AdminItemEditScreen(
+    item: Item?,
     onBack: () -> Unit,
-    onSave: (Attraction) -> Unit,
+    onSave: (Item) -> Unit,
     uploadVm: UploadViewModel = viewModel(factory = UploadViewModelFactory())
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
-    var name by remember { mutableStateOf(attraction?.attName.orEmpty()) }
-    var capacity by remember { mutableStateOf(attraction?.attCapacity?.toString().orEmpty()) }
-    var comment by remember { mutableStateOf(attraction?.attComment.orEmpty()) }
-    var able by remember { mutableStateOf(attraction?.attAble ?: true) }
-    var category by remember { mutableStateOf(attraction?.attCategory ?: "스릴") }
+    var name by remember { mutableStateOf(item?.itemName.orEmpty()) }
+    var price by remember { mutableStateOf(item?.itemPrice?.toString().orEmpty()) }
+    var count by remember { mutableStateOf(item?.itemCount?.toString().orEmpty()) }
+    var comment by remember { mutableStateOf(item?.itemComment.orEmpty()) }
+    var category by remember { mutableStateOf(item?.itemCategory ?: "시그니쳐") }
     var selectedUri by remember { mutableStateOf<Uri?>(null) }
     var pendingCameraLaunch by remember { mutableStateOf(false) }
     var cameraFile by remember { mutableStateOf<File?>(null) }
@@ -166,7 +167,7 @@ fun AdminAttractionEditScreen(
 
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
-            title = { Text(if (attraction == null) "놀이기구 추가" else "놀이기구 수정", fontWeight = FontWeight.Bold) },
+            title = { Text(if (item == null) "상품 추가" else "상품 수정", fontWeight = FontWeight.Bold) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
                     Icon(Icons.Default.ArrowBack, contentDescription = "뒤로가기")
@@ -185,7 +186,7 @@ fun AdminAttractionEditScreen(
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("어트랙션 이름") },
+                label = { Text("상품 이름") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedTextColor = Color.White,
@@ -197,25 +198,25 @@ fun AdminAttractionEditScreen(
                     cursorColor = Color.White
                 )
             )
-            Button(
-                onClick = { showPicker = true },
+            OutlinedTextField(
+                value = price,
+                onValueChange = { price = it },
+                label = { Text("가격") },
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = AuroraPurple, contentColor = Color.White)
-            ) {
-                Text("이미지 등록")
-            }
-            val previewUrl = selectedUri ?: attraction?.attPic ?: DEFAULT_ATTRACTION_IMAGE_URL
-            AsyncImage(
-                model = previewUrl,
-                contentDescription = "미리보기",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp)
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    focusedBorderColor = Color.White,
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.7f),
+                    focusedLabelColor = Color.White,
+                    unfocusedLabelColor = Color.White.copy(alpha = 0.7f),
+                    cursorColor = Color.White
+                )
             )
             OutlinedTextField(
-                value = capacity,
-                onValueChange = { capacity = it },
-                label = { Text("총 정원 수") },
+                value = count,
+                onValueChange = { count = it },
+                label = { Text("수량") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedTextColor = Color.White,
@@ -244,23 +245,37 @@ fun AdminAttractionEditScreen(
                     cursorColor = Color.White
                 )
             )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("운영 유무")
-                Spacer(modifier = Modifier.width(8.dp))
-                Switch(checked = able, onCheckedChange = { able = it })
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(if (able) "운영 중" else "운영 중단")
+            Button(
+                onClick = { showPicker = true },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = AuroraPurple, contentColor = Color.White)
+            ) {
+                Text("이미지 등록")
             }
+            val previewUrl = selectedUri ?: item?.itemPic ?: DEFAULT_ITEM_IMAGE_URL
+            AsyncImage(
+                model = previewUrl,
+                contentDescription = "미리보기",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp)
+            )
             Text("카테고리")
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                RadioButton(selected = category == "스릴", onClick = { category = "스릴" })
-                Text("스릴")
-                Spacer(modifier = Modifier.width(12.dp))
-                RadioButton(selected = category == "가족", onClick = { category = "가족" })
-                Text("가족")
-                Spacer(modifier = Modifier.width(12.dp))
-                RadioButton(selected = category == "어린이", onClick = { category = "어린이" })
-                Text("어린이")
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    RadioButton(selected = category == "시그니쳐", onClick = { category = "시그니쳐" })
+                    Text("시그니쳐")
+                    Spacer(modifier = Modifier.width(12.dp))
+                    RadioButton(selected = category == "악세서리", onClick = { category = "악세서리" })
+                    Text("악세서리")
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    RadioButton(selected = category == "기념품", onClick = { category = "기념품" })
+                    Text("기념품")
+                    Spacer(modifier = Modifier.width(12.dp))
+                    RadioButton(selected = category == "의류", onClick = { category = "의류" })
+                    Text("의류")
+                }
             }
             Button(
                 onClick = {
@@ -268,22 +283,23 @@ fun AdminAttractionEditScreen(
                     saving = true
                     scope.launch {
                         try {
-                            val cap = capacity.toIntOrNull() ?: 0
+                            val finalPrice = price.toIntOrNull() ?: 0
+                            val finalCount = count.toIntOrNull() ?: 0
                             val link = if (selectedUri != null) {
                                 val part = createMultipart(context, selectedUri!!)
                                 uploadVm.uploadAndGetLink(part)
                             } else {
-                                attraction?.attPic ?: DEFAULT_ATTRACTION_IMAGE_URL
+                                item?.itemPic ?: DEFAULT_ITEM_IMAGE_URL
                             }
-                            val payload = Attraction(
-                                attId = attraction?.attId ?: 0,
-                                attName = name,
-                                attPic = link,
-                                attCapacity = cap,
-                                attComment = comment.ifBlank { null },
-                                attAble = able,
-                                attCategory = category,
-                                attTotal = attraction?.attTotal ?: 0
+                            val payload = Item(
+                                itemId = item?.itemId ?: 0,
+                                itemName = name,
+                                itemPrice = finalPrice,
+                                itemCount = finalCount,
+                                itemPic = link,
+                                itemComment = comment.ifBlank { null },
+                                itemCategory = category,
+                                itemTime = item?.itemTime ?: nowString()
                             )
                             onSave(payload)
                         } catch (e: Exception) {
@@ -303,7 +319,12 @@ fun AdminAttractionEditScreen(
 }
 
 // TODO: pic이 null인 경우 보여줄 기본 이미지 URL을 여기에 넣어주세요.
-private const val DEFAULT_ATTRACTION_IMAGE_URL = "https://example.com/default-attraction.jpg"
+private const val DEFAULT_ITEM_IMAGE_URL = "https://example.com/default-item.jpg"
+
+private fun nowString(): String {
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+    return LocalDateTime.now().format(formatter)
+}
 
 private fun launchCamera(
     context: Context,

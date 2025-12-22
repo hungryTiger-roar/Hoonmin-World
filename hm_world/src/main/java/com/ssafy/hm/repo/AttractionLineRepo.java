@@ -10,5 +10,6 @@ import com.ssafy.hm.dto.AttractionLine;
 public interface AttractionLineRepo {
 	int insert(AttractionLine line);
     AttractionLine selectById(Integer lineId);
+    List<AttractionLine> selectByAttId(Integer attId);
 	int delete(Integer lineId);
 }

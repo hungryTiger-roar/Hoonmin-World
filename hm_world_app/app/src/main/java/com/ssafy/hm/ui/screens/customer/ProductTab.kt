@@ -25,11 +25,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.ssafy.hm.R
 import com.ssafy.hm.data.model.BuyImage
 import com.ssafy.hm.data.model.Item
 import com.ssafy.hm.data.model.ItemReview // Moved this import to the top
@@ -301,13 +303,16 @@ fun ProductCard(item: Item, onAddToCartClick: () -> Unit, onCardClick: () -> Uni
         Column {
             Box(contentAlignment = Alignment.TopEnd) {
                 AsyncImage(
-                    model = item.itemPic,
+                    model = item.itemPic?.takeIf { it.isNotBlank() },
                     contentDescription = item.itemName,
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f)
                         .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(id = R.drawable.noimage),
+                    error = painterResource(id = R.drawable.noimage),
+                    fallback = painterResource(id = R.drawable.noimage)
                 )
                 if (item.itemCategory == "신상품") { // Example condition for "NEW" badge
                      Surface(

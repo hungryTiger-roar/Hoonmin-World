@@ -10,6 +10,7 @@ public interface AttractionLineService {
     Integer createGroupLine(AttractionLineCreateRequest request);
     void leaveGroup(Integer lineId, String userId);
     void deleteLine(Integer lineId);
+    List<AttractionLine> getLinesByAttraction(Integer attId);
     List<AttractionLineMember> getMembers(Integer lineId);
     AttractionLineMember getMember(Integer lineId, String userId);
 }
