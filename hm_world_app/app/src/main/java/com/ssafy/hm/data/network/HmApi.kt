@@ -16,6 +16,9 @@ interface HmApi {
     @GET("/accounts/{userId}")
     suspend fun getAccount(@Path("userId") userId: String): Account
 
+    @GET("/accounts")
+    suspend fun getAccounts(): List<Account>
+
     @GET("/attractions")
     suspend fun getAttractions(): List<Attraction>
 
@@ -88,6 +91,9 @@ interface HmApi {
     @GET("/orders/user/{userId}")
     suspend fun getOrders(@Path("userId") userId: String): List<Orders>
 
+    @GET("/orders")
+    suspend fun getAllOrders(): List<Orders>
+
     @GET("/orders/{orderId}/details")
     suspend fun getOrderDetails(@Path("orderId") orderId: Int): List<OrderDetail>
 
@@ -115,8 +121,14 @@ interface HmApi {
     @POST("/line/{attId}")
     suspend fun createLine(@Path("attId") attId: Int, @Body req: AttractionLineCreateRequest): Int
 
+    @GET("/line/attraction/{attId}")
+    suspend fun getLinesByAttraction(@Path("attId") attId: Int): List<AttractionLine>
+
     @GET("/line/{lineId}/members")
     suspend fun getLineMembers(@Path("lineId") lineId: Int): List<AttractionLineMember>
+
+    @DELETE("/line/{lineId}/member/{userId}")
+    suspend fun deleteLineMember(@Path("lineId") lineId: Int, @Path("userId") userId: String): Void
 
     @DELETE("/line/{lineId}")
     suspend fun deleteLine(@Path("lineId") lineId: Int): Void

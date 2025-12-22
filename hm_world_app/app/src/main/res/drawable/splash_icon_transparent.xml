@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 스플래시 아이콘을 숨기기 위한 투명 drawable -->
+    <solid android:color="@android:color/transparent" />
+</shape>

@@ -18,8 +18,8 @@
 	</select>
 
 	<insert id="insert" parameterType="com.ssafy.hm.dto.Item" useGeneratedKeys="true" keyProperty="itemId">
-		insert into item (item_name, item_price, item_count, item_pic, item_comment)
-		values (#{itemName}, #{itemPrice}, #{itemCount}, #{itemPic}, #{itemComment});
+		insert into item (item_name, item_price, item_count, item_pic, item_comment, item_category)
+		values (#{itemName}, #{itemPrice}, #{itemCount}, #{itemPic}, #{itemComment}, #{itemCategory});
 	</insert>
 
 	<update id="update" parameterType="com.ssafy.hm.dto.Item">
@@ -28,7 +28,8 @@
 		    item_price = #{itemPrice},
 		    item_count = #{itemCount},
 		    item_pic = #{itemPic},
-		    item_comment = #{itemComment}
+		    item_comment = #{itemComment},
+		    item_category = #{itemCategory}
 		where item_id = #{itemId};
 	</update>
 	

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.HmWorld" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.HmWorld.Splash" parent="Theme.HmWorld">
+        <!-- Android 12+: 스플래시 배경색(시스템 스플래시 단계) -->
+        <item name="android:windowSplashScreenBackground">@android:color/black</item>
+        <!-- 시스템 스플래시 아이콘을 투명하게 숨김 -->
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_icon_transparent</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@android:color/transparent</item>
+        <item name="android:windowSplashScreenBrandingImage">@null</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
+        <!-- 앱 컨텐츠가 그려질 때 사용하는 시작 배경 -->
+        <item name="android:windowBackground">@drawable/main</item>
+    </style>
+</resources>

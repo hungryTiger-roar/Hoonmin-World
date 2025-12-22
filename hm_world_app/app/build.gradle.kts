@@ -16,8 +16,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        // 에뮬레이터에서 로컬호스트 접근용 기본 URL (필요시 변경)
-        buildConfigField("String", "BASE_URL", "\"http://192.168.32.102:8080\"")
+        // 에뮬레이터에서 로컬호스트 접근용 기본 URL (필요시 변경) 경훈 : 192.168.55.21, 경훈 싸피 : 192.168.32.102
+        buildConfigField("String", "BASE_URL", "\"http://192.168.55.21:8080\"")
     }
 
     buildTypes {

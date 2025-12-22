@@ -37,7 +37,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -45,7 +47,9 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.Image
 import com.ssafy.hm.data.model.Account
+import com.ssafy.hm.R
 import com.ssafy.hm.ui.theme.AuroraBlue
 import com.ssafy.hm.ui.theme.AuroraGlow
 import com.ssafy.hm.ui.theme.AuroraPink
@@ -78,24 +82,39 @@ fun SignUpScreen(
     val gradient = remember {
         Brush.verticalGradient(
             listOf(
-                AuroraPurple,
-                AuroraGlow,
-                AuroraPink.copy(alpha = 0.9f),
-                AuroraBlue.copy(alpha = 0.8f)
+                AuroraPurple.copy(alpha = 0.7f),
+                AuroraGlow.copy(alpha = 0.7f),
+                AuroraPink.copy(alpha = 0.65f),
+                AuroraBlue.copy(alpha = 0.6f)
             )
         )
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(gradient)
+        modifier = Modifier.fillMaxSize()
     ) {
+        Image(
+            painter = painterResource(id = R.drawable.main),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop,
+            alpha = 0.20f
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(gradient)
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.35f))
+        )
         Surface(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp, vertical = 12.dp),
-            color = Color.White.copy(alpha = 0.14f),
+            color = Color.White.copy(alpha = 0.22f),
             shape = RoundedCornerShape(20.dp)
         ) {
             Column(
@@ -301,8 +320,8 @@ private fun textFieldColors() = OutlinedTextFieldDefaults.colors(
     cursorColor = Color.White,
     focusedTextColor = Color.White,
     unfocusedTextColor = Color.White,
-    focusedContainerColor = Color.White.copy(alpha = 0.08f),
-    unfocusedContainerColor = Color.White.copy(alpha = 0.06f)
+    focusedContainerColor = Color.White.copy(alpha = 0.18f),
+    unfocusedContainerColor = Color.White.copy(alpha = 0.14f)
 )
 
 private fun parseBirth(value: String): Calendar? {

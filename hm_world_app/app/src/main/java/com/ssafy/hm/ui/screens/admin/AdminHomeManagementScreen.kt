@@ -33,7 +33,8 @@ fun AdminHomeManagementScreen(
     onOpenHomeCarouselList: () -> Unit,
     onOpenNoticeList: () -> Unit,
     onOpenBuyCarouselList: () -> Unit,
-    onOpenAttractionList: () -> Unit
+    onOpenAttractionList: () -> Unit,
+    onOpenItemList: () -> Unit
 ) {
     val homeColor = Color(0xFF4FC3F7)
     val productColor = Color(0xFF6A5AE0)
@@ -62,7 +63,7 @@ fun AdminHomeManagementScreen(
             AdminListCard("홈 화면 캐러셀 관리", "홈 캐러셀 이미지 추가/삭제", homeColor, onOpenHomeCarouselList)
             AdminListCard("공지사항 관리", "공지 등록/수정/삭제", homeColor, onOpenNoticeList)
             AdminListCard("상품 화면 캐러셀 관리", "상품 캐러셀 이미지 관리", productColor, onOpenBuyCarouselList)
-            AdminListCard("상품 관리", "상품 등록/수정/삭제", productColor) { }
+            AdminListCard("상품 관리", "상품 등록/수정/삭제", productColor, onOpenItemList)
             AdminListCard("놀이기구 관리", "어트랙션 정보 관리", rideColor, onOpenAttractionList)
         }
     }

@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -55,24 +56,36 @@ fun LoginScreen(
 
     val gradient = Brush.verticalGradient(
         listOf(
-            AuroraPurple,
-            AuroraGlow,
-            AuroraPink.copy(alpha = 0.9f),
-            AuroraBlue.copy(alpha = 0.8f)
+            AuroraPurple.copy(alpha = 0.7f),
+            AuroraGlow.copy(alpha = 0.7f),
+            AuroraPink.copy(alpha = 0.65f),
+            AuroraBlue.copy(alpha = 0.6f)
         )
     )
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(gradient),
-        contentAlignment = Alignment.Center
-    ) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Image(
+            painter = painterResource(id = R.drawable.main),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop,
+            alpha = 0.20f
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(gradient)
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.35f))
+        )
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp),
-            color = Color.White.copy(alpha = 0.14f),
+            color = Color.White.copy(alpha = 0.24f),
             shape = RoundedCornerShape(24.dp)
         ) {
             Column(
@@ -82,17 +95,6 @@ fun LoginScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Box(
-                    modifier = Modifier
-                        .height(96.dp)
-                        .background(Color.White.copy(alpha = 0.1f), shape = CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                        contentDescription = null
-                    )
-                }
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text("환상적인 훈민월드", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
                     Text("보랏빛 오로라로 물든 테마파크에 오신 것을 환영해요.", color = Color(0xFFEDE7FF), fontSize = 14.sp)
@@ -113,8 +115,8 @@ fun LoginScreen(
                         cursorColor = Color.White,
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
-                        focusedContainerColor = Color.White.copy(alpha = 0.1f),
-                        unfocusedContainerColor = Color.White.copy(alpha = 0.08f)
+                        focusedContainerColor = Color.White.copy(alpha = 0.2f),
+                        unfocusedContainerColor = Color.White.copy(alpha = 0.16f)
                     )
                 )
                 OutlinedTextField(
@@ -133,8 +135,8 @@ fun LoginScreen(
                         cursorColor = Color.White,
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
-                        focusedContainerColor = Color.White.copy(alpha = 0.1f),
-                        unfocusedContainerColor = Color.White.copy(alpha = 0.08f)
+                        focusedContainerColor = Color.White.copy(alpha = 0.2f),
+                        unfocusedContainerColor = Color.White.copy(alpha = 0.16f)
                     )
                 )
                 Button(
