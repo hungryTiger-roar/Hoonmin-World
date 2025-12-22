@@ -34,7 +34,7 @@ class LineViewModel(
                 _state.update {
                     val map = it.lineMembers.toMutableMap()
                     map[lineId] = members
-                    it.copy(lineMembers = map, toast = "ì¤„ì„œê¸??„ë£Œ")
+                    it.copy(lineMembers = map, toast = "줄서기 완료")
                 }
             }.onFailure { e ->
                 _state.update { it.copy(error = e.message) }

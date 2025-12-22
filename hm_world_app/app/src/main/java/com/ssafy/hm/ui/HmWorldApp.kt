@@ -1,6 +1,10 @@
 package com.ssafy.hm.ui
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,10 +12,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -25,6 +33,7 @@ import com.ssafy.hm.ui.screens.admin.AdminBuyCarouselListScreen
 import com.ssafy.hm.ui.screens.admin.AdminBuyCarouselScreen
 import com.ssafy.hm.ui.screens.admin.AdminAttractionEditScreen
 import com.ssafy.hm.ui.screens.admin.AdminAttractionListScreen
+import com.ssafy.hm.ui.screens.admin.AdminAttractionManagementScreen
 import com.ssafy.hm.ui.screens.admin.AdminHomeCarouselListScreen
 import com.ssafy.hm.ui.screens.admin.AdminItemEditScreen
 import com.ssafy.hm.ui.screens.admin.AdminItemListScreen
@@ -86,6 +95,11 @@ fun HmWorldApp() {
     val friendState by friendVm.state.collectAsState()
     val lineState by lineVm.state.collectAsState()
 
+    var locationPermissionRequested by remember { mutableStateOf(false) }
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { }
+
     LaunchedEffect(Unit) {
         authVm.tryAutoLogin()
         homeVm.refresh()
@@ -94,6 +108,25 @@ fun HmWorldApp() {
 
     LaunchedEffect(authState.account) {
         authState.account?.let { acct ->
+            if (!locationPermissionRequested) {
+                val fineGranted = ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+                val coarseGranted = ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+                if (!fineGranted && !coarseGranted) {
+                    locationPermissionRequested = true
+                    locationPermissionLauncher.launch(
+                        arrayOf(
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION
+                        )
+                    )
+                }
+            }
             orderVm.setUser(acct.userId)
             friendVm.setUser(acct.userId)
             val target = if (acct.userId.equals("staff", ignoreCase = true)) {
@@ -102,7 +135,7 @@ fun HmWorldApp() {
                 NavRoutes.CustomerMain.route
             }
             navController.navigate(target) {
-                popUpTo(NavRoutes.Login.route) { inclusive = true }
+                popUpTo(0) { inclusive = true }
             }
         }
     }
@@ -273,7 +306,7 @@ private fun AppNavHost(
                 onOpenHomeCarouselList = { navController.navigate(NavRoutes.AdminHomeCarouselList.route) },
                 onOpenNoticeList = { navController.navigate(NavRoutes.AdminNoticeList.route) },
                 onOpenBuyCarouselList = { navController.navigate(NavRoutes.AdminBuyCarouselList.route) },
-                onOpenAttractionList = { navController.navigate(NavRoutes.AdminAttractionList.route) },
+                onOpenAttractionList = { navController.navigate(NavRoutes.AdminAttractionManagement.route) },
                 onOpenItemList = { navController.navigate(NavRoutes.AdminItemList.route) }
             )
         }
@@ -303,6 +336,16 @@ private fun AppNavHost(
             AdminBuyCarouselScreen(
                 onBack = { navController.popBackStack() },
                 onUploaded = { homeVm.refresh() }
+            )
+        }
+        composable(NavRoutes.AdminAttractionManagement.route) {
+            AdminAttractionManagementScreen(
+                attractions = catalogState.attractions,
+                onBack = { navController.popBackStack() },
+                onAdd = { navController.navigate(NavRoutes.AdminAttractionCreate.route) },
+                onEdit = { navController.navigate(NavRoutes.AdminAttractionEdit.create(it)) },
+                onDelete = { catalogVm.deleteAttraction(it) },
+                onToggleAble = { catalogVm.toggleAttractionAble(it) }
             )
         }
         composable(NavRoutes.AdminAttractionList.route) {

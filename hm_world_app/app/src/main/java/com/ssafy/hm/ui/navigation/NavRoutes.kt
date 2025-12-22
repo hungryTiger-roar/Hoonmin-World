@@ -11,6 +11,7 @@ sealed class NavRoutes(val route: String) {
     data object AdminNotificationManagement : NavRoutes("admin/notification-management")
     data object AdminHomeCarouselList : NavRoutes("admin/home-carousel/list")
     data object AdminHomeCarousel : NavRoutes("admin/home-carousel")
+    data object AdminAttractionManagement : NavRoutes("admin/attraction/management")
     data object AdminAttractionList : NavRoutes("admin/attraction/list")
     data object AdminAttractionLine : NavRoutes("admin/attraction/line/{attId}") {
         fun create(attId: Int) = "admin/attraction/line/$attId"

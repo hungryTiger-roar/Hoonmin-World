@@ -196,3 +196,29 @@ VALUES
 ('콜라', 3000, 300, 'cola.png', '시원한 탄산음료', '음료'),
 ('아이스크림', 4000, 120, 'icecream.png', '여름에 인기 많은 아이스크림', '푸드'),
 ('캐릭터 풍선', 8000, 60, 'balloon.png', '아이들에게 인기 많은 캐릭터 풍선', '굿즈');
+
+
+CREATE TABLE fcm_token (
+    token VARCHAR(255) PRIMARY KEY,
+    user_id VARCHAR(50) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_fcm_token_user
+        FOREIGN KEY (user_id) REFERENCES account(user_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+
+CREATE TABLE push_notification (
+    push_id INT AUTO_INCREMENT PRIMARY KEY,
+    push_title VARCHAR(200) NOT NULL,
+    push_body TEXT NOT NULL,
+    push_type VARCHAR(20) NOT NULL,
+    scheduled_at DATETIME NULL,
+    repeat_days VARCHAR(30) NULL,
+    repeat_time VARCHAR(5) NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    last_sent_at DATETIME NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);

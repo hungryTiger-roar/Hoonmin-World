@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ssafy.hm.repo.NotificationRepo">
+    <select id="selectScheduled" resultType="com.ssafy.hm.dto.PushNotification">
+        SELECT
+            push_id AS id,
+            push_title AS title,
+            push_body AS body,
+            push_type AS type,
+            DATE_FORMAT(scheduled_at, '%Y-%m-%d %H:%i') AS scheduledAt,
+            repeat_days AS repeatDays,
+            repeat_time AS repeatTime,
+            status,
+            DATE_FORMAT(last_sent_at, '%Y-%m-%d %H:%i') AS lastSentAt,
+            DATE_FORMAT(created_at, '%Y-%m-%d %H:%i') AS createdAt,
+            DATE_FORMAT(updated_at, '%Y-%m-%d %H:%i') AS updatedAt
+        FROM push_notification
+        WHERE push_type = 'SCHEDULE' AND status = 'PENDING'
+        ORDER BY scheduled_at ASC
+    </select>
+
+    <select id="selectRepeat" resultType="com.ssafy.hm.dto.PushNotification">
+        SELECT
+            push_id AS id,
+            push_title AS title,
+            push_body AS body,
+            push_type AS type,
+            DATE_FORMAT(scheduled_at, '%Y-%m-%d %H:%i') AS scheduledAt,
+            repeat_days AS repeatDays,
+            repeat_time AS repeatTime,
+            status,
+            DATE_FORMAT(last_sent_at, '%Y-%m-%d %H:%i') AS lastSentAt,
+            DATE_FORMAT(created_at, '%Y-%m-%d %H:%i') AS createdAt,
+            DATE_FORMAT(updated_at, '%Y-%m-%d %H:%i') AS updatedAt
+        FROM push_notification
+        WHERE push_type = 'REPEAT' AND status = 'ACTIVE'
+        ORDER BY push_id DESC
+    </select>
+
+    <select id="selectDueScheduled" resultType="com.ssafy.hm.dto.PushNotification">
+        SELECT
+            push_id AS id,
+            push_title AS title,
+            push_body AS body,
+            push_type AS type,
+            DATE_FORMAT(scheduled_at, '%Y-%m-%d %H:%i') AS scheduledAt,
+            repeat_days AS repeatDays,
+            repeat_time AS repeatTime,
+            status,
+            DATE_FORMAT(last_sent_at, '%Y-%m-%d %H:%i') AS lastSentAt,
+            DATE_FORMAT(created_at, '%Y-%m-%d %H:%i') AS createdAt,
+            DATE_FORMAT(updated_at, '%Y-%m-%d %H:%i') AS updatedAt
+        FROM push_notification
+        WHERE push_type = 'SCHEDULE'
+          AND status = 'PENDING'
+          AND scheduled_at &lt;= STR_TO_DATE(#{now}, '%Y-%m-%d %H:%i')
+        ORDER BY scheduled_at ASC
+    </select>
+
+    <select id="selectActiveRepeats" resultType="com.ssafy.hm.dto.PushNotification">
+        SELECT
+            push_id AS id,
+            push_title AS title,
+            push_body AS body,
+            push_type AS type,
+            DATE_FORMAT(scheduled_at, '%Y-%m-%d %H:%i') AS scheduledAt,
+            repeat_days AS repeatDays,
+            repeat_time AS repeatTime,
+            status,
+            DATE_FORMAT(last_sent_at, '%Y-%m-%d %H:%i') AS lastSentAt,
+            DATE_FORMAT(created_at, '%Y-%m-%d %H:%i') AS createdAt,
+            DATE_FORMAT(updated_at, '%Y-%m-%d %H:%i') AS updatedAt
+        FROM push_notification
+        WHERE push_type = 'REPEAT'
+          AND status = 'ACTIVE'
+    </select>
+
+    <select id="selectById" resultType="com.ssafy.hm.dto.PushNotification">
+        SELECT
+            push_id AS id,
+            push_title AS title,
+            push_body AS body,
+            push_type AS type,
+            DATE_FORMAT(scheduled_at, '%Y-%m-%d %H:%i') AS scheduledAt,
+            repeat_days AS repeatDays,
+            repeat_time AS repeatTime,
+            status,
+            DATE_FORMAT(last_sent_at, '%Y-%m-%d %H:%i') AS lastSentAt,
+            DATE_FORMAT(created_at, '%Y-%m-%d %H:%i') AS createdAt,
+            DATE_FORMAT(updated_at, '%Y-%m-%d %H:%i') AS updatedAt
+        FROM push_notification
+        WHERE push_id = #{id}
+    </select>
+
+    <insert id="insertScheduled" parameterType="com.ssafy.hm.dto.PushNotification">
+        INSERT INTO push_notification (push_title, push_body, push_type, scheduled_at, status)
+        VALUES (#{title}, #{body}, 'SCHEDULE', STR_TO_DATE(#{scheduledAt}, '%Y-%m-%d %H:%i'), 'PENDING')
+    </insert>
+
+    <insert id="insertRepeat" parameterType="com.ssafy.hm.dto.PushNotification">
+        INSERT INTO push_notification (push_title, push_body, push_type, repeat_days, repeat_time, status)
+        VALUES (#{title}, #{body}, 'REPEAT', #{repeatDays}, #{repeatTime}, 'ACTIVE')
+    </insert>
+
+    <update id="updateScheduled" parameterType="com.ssafy.hm.dto.PushNotification">
+        UPDATE push_notification
+        SET push_title = #{title},
+            push_body = #{body},
+            scheduled_at = STR_TO_DATE(#{scheduledAt}, '%Y-%m-%d %H:%i'),
+            updated_at = CURRENT_TIMESTAMP
+        WHERE push_id = #{id}
+    </update>
+
+    <update id="updateRepeat" parameterType="com.ssafy.hm.dto.PushNotification">
+        UPDATE push_notification
+        SET push_title = #{title},
+            push_body = #{body},
+            repeat_days = #{repeatDays},
+            repeat_time = #{repeatTime},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE push_id = #{id}
+    </update>
+
+    <update id="markScheduledSent">
+        UPDATE push_notification
+        SET status = 'SENT',
+            last_sent_at = STR_TO_DATE(#{sentAt}, '%Y-%m-%d %H:%i'),
+            updated_at = CURRENT_TIMESTAMP
+        WHERE push_id = #{id}
+    </update>
+
+    <update id="updateRepeatLastSent">
+        UPDATE push_notification
+        SET last_sent_at = STR_TO_DATE(#{sentAt}, '%Y-%m-%d %H:%i'),
+            updated_at = CURRENT_TIMESTAMP
+        WHERE push_id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM push_notification
+        WHERE push_id = #{id}
+    </delete>
+</mapper>
