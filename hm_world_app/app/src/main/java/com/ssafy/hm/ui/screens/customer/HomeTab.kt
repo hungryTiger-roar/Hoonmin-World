@@ -1,5 +1,6 @@
 package com.ssafy.hm.ui.screens.customer
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -26,6 +27,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -39,14 +41,21 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
+import java.util.Date
+
 @Composable
 fun HomeTab(
     images: List<HomeImage>,
     boards: List<HomeBoard>,
     orderState: OrderState,
     paddingValues: PaddingValues,
-    onBoardClick: (HomeBoard) -> Unit
+    onBoardClick: (HomeBoard) -> Unit,
+    onTicketPurchaseClick: () -> Unit
 ) {
+    val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    val today = sdf.format(Date())
+    val hasTicket = orderState.orders.any { it.orderTime.startsWith(today) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -54,11 +63,13 @@ fun HomeTab(
             .verticalScroll(rememberScrollState())
             .background(Color(0xFFF7F7F7))
     ) {
-        TopHeader()
-        Spacer(modifier = Modifier.height(16.dp))
+//        TopHeader()
         HomeCarousel(images)
-        Spacer(modifier = Modifier.height(24.dp))
-        TicketStatusCard(hasTicket = orderState.orders.isNotEmpty())
+        Spacer(modifier = Modifier.height(20.dp))
+        TicketStatusCard(
+            hasTicket = hasTicket,
+            onClick = onTicketPurchaseClick
+        )
         Spacer(modifier = Modifier.height(24.dp))
         NoticeBoard(boards, onBoardClick = onBoardClick)
     }
@@ -76,20 +87,12 @@ fun TopHeader() {
             )
             .padding(top = 24.dp, bottom = 16.dp, start = 20.dp, end = 20.dp)
     ) {
-        Column {
-            Text(
-                text = "🌙 훈민월드",
-                fontSize = 26.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = Color.White
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "마법같은 하루를 만들어드릴게요 ✨",
-                fontSize = 14.sp,
-                color = Color.White.copy(alpha = 0.9f)
-            )
-        }
+//        Image(
+//            painter = painterResource(id = R.drawable.logo), // drawable 폴더에 있는 이미지
+//            contentDescription = "App Logo",
+//            modifier = Modifier.size(48.dp), // 원하는 크기
+//            contentScale = ContentScale.Fit
+//        )
     }
 }
 
@@ -105,14 +108,12 @@ fun HomeCarousel(images: List<HomeImage>) {
     }
 
     Column(
-        modifier = Modifier.padding(horizontal = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp),
-            shape = RoundedCornerShape(16.dp),
+                .height(250.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
             Box {
@@ -132,33 +133,13 @@ fun HomeCarousel(images: List<HomeImage>) {
                                 .background(Color.Gray.copy(alpha = 0.3f)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("사진을 등록해주세요", color = Color.Gray)
+                            Text("이미지를 준비 중입니다.", color = Color.Gray)
                         }
                     }
                 }
-                // Text overlay on the image
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.6f)),
-                                startY = 300f
-                            )
-                        )
-                        .padding(12.dp),
-                    contentAlignment = Alignment.BottomStart
-                ) {
-                    Text(
-                        text = "신규 놀이기구 오픈!",
-                        color = Color.White,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
             }
         }
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(10.dp))
         Row(
             horizontalArrangement = Arrangement.Center,
             modifier = Modifier.fillMaxWidth()
@@ -179,15 +160,12 @@ fun HomeCarousel(images: List<HomeImage>) {
 
 
 @Composable
-fun TicketStatusCard(hasTicket: Boolean) {
+fun TicketStatusCard(hasTicket: Boolean, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp)
-            .clickable {
-                // TODO: 티켓 구매 페이지로 네비게이션하는 로직을 여기에 추가하세요.
-                // 예: navController.navigate("ticketPurchase")
-            },
+            .clickable { if (!hasTicket) onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -203,15 +181,15 @@ fun TicketStatusCard(hasTicket: Boolean) {
                 tint = Color(0xFF6200EE)
             )
             Spacer(modifier = Modifier.width(16.dp))
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 if (hasTicket) {
                     Text(
-                        text = "구매한 티켓이 있습니다.",
+                        text = "훈민월드에 오신걸 환영합니다.😘",
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )
                     Text(
-                        text = "즐거운 시간 보내세요!",
+                        text = "행복 가득한 시간 보내세요!",
                         color = Color.Gray,
                         fontSize = 14.sp
                     )
@@ -222,12 +200,20 @@ fun TicketStatusCard(hasTicket: Boolean) {
                         fontSize = 16.sp
                     )
                     Text(
-                        text = "탭하여 티켓 구매하기 →",
+                        text = "탭하여 티켓 구매하기",
                         color = Color(0xFF6200EE),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
+            }
+            if (!hasTicket) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                    contentDescription = "Go to purchase",
+                    modifier = Modifier.size(16.dp),
+                    tint = Color.Gray
+                )
             }
         }
     }

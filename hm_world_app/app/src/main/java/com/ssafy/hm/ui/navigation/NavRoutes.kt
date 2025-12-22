@@ -32,6 +32,7 @@ sealed class NavRoutes(val route: String) {
         fun create(boardId: Int) = "admin/notice/edit/$boardId"
     }
     data object CustomerMain : NavRoutes("customer/main")
+    data object TicketPurchase : NavRoutes("customer/ticket-purchase")
     data object NoticeDetail : NavRoutes("notice/{id}") {
         fun create(id: Int) = "notice/$id"
     }
