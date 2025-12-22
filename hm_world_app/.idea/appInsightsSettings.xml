@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.ssafy.hm" />
+                  <option name="mobileSdkAppId" value="1:790633140702:android:342f0e0de5612bb7d3cd4f" />
+                  <option name="projectId" value="hmworld-3c26d" />
+                  <option name="projectNumber" value="790633140702" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

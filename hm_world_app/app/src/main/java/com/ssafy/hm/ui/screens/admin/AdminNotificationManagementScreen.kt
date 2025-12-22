@@ -36,10 +36,12 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,15 +50,29 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ssafy.hm.data.model.NotificationRepeatRequest
+import com.ssafy.hm.data.model.NotificationScheduleRequest
+import com.ssafy.hm.data.model.NotificationSendRequest
+import com.ssafy.hm.data.model.NotificationUpdateRequest
+import com.ssafy.hm.data.model.PushNotification
+import com.ssafy.hm.data.network.NetworkModule
 import com.ssafy.hm.ui.theme.AuroraPurple
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Calendar
 import java.util.Locale
 
-private data class AdminPushItem(
-    val id: Int,
-    val title: String,
-    val body: String,
-    val schedule: String
+private data class DayOption(val label: String, val code: String)
+
+private val dayOptions = listOf(
+    DayOption("월", "MON"),
+    DayOption("화", "TUE"),
+    DayOption("수", "WED"),
+    DayOption("목", "THU"),
+    DayOption("금", "FRI"),
+    DayOption("토", "SAT"),
+    DayOption("일", "SUN")
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -65,6 +81,8 @@ fun AdminNotificationManagementScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
     var title by remember { mutableStateOf("") }
     var content by remember { mutableStateOf("") }
     var isRepeat by remember { mutableStateOf(false) }
@@ -75,13 +93,15 @@ fun AdminNotificationManagementScreen(
     var laterDate by remember { mutableStateOf("") }
     var laterTime by remember { mutableStateOf("") }
 
-    var editTarget by remember { mutableStateOf<AdminPushItem?>(null) }
+    var editTarget by remember { mutableStateOf<PushNotification?>(null) }
     var editTitle by remember { mutableStateOf("") }
     var editContent by remember { mutableStateOf("") }
-    var editSchedule by remember { mutableStateOf("") }
+    var editDate by remember { mutableStateOf("") }
+    var editTime by remember { mutableStateOf("") }
+    val editDays = remember { mutableStateListOf<String>() }
 
-    val scheduledItems = remember { mutableStateListOf<AdminPushItem>() }
-    val repeatItems = remember { mutableStateListOf<AdminPushItem>() }
+    val scheduledItems = remember { mutableStateListOf<PushNotification>() }
+    val repeatItems = remember { mutableStateListOf<PushNotification>() }
 
     fun resetInput() {
         title = ""
@@ -94,27 +114,82 @@ fun AdminNotificationManagementScreen(
         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
     }
 
+    fun refresh() {
+        scope.launch {
+            runCatching {
+                val scheduled = withContext(Dispatchers.IO) { NetworkModule.api.getScheduledNotifications() }
+                val repeats = withContext(Dispatchers.IO) { NetworkModule.api.getRepeatNotifications() }
+                scheduledItems.clear()
+                scheduledItems.addAll(scheduled)
+                repeatItems.clear()
+                repeatItems.addAll(repeats)
+            }.onFailure {
+                toast("알림 목록을 불러오지 못했습니다: ${it.message}")
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        refresh()
+    }
+
+    LaunchedEffect(editTarget) {
+        val target = editTarget ?: return@LaunchedEffect
+        editTitle = target.title
+        editContent = target.body
+        editDate = ""
+        editTime = ""
+        editDays.clear()
+
+        if (target.type.equals("REPEAT", ignoreCase = true)) {
+            val days = target.repeatDays?.split(",")?.map { it.trim() }?.filter { it.isNotBlank() } ?: emptyList()
+            editDays.addAll(days)
+            editTime = target.repeatTime.orEmpty()
+        } else {
+            val parts = target.scheduledAt?.split(" ") ?: emptyList()
+            if (parts.size >= 2) {
+                editDate = parts[0]
+                editTime = parts[1]
+            }
+        }
+    }
+
     if (showLaterDialog) {
         AlertDialog(
             onDismissRequest = { showLaterDialog = false },
             confirmButton = {
                 Button(onClick = {
                     if (title.isBlank() || content.isBlank()) {
-                        toast("제목과 내용을 입력해주세요.")
+                        toast("제목과 내용을 입력해 주세요.")
                         return@Button
                     }
                     if (laterDate.isBlank() || laterTime.isBlank()) {
-                        toast("날짜와 시간을 입력해주세요.")
+                        toast("날짜와 시간을 선택해 주세요.")
                         return@Button
                     }
-                    val schedule = "${laterDate} ${laterTime}"
-                    val id = (scheduledItems.maxOfOrNull { it.id } ?: 0) + 1
-                    scheduledItems.add(AdminPushItem(id, title, content, schedule))
-                    showLaterDialog = false
-                    laterDate = ""
-                    laterTime = ""
-                    resetInput()
-                    toast("PUSH 예약이 등록되었습니다.")
+                    val schedule = "$laterDate $laterTime"
+                    scope.launch {
+                        runCatching {
+                            withContext(Dispatchers.IO) {
+                                NetworkModule.api.scheduleNotification(
+                                    NotificationScheduleRequest(title, content, schedule)
+                                )
+                            }
+                        }.onSuccess { response ->
+                            if (response.isSuccessful) {
+                                showLaterDialog = false
+                                laterDate = ""
+                                laterTime = ""
+                                resetInput()
+                                toast("예약 알림이 등록되었습니다.")
+                                refresh()
+                            } else {
+                                toast("예약 등록 실패: ${response.code()}")
+                            }
+                        }.onFailure {
+                            toast("예약 등록 실패: ${it.message}")
+                        }
+                    }
                 }) { Text("저장") }
             },
             dismissButton = {
@@ -141,18 +216,59 @@ fun AdminNotificationManagementScreen(
     }
 
     if (editTarget != null) {
+        val isRepeatEdit = editTarget?.type.equals("REPEAT", ignoreCase = true)
         AlertDialog(
             onDismissRequest = { editTarget = null },
             confirmButton = {
                 Button(onClick = {
-                    val target = editTarget ?: return@Button
-                    val updated = AdminPushItem(target.id, editTitle, editContent, editSchedule)
-                    val list = if (repeatItems.any { it.id == target.id }) repeatItems else scheduledItems
-                    val index = list.indexOfFirst { it.id == target.id }
-                    if (index != -1) list[index] = updated
-                    editTarget = null
-                    toast("PUSH 알림이 수정되었습니다")
-                }) { Text("수정 완료") }
+                    if (editTitle.isBlank() || editContent.isBlank()) {
+                        toast("제목과 내용을 입력해 주세요.")
+                        return@Button
+                    }
+
+                    scope.launch {
+                        val request = if (isRepeatEdit) {
+                            if (editDays.isEmpty() || editTime.isBlank()) {
+                                toast("반복 요일과 시간을 선택해 주세요.")
+                                return@launch
+                            }
+                            val repeatDays = editDays.joinToString(",")
+                            NotificationUpdateRequest(
+                                title = editTitle,
+                                body = editContent,
+                                repeatDays = repeatDays,
+                                repeatTime = editTime
+                            )
+                        } else {
+                            if (editDate.isBlank() || editTime.isBlank()) {
+                                toast("날짜와 시간을 선택해 주세요.")
+                                return@launch
+                            }
+                            val schedule = "$editDate $editTime"
+                            NotificationUpdateRequest(
+                                title = editTitle,
+                                body = editContent,
+                                scheduledAt = schedule
+                            )
+                        }
+
+                        runCatching {
+                            withContext(Dispatchers.IO) {
+                                NetworkModule.api.updateNotification(editTarget!!.id, request)
+                            }
+                        }.onSuccess { response ->
+                            if (response.isSuccessful) {
+                                toast("알림이 수정되었습니다.")
+                                editTarget = null
+                                refresh()
+                            } else {
+                                toast("수정 실패: ${response.code()}")
+                            }
+                        }.onFailure {
+                            toast("수정 실패: ${it.message}")
+                        }
+                    }
+                }) { Text("수정") }
             },
             dismissButton = {
                 OutlinedButton(onClick = { editTarget = null }) { Text("취소") }
@@ -172,12 +288,41 @@ fun AdminNotificationManagementScreen(
                         label = { Text("내용") },
                         modifier = Modifier.fillMaxWidth()
                     )
-                    OutlinedTextField(
-                        value = editSchedule,
-                        onValueChange = { editSchedule = it },
-                        label = { Text("시간/요일") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
+
+                    if (isRepeatEdit) {
+                        Text("반복 요일", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            dayOptions.forEach { day ->
+                                DayChip(
+                                    label = day.label,
+                                    selected = editDays.contains(day.code),
+                                    onToggle = {
+                                        if (editDays.contains(day.code)) editDays.remove(day.code)
+                                        else editDays.add(day.code)
+                                    }
+                                )
+                            }
+                        }
+                        OutlinedButton(
+                            onClick = { showTimePicker(context, editTime) { editTime = it } },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(if (editTime.isBlank()) "시간 선택" else editTime)
+                        }
+                    } else {
+                        OutlinedButton(
+                            onClick = { showDatePicker(context, editDate) { editDate = it } },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(if (editDate.isBlank()) "날짜 선택" else editDate)
+                        }
+                        OutlinedButton(
+                            onClick = { showTimePicker(context, editTime) { editTime = it } },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(if (editTime.isBlank()) "시간 선택" else editTime)
+                        }
+                    }
                 }
             }
         )
@@ -229,10 +374,26 @@ fun AdminNotificationManagementScreen(
                     Button(
                         onClick = {
                             if (title.isBlank() || content.isBlank()) {
-                                toast("제목과 내용을 입력해주세요.")
+                                toast("제목과 내용을 입력해 주세요.")
                             } else {
-                                toast("PUSH 전송이 완료되었습니다!")
-                                resetInput()
+                                scope.launch {
+                                    runCatching {
+                                        withContext(Dispatchers.IO) {
+                                            NetworkModule.api.sendNotification(
+                                                NotificationSendRequest(title, content)
+                                            )
+                                        }
+                                    }.onSuccess { response ->
+                                        if (response.isSuccessful) {
+                                            toast("PUSH 전송이 완료되었습니다.")
+                                            resetInput()
+                                        } else {
+                                            toast("전송 실패: ${response.code()}")
+                                        }
+                                    }.onFailure {
+                                        toast("전송 실패: ${it.message}")
+                                    }
+                                }
                             }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = AuroraPurple, contentColor = Color.White),
@@ -243,7 +404,7 @@ fun AdminNotificationManagementScreen(
                     OutlinedButton(
                         onClick = {
                             if (title.isBlank() || content.isBlank()) {
-                                toast("제목과 내용을 입력해주세요.")
+                                toast("제목과 내용을 입력해 주세요.")
                             } else {
                                 showLaterDialog = true
                             }
@@ -254,15 +415,15 @@ fun AdminNotificationManagementScreen(
                     }
                 }
             } else {
-                Text("반복 요일 선택", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                Text("반복 요일", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    listOf("월", "화", "수", "목", "금", "토", "일").forEach { day ->
+                    dayOptions.forEach { day ->
                         DayChip(
-                            label = day,
-                            selected = selectedDays.contains(day),
+                            label = day.label,
+                            selected = selectedDays.contains(day.code),
                             onToggle = {
-                                if (selectedDays.contains(day)) selectedDays.remove(day)
-                                else selectedDays.add(day)
+                                if (selectedDays.contains(day.code)) selectedDays.remove(day.code)
+                                else selectedDays.add(day.code)
                             }
                         )
                     }
@@ -276,13 +437,28 @@ fun AdminNotificationManagementScreen(
                 Button(
                     onClick = {
                         if (title.isBlank() || content.isBlank() || time.isBlank() || selectedDays.isEmpty()) {
-                            toast("요일과 시간을 입력해주세요.")
+                            toast("요일과 시간을 선택해 주세요.")
                         } else {
-                            val schedule = "${selectedDays.joinToString(",")} ${time}"
-                            val id = (repeatItems.maxOfOrNull { it.id } ?: 0) + 1
-                            repeatItems.add(AdminPushItem(id, title, content, schedule))
-                            toast("PUSH 반복 설정이 완료되었습니다!")
-                            resetInput()
+                            val repeatDays = selectedDays.joinToString(",")
+                            scope.launch {
+                                runCatching {
+                                    withContext(Dispatchers.IO) {
+                                        NetworkModule.api.repeatNotification(
+                                            NotificationRepeatRequest(title, content, repeatDays, time)
+                                        )
+                                    }
+                                }.onSuccess { response ->
+                                    if (response.isSuccessful) {
+                                        toast("반복 알림이 등록되었습니다.")
+                                        resetInput()
+                                        refresh()
+                                    } else {
+                                        toast("등록 실패: ${response.code()}")
+                                    }
+                                }.onFailure {
+                                    toast("등록 실패: ${it.message}")
+                                }
+                            }
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = AuroraPurple, contentColor = Color.White),
@@ -295,19 +471,29 @@ fun AdminNotificationManagementScreen(
             Spacer(modifier = Modifier.height(8.dp))
             Text("예약 알림", fontWeight = FontWeight.Bold, fontSize = 16.sp)
             if (scheduledItems.isEmpty()) {
-                Text("예약된 알림이 없습니다.", color = Color.Gray)
+                Text("예약 알림이 없습니다.", color = Color.White)
             } else {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(scheduledItems, key = { it.id }) { item ->
                         PushItemCard(
                             item = item,
-                            onEdit = {
-                                editTarget = item
-                                editTitle = item.title
-                                editContent = item.body
-                                editSchedule = item.schedule
-                            },
-                            onDelete = { scheduledItems.remove(item) }
+                            onEdit = { editTarget = item },
+                            onDelete = {
+                                scope.launch {
+                                    runCatching {
+                                        withContext(Dispatchers.IO) { NetworkModule.api.deleteNotification(item.id) }
+                                    }.onSuccess { response ->
+                                        if (response.isSuccessful) {
+                                            toast("삭제되었습니다.")
+                                            refresh()
+                                        } else {
+                                            toast("삭제 실패: ${response.code()}")
+                                        }
+                                    }.onFailure {
+                                        toast("삭제 실패: ${it.message}")
+                                    }
+                                }
+                            }
                         )
                     }
                 }
@@ -316,19 +502,29 @@ fun AdminNotificationManagementScreen(
             Spacer(modifier = Modifier.height(8.dp))
             Text("반복 알림", fontWeight = FontWeight.Bold, fontSize = 16.sp)
             if (repeatItems.isEmpty()) {
-                Text("반복 알림이 없습니다.", color = Color.Gray)
+                Text("반복 알림이 없습니다.", color = Color.White)
             } else {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(repeatItems, key = { it.id }) { item ->
                         PushItemCard(
                             item = item,
-                            onEdit = {
-                                editTarget = item
-                                editTitle = item.title
-                                editContent = item.body
-                                editSchedule = item.schedule
-                            },
-                            onDelete = { repeatItems.remove(item) }
+                            onEdit = { editTarget = item },
+                            onDelete = {
+                                scope.launch {
+                                    runCatching {
+                                        withContext(Dispatchers.IO) { NetworkModule.api.deleteNotification(item.id) }
+                                    }.onSuccess { response ->
+                                        if (response.isSuccessful) {
+                                            toast("삭제되었습니다.")
+                                            refresh()
+                                        } else {
+                                            toast("삭제 실패: ${response.code()}")
+                                        }
+                                    }.onFailure {
+                                        toast("삭제 실패: ${it.message}")
+                                    }
+                                }
+                            }
                         )
                     }
                 }
@@ -340,8 +536,7 @@ fun AdminNotificationManagementScreen(
 @Composable
 private fun DayChip(label: String, selected: Boolean, onToggle: () -> Unit) {
     Card(
-        modifier = Modifier
-            .clickable { onToggle() }
+        modifier = Modifier.clickable { onToggle() }
     ) {
         Text(
             text = label,
@@ -355,7 +550,7 @@ private fun DayChip(label: String, selected: Boolean, onToggle: () -> Unit) {
 
 @Composable
 private fun PushItemCard(
-    item: AdminPushItem,
+    item: PushNotification,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -371,7 +566,7 @@ private fun PushItemCard(
             Column {
                 Text(item.title, fontWeight = FontWeight.SemiBold)
                 Text(item.body, fontSize = 12.sp, color = Color.DarkGray)
-                Text(item.schedule, fontSize = 12.sp, color = Color.Gray)
+                Text(scheduleText(item), fontSize = 12.sp, color = Color.Gray)
             }
             Row {
                 IconButton(onClick = onEdit) {
@@ -382,6 +577,19 @@ private fun PushItemCard(
                 }
             }
         }
+    }
+}
+
+private fun scheduleText(item: PushNotification): String {
+    return if (item.type.equals("REPEAT", ignoreCase = true)) {
+        val dayLabels = item.repeatDays
+            ?.split(",")
+            ?.mapNotNull { code -> dayOptions.firstOrNull { it.code == code.trim() }?.label }
+            ?.joinToString(",")
+            .orEmpty()
+        listOf(dayLabels, item.repeatTime.orEmpty()).filter { it.isNotBlank() }.joinToString(" ")
+    } else {
+        item.scheduledAt.orEmpty()
     }
 }
 
@@ -403,14 +611,12 @@ private fun showTimePicker(context: Context, current: String, onPicked: (String)
     TimePickerDialog(
         context,
         { _, hour, minute ->
-            val ampm = if (hour < 12) "오전" else "오후"
-            val hour12 = ((hour + 11) % 12) + 1
-            val formatted = String.format(Locale.getDefault(), "%s %02d:%02d", ampm, hour12, minute)
+            val formatted = String.format(Locale.getDefault(), "%02d:%02d", hour, minute)
             onPicked(formatted)
         },
         initHour,
         initMinute,
-        false
+        true
     ).show()
 }
 
