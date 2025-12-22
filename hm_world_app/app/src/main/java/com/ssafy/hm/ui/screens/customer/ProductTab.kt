@@ -85,8 +85,7 @@ fun ProductTab(
             }
 
             item(span = { GridItemSpan(2) }) {
-                Column { // 여백을 주기 위해 Column으로 감쌉니다.
-                    Spacer(modifier = Modifier.height(24.dp))
+                Column {
                     CategoryButtons(
                         selectedCategory = selectedCategory,
                         onCategorySelected = { selectedCategory = it }
@@ -176,7 +175,7 @@ fun ProductCarousel(images: List<BuyImage>) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(150.dp),
+                .height(200.dp),
             shape = RoundedCornerShape(16.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
@@ -188,7 +187,8 @@ fun ProductCarousel(images: List<BuyImage>) {
                             model = image.buyImage,
                             contentDescription = "Buy Image",
                             contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier.fillMaxSize(),
+                            alignment = Alignment.TopCenter
                         )
                     } else {
                         Box(
@@ -198,35 +198,6 @@ fun ProductCarousel(images: List<BuyImage>) {
                             contentAlignment = Alignment.Center
                         ) {
                             Text("이미지를 준비 중입니다.", color = Color.Gray)
-                        }
-                    }
-                     Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(
-                                        Color.Transparent,
-                                        Color.Black.copy(alpha = 0.5f)
-                                    ),
-                                    startY = 250f
-                                )
-                            )
-                            .padding(12.dp),
-                        contentAlignment = Alignment.BottomStart
-                    ) {
-                        Column {
-                             Text(
-                                "겨울 시즌 특별 할인",
-                                color = Color.White,
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                             Text(
-                                "전 상품 최대 20% 할인",
-                                color = Color.White,
-                                fontSize = 14.sp
-                            )
                         }
                     }
                 }
@@ -253,8 +224,7 @@ fun ProductCarousel(images: List<BuyImage>) {
 
 @Composable
 fun CategoryButtons(selectedCategory: String, onCategorySelected: (String) -> Unit) {
-    // TODO: 여기에 카테고리 종류를 추가하세요
-    val categories = listOf("전체", "신상품", "머리띠", "가방", "의류", "인형")
+    val categories = listOf("전체", "신상품", "시그니쳐", "악세사리", "의류")
 
     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         items(categories) { category ->

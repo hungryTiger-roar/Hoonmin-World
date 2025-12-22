@@ -28,7 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ssafy.hm.data.model.Friend
+import com.ssafy.hm.data.model.FriendWithDetails
 import com.ssafy.hm.data.model.OrderDetail
 import com.ssafy.hm.data.model.Orders
 
@@ -39,8 +39,8 @@ fun ProfileTab(
     orders: List<Orders>,
     details: Map<Int, List<OrderDetail>>,
     onReceive: (Int) -> Unit,
-    friends: List<Friend>,
-    availableFriends: List<Friend>,
+    friends: List<FriendWithDetails>,
+    availableFriends: List<FriendWithDetails>,
     onAddFriend: (String) -> Unit,
     onRemoveFriend: (Int) -> Unit,
     onLogout: () -> Unit,
@@ -87,7 +87,7 @@ fun ProfileTab(
             Button(onClick = { friendSearch = "" }) { Text("초기화") }
         }
         LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.heightIn(max = 140.dp)) {
-            items(friends.filter { it.friendId?.contains(friendSearch, true) == true || friendSearch.isBlank() }) { fr ->
+            items(friends.filter { (it.account.name ?: "").contains(friendSearch, true) || friendSearch.isBlank() }) { details ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -95,8 +95,8 @@ fun ProfileTab(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(fr.friendId)
-                    TextButton(onClick = { onRemoveFriend(fr.id) }) { Text("삭제") }
+                    Text(details.account.name ?: "이름 없음")
+                    TextButton(onClick = { onRemoveFriend(details.friend.id) }) { Text("삭제") }
                 }
             }
         }
@@ -110,14 +110,14 @@ fun ProfileTab(
 }
 
 @Composable
-private fun FlowFriends(friends: List<Friend>) {
+private fun FlowFriends(friends: List<FriendWithDetails>) {
     FlowRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         friends.forEach {
             Text(
-                text = it.friendId,
+                text = it.account.name ?: "이름 없음",
                 modifier = Modifier
                     .background(Color(0xFFE8E8F5), shape = RoundedCornerShape(8.dp))
                     .padding(horizontal = 8.dp, vertical = 4.dp)

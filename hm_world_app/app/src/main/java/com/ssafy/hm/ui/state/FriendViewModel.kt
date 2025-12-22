@@ -3,6 +3,7 @@ package com.ssafy.hm.ui.state
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssafy.hm.data.model.Friend
+import com.ssafy.hm.data.model.FriendWithDetails
 import com.ssafy.hm.data.repository.FriendRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -10,8 +11,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class FriendState(
-    val friends: List<Friend> = emptyList(),
-    val availableFriends: List<Friend> = emptyList(),
+    val friends: List<FriendWithDetails> = emptyList(),
+    val availableFriends: List<FriendWithDetails> = emptyList(),
     val error: String? = null,
     val toast: String? = null
 )
