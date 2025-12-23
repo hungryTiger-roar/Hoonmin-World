@@ -81,6 +81,8 @@ fun CustomerRootScreen(
     onRemoveFriend: (Int) -> Unit,
     onToggleParty: (Int, String, Boolean) -> Unit,
     onRefreshFriends: () -> Unit,
+    onRefreshReservation: () -> Unit,
+    onFindReservation: (String, List<Int>) -> Unit,
     clearSelection: () -> Unit,
     clearToasts: () -> Unit
 ) {
@@ -90,6 +92,17 @@ fun CustomerRootScreen(
 
     LaunchedEffect(tab) {
         if (tab == 4) onRefreshFriends()
+    }
+    LaunchedEffect(tab, lineState.reservedAttId, lineState.reservedLineId, account?.userId) {
+        if (tab != 2 || account?.ticket != true || account.userId.isNullOrBlank()) {
+            return@LaunchedEffect
+        }
+        if (lineState.reservedAttId != null && lineState.reservedLineId != null) {
+            onRefreshReservation()
+        } else {
+            val attIds = catalogState.attractions.map { it.attId }
+            onFindReservation(account.userId, attIds)
+        }
     }
 
     LaunchedEffect(orderState.error ?: friendState.error ?: lineState.error) {
@@ -224,7 +237,10 @@ fun CustomerRootScreen(
             2 -> HomeTab(
                 images = homeState.homeImages,
                 boards = homeState.boards,
+                attractions = catalogState.attractions,
                 hasTicket = (account?.ticket == true),
+                reservedAttId = lineState.reservedAttId,
+                reservedAheadCount = lineState.reservedAheadCount,
                 paddingValues = innerPadding,
                 onBoardClick = onBoardClick,
                 onTicketPurchaseClick = onTicketPurchaseClick

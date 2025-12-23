@@ -12,6 +12,9 @@ import kotlinx.coroutines.launch
 
 data class LineState(
     val lineMembers: Map<Int, List<AttractionLineMember>> = emptyMap(),
+    val reservedAttId: Int? = null,
+    val reservedLineId: Int? = null,
+    val reservedAheadCount: Int? = null,
     val toast: String? = null,
     val error: String? = null
 )
@@ -34,8 +37,66 @@ class LineViewModel(
                 _state.update {
                     val map = it.lineMembers.toMutableMap()
                     map[lineId] = members
-                    it.copy(lineMembers = map, toast = "줄서기 완료")
+                    it.copy(
+                        lineMembers = map,
+                        reservedAttId = attId,
+                        reservedLineId = lineId,
+                        reservedAheadCount = null,
+                        toast = "줄서기 완료"
+                    )
                 }
+                refreshReservationStatus()
+            }.onFailure { e ->
+                _state.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
+    fun findReservation(userId: String, attIds: List<Int>) {
+        if (attIds.isEmpty()) {
+            return
+        }
+        viewModelScope.launch {
+            runCatching {
+                for (attId in attIds) {
+                    val lines = lineRepo.getLinesByAttraction(attId)
+                    val line = lines.firstOrNull { it.members.any { member -> member.userId == userId } }
+                    if (line != null) {
+                        val aheadCount = lines.filter { it.lineId < line.lineId }.sumOf { it.members.size }
+                        return@runCatching Triple(attId, line.lineId, aheadCount)
+                    }
+                }
+                null
+            }.onSuccess { result ->
+                if (result == null) {
+                    _state.update {
+                        it.copy(reservedAttId = null, reservedLineId = null, reservedAheadCount = null, error = null)
+                    }
+                } else {
+                    _state.update {
+                        it.copy(
+                            reservedAttId = result.first,
+                            reservedLineId = result.second,
+                            reservedAheadCount = result.third,
+                            error = null
+                        )
+                    }
+                }
+            }.onFailure { e ->
+                _state.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
+    fun refreshReservationStatus() {
+        val attId = _state.value.reservedAttId ?: return
+        val lineId = _state.value.reservedLineId ?: return
+        viewModelScope.launch {
+            runCatching {
+                val lines = lineRepo.getLinesByAttraction(attId)
+                lines.filter { it.lineId < lineId }.sumOf { it.members.size }
+            }.onSuccess { aheadCount ->
+                _state.update { it.copy(reservedAheadCount = aheadCount, error = null) }
             }.onFailure { e ->
                 _state.update { it.copy(error = e.message) }
             }

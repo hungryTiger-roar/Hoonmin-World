@@ -32,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -44,9 +45,14 @@ import androidx.compose.ui.unit.sp
 import com.ssafy.hm.data.model.Account
 import com.ssafy.hm.data.model.Attraction
 import com.ssafy.hm.data.model.AttractionLine
+import com.ssafy.hm.data.model.NotificationSendRequest
+import com.ssafy.hm.data.network.NetworkModule
 import com.ssafy.hm.ui.state.NfcTagBus
 import com.ssafy.hm.ui.theme.AuroraPurple
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,6 +67,7 @@ fun AdminAttractionLineManagementScreen(
     onNoShowMember: (Int, String) -> Unit
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val boardingLineIds = remember { mutableStateListOf<Int>() }
     val readyMembers = remember { mutableStateListOf<String>() }
     var expandedLineId by remember { mutableStateOf<Int?>(null) }
@@ -71,6 +78,32 @@ fun AdminAttractionLineManagementScreen(
     val capacity = attraction.attCapacity
     val waitCount = lines.sumOf { it.members.size }
     val groupCount = lines.size
+
+    fun notifyBoardingMembers(lineIds: List<Int>) {
+        val memberIds = lines
+            .filter { lineIds.contains(it.lineId) }
+            .flatMap { it.members }
+            .mapNotNull { it.userId?.trim() }
+            .filter { it.isNotBlank() }
+            .distinct()
+        if (memberIds.isEmpty()) {
+            return
+        }
+
+        val title = "${attraction.attName ?: "놀이기구"} 탑승 순서입니다."
+        val body = "지금 바로 줄 서주시기 바랍니다. \n노쇼시 다음 인원에게 차례가 넘어갑니다."
+        scope.launch {
+            runCatching {
+                withContext(Dispatchers.IO) {
+                    NetworkModule.api.sendNotification(
+                        NotificationSendRequest(title = title, body = body, targetUserIds = memberIds)
+                    )
+                }
+            }.onFailure {
+                Toast.makeText(context, "탑승 알림 전송 실패: ${it.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     fun fillBoarding() {
         if (capacity <= 0) {
@@ -96,6 +129,7 @@ fun AdminAttractionLineManagementScreen(
         boardingLineIds.clear()
         boardingLineIds.addAll(selected)
         readyMembers.clear()
+        notifyBoardingMembers(selected)
     }
 
     fun completeBoarding() {

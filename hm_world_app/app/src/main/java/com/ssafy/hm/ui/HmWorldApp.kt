@@ -548,6 +548,8 @@ private fun AppNavHost(
                 onRemoveFriend = { friendVm.removeFriend(it) },
                 onToggleParty = { id, friendId, party -> friendVm.updateFriendParty(id, friendId, party) },
                 onRefreshFriends = { friendVm.loadFriends() },
+                onRefreshReservation = { lineVm.refreshReservationStatus() },
+                onFindReservation = { userId, attIds -> lineVm.findReservation(userId, attIds) },
                 clearSelection = { catalogVm.clearSelection() },
                 clearToasts = {
                     orderVm.clearToast(); friendVm.clearToast()
@@ -706,9 +708,3 @@ private fun AppNavHost(
         }
     }
 }
-<<<<<<< HEAD
-=======
-
-
-
->>>>>>> 미니
