@@ -36,7 +36,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -86,24 +85,22 @@ fun AdminOrderManagementScreen(
     var filterDialogOpen by remember { mutableStateOf(false) }
     var expandedOrderId by remember { mutableStateOf<Int?>(null) }
 
-    val filteredOrders by remember(orders, accounts, query, includeReceived, selectedStore) {
-        derivedStateOf {
-            val trimmed = query.trim().lowercase()
-            orders.filter { order ->
-                if (includeReceived && !order.orderReceived) return@filter false
-                if (!includeReceived && order.orderReceived) return@filter false
-                if (selectedStore != null && order.orderStore != selectedStore!!.id) return@filter false
-                if (trimmed.isBlank()) return@filter true
-                val account = order.userId?.let { accounts[it] }
-                val name = account?.name?.lowercase().orEmpty()
-                val phone = account?.phone?.lowercase().orEmpty()
-                val userId = order.userId?.lowercase().orEmpty()
-                val orderId = order.orderId.toString()
-                name.contains(trimmed) ||
-                    phone.contains(trimmed) ||
-                    userId.contains(trimmed) ||
-                    orderId.contains(trimmed)
-            }
+    val filteredOrders = run {
+        val trimmed = query.trim().lowercase()
+        orders.filter { order ->
+            if (includeReceived && !order.orderReceived) return@filter false
+            if (!includeReceived && order.orderReceived) return@filter false
+            if (selectedStore != null && order.orderStore != selectedStore!!.id) return@filter false
+            if (trimmed.isBlank()) return@filter true
+            val account = order.userId?.let { accounts[it] }
+            val name = account?.name?.lowercase().orEmpty()
+            val phone = account?.phone?.lowercase().orEmpty()
+            val userId = order.userId?.lowercase().orEmpty()
+            val orderId = order.orderId.toString()
+            name.contains(trimmed) ||
+                phone.contains(trimmed) ||
+                userId.contains(trimmed) ||
+                orderId.contains(trimmed)
         }
     }
 

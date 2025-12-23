@@ -28,9 +28,11 @@ class AdminOrderViewModel(
     private val _state = MutableStateFlow(AdminOrderState())
     val state: StateFlow<AdminOrderState> = _state
 
-    fun refresh() {
+    fun refresh(showLoading: Boolean = true) {
         viewModelScope.launch {
-            _state.update { it.copy(loading = true) }
+            if (showLoading) {
+                _state.update { it.copy(loading = true) }
+            }
             runCatching {
                 val orders = orderRepo.getAllOrders()
                 val accounts = accountRepo.getAccounts()
@@ -40,39 +42,59 @@ class AdminOrderViewModel(
                 }
                 Triple(orders, accounts, detailMap)
             }.onSuccess { (orders, accounts, details) ->
+                val previousOrders = _state.value.orders.associateBy { it.orderId }
+                val mergedOrders = orders.map { order ->
+                    val previous = previousOrders[order.orderId]
+                    if (previous != null && previous.orderReceived && !order.orderReceived) {
+                        order.copy(
+                            orderReceived = true,
+                            orderReceivedTime = previous.orderReceivedTime
+                        )
+                    } else {
+                        order
+                    }
+                }
                 _state.update {
                     it.copy(
-                        orders = orders,
+                        orders = mergedOrders,
                         accounts = accounts,
                         orderDetails = details,
-                        loading = false,
+                        loading = if (showLoading) false else it.loading,
                         error = null
                     )
                 }
             }.onFailure { e ->
-                _state.update { it.copy(loading = false, error = e.message) }
+                _state.update { it.copy(loading = if (showLoading) false else it.loading, error = e.message) }
             }
         }
     }
 
     fun receiveOrder(orderId: Int, customerName: String?) {
         viewModelScope.launch {
+            val previousOrders = _state.value.orders
+            val receivedAt = java.time.LocalDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+            _state.update { state ->
+                val updated = state.orders.map { order ->
+                    if (order.orderId == orderId) {
+                        order.copy(
+                            orderReceived = true,
+                            orderReceivedTime = order.orderReceivedTime ?: receivedAt
+                        )
+                    } else {
+                        order
+                    }
+                }
+                state.copy(orders = updated)
+            }
             runCatching { orderRepo.receiveOrder(orderId) }
                 .onSuccess {
                     val label = customerName?.takeIf { it.isNotBlank() } ?: "고객"
-                    _state.update { state ->
-                        val updated = state.orders.map { order ->
-                            if (order.orderId == orderId) {
-                                order.copy(orderReceived = true)
-                            } else {
-                                order
-                            }
-                        }
-                        state.copy(orders = updated, toast = "${label}님의 주문이 수령 완료되었습니다!")
-                    }
-                    refresh()
+                    _state.update { it.copy(toast = "${label}님 수령 완료 처리되었습니다.", error = null) }
                 }
-                .onFailure { e -> _state.update { it.copy(error = e.message) } }
+                .onFailure { e ->
+                    _state.update { it.copy(orders = previousOrders, error = e.message) }
+                }
         }
     }
 

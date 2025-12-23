@@ -90,7 +90,7 @@ fun ProfileTab(
     accounts: List<Account>,
     onAddFriend: (String) -> Unit,
     onRemoveFriend: (Int) -> Unit,
-    onToggleParty: (Int, Boolean) -> Unit,
+    onToggleParty: (Int, String, Boolean) -> Unit,
     onLogout: () -> Unit,
     paddingValues: PaddingValues,
     account: Account?
@@ -164,7 +164,7 @@ fun ProfileTab(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             item {
                 Box(
@@ -267,12 +267,14 @@ fun ProfileTab(
                     Icon(
                         imageVector = Icons.Default.Group,
                         contentDescription = "friends",
-                        tint = Color.White
+                        tint = Color.Gray
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("내 친구목록", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                    Text("내 친구목록", fontWeight = FontWeight.Bold, fontSize = 20.sp)
                 }
+                Text("체크박스를 통해 어트랙션 줄서기 그룹을 만들 수 있습니다! 😊", color = Color.Gray, fontSize = 10.sp)
             }
+
             items(sortedFriends, key = { it.friend.id }) { friend ->
                 val hasTicket = friend.account.ticket
                 val bg = if (hasTicket) Color.White else AuroraMist.copy(alpha = 0.5f)
@@ -297,10 +299,10 @@ fun ProfileTab(
                                 contentDescription = "friend",
                                 modifier = Modifier
                                     .size(48.dp)
-                                    .background(AuroraMist, CircleShape)
-                                    .padding(6.dp)
+                                    .clip(CircleShape),
+                                contentScale = ContentScale.Crop
                             )
-                            Spacer(modifier = Modifier.size(12.dp))
+                            Spacer(modifier = Modifier.size(8.dp))
                             Text("${friend.account.name ?: "이름없음"} (${friend.friend.friendId})")
                         }
                         Row(
@@ -311,7 +313,7 @@ fun ProfileTab(
                                 Checkbox(
                                     checked = friend.friend.friendParty,
                                     onCheckedChange = { checked ->
-                                        onToggleParty(friend.friend.id, checked)
+                                    onToggleParty(friend.friend.id, friend.friend.friendId, checked)
                                     }
                                 )
                             }
@@ -343,7 +345,7 @@ fun ProfileTab(
             FriendSearchOverlay(
                 friends = friends,
                 accounts = accounts,
-                currentUserId = account?.userId,
+                currentUserId = (account?.userId ?: displayId).ifBlank { null },
                 onClose = { searching = false },
                 onAddFriend = onAddFriend
             )

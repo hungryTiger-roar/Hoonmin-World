@@ -77,7 +77,7 @@ class FriendViewModel(
         }
     }
 
-    fun updateFriendParty(id: Int, party: Boolean) {
+    fun updateFriendParty(id: Int, friendId: String, party: Boolean) {
         _state.update { state ->
             state.copy(
                 friends = state.friends.map { friend ->
@@ -89,9 +89,18 @@ class FriendViewModel(
             )
         }
         viewModelScope.launch {
+            val user = currentUser
             runCatching { friendRepo.updateFriendParty(id, party) }
                 .onSuccess { loadFriends() }
-                .onFailure { _state.update { it.copy(error = "파티 설정에 실패했습니다.") } }
+                .onFailure {
+                    if (!user.isNullOrBlank()) {
+                        runCatching { friendRepo.updateFriendPartyByIds(user, friendId, party) }
+                            .onSuccess { loadFriends() }
+                            .onFailure { _state.update { it.copy() } }
+                    } else {
+                        _state.update { it.copy(error = "파티 설정에 실패했습니다.") }
+                    }
+                }
         }
     }
 

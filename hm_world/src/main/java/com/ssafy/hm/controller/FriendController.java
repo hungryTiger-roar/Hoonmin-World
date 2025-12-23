@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -46,15 +47,36 @@ public class FriendController {
 
 	@PatchMapping("/{id}/party")
 	@Operation(summary = "Update friend party")
-	public ResponseEntity<Void> updateParty(@PathVariable Integer id, @RequestBody(required = false) FriendPartyRequest request) {
-		boolean updated = friendService.updateFriendParty(id, request == null ? null : request.getFriendParty());
+	public ResponseEntity<Void> updateParty(
+		@PathVariable Integer id,
+		@RequestBody(required = false) FriendPartyRequest request,
+		@RequestParam(value = "friendParty", required = false) Boolean friendParty
+	) {
+		Boolean party = request != null ? request.getFriendParty() : friendParty;
+		boolean updated = friendService.updateFriendParty(id, party);
 		return updated ? ResponseEntity.noContent().build() : ResponseEntity.badRequest().build();
 	}
 
 	@PostMapping("/{id}/party")
 	@Operation(summary = "Update friend party (POST)")
-	public ResponseEntity<Void> updatePartyPost(@PathVariable Integer id, @RequestBody(required = false) FriendPartyRequest request) {
-		boolean updated = friendService.updateFriendParty(id, request == null ? null : request.getFriendParty());
+	public ResponseEntity<Void> updatePartyPost(
+		@PathVariable Integer id,
+		@RequestBody(required = false) FriendPartyRequest request,
+		@RequestParam(value = "friendParty", required = false) Boolean friendParty
+	) {
+		Boolean party = request != null ? request.getFriendParty() : friendParty;
+		boolean updated = friendService.updateFriendParty(id, party);
+		return updated ? ResponseEntity.noContent().build() : ResponseEntity.badRequest().build();
+	}
+
+	@PostMapping("/party")
+	@Operation(summary = "Update friend party by user/friend ids")
+	public ResponseEntity<Void> updatePartyByIds(
+		@RequestParam String userId,
+		@RequestParam String friendId,
+		@RequestParam Boolean friendParty
+	) {
+		boolean updated = friendService.updateFriendPartyByIds(userId, friendId, friendParty);
 		return updated ? ResponseEntity.noContent().build() : ResponseEntity.badRequest().build();
 	}
 

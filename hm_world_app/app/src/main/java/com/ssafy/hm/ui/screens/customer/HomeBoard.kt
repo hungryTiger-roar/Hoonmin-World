@@ -2,6 +2,7 @@ package com.ssafy.hm.ui.screens.customer
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -22,10 +23,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ssafy.hm.data.model.HomeBoard
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeBoardScreen(board: HomeBoard, onBack: () -> Unit) {
+    val dateText = formatBoardDate(board.boardDate)
     Scaffold(
         topBar = {
             TopAppBar(
@@ -54,11 +58,16 @@ fun HomeBoardScreen(board: HomeBoard, onBack: () -> Unit) {
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
-            Text(
-                text = board.boardDate ?: "",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Text(
+                    text = dateText,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
             androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             Text(
                 text = board.boardContent ?: "",
@@ -66,5 +75,17 @@ fun HomeBoardScreen(board: HomeBoard, onBack: () -> Unit) {
                 lineHeight = 24.sp
             )
         }
+    }
+}
+
+private fun formatBoardDate(raw: String?): String {
+    if (raw.isNullOrBlank()) return ""
+    return try {
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        val outputFormat = SimpleDateFormat("yyyy.MM.dd", Locale.getDefault())
+        val parsed = inputFormat.parse(raw)
+        if (parsed != null) outputFormat.format(parsed) else raw
+    } catch (e: Exception) {
+        raw
     }
 }

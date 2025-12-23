@@ -6,5 +6,6 @@ data class HomeBoard(
     val boardId: Int,
     val boardTitle: String?,
     val boardContent: String?,
-    @SerializedName("board_date") val boardDate: String?
+    @SerializedName(value = "boardTime", alternate = ["board_date"])
+    val boardDate: String?
 )

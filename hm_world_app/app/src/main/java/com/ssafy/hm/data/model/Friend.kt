@@ -4,7 +4,7 @@ data class Friend(
     val id: Int,
     val userId: String,
     val friendId: String,
-    val friendParty: Boolean = false
+    val friendParty: Boolean
 )
 
 data class FriendPartyRequest(

@@ -60,4 +60,11 @@
 		where id = #{id};
 	</update>
 
+	<update id="updatePartyByIds">
+		update friend
+		set friend_party = #{friendParty}
+		where user_id = #{userId}
+		  and friend_id = #{friendId};
+	</update>
+
 </mapper>

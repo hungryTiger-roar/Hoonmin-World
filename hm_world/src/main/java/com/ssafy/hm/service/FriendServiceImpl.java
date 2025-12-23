@@ -39,6 +39,15 @@ public class FriendServiceImpl implements FriendService {
 	}
 
 	@Override
+	@Transactional
+	public boolean updateFriendPartyByIds(String userId, String friendId, Boolean friendParty) {
+		if (userId == null || userId.isBlank() || friendId == null || friendId.isBlank() || friendParty == null) {
+			return false;
+		}
+		return friendRepo.updatePartyByIds(userId, friendId, friendParty) == 1;
+	}
+
+	@Override
 	public List<Friend> getFriends(String userId) {
 		return friendRepo.selectByUser(userId);
 	}
