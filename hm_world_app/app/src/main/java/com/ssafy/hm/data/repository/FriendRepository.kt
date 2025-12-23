@@ -33,8 +33,11 @@ class FriendRepository(private val api: HmApi) {
     suspend fun addFriend(friend: Friend): Friend = api.addFriend(friend)
     suspend fun removeFriend(id: Int) = api.removeFriend(id)
     suspend fun updateFriendParty(id: Int, friendParty: Boolean) {
-        val request = FriendPartyRequest(friendParty)
-        runCatching { api.updateFriendPartyPatch(id, request) }
-            .getOrElse { api.updateFriendPartyPost(id, request) }
+        runCatching { api.updateFriendPartyPatch(id, friendParty) }
+            .getOrElse { api.updateFriendPartyPost(id, friendParty) }
+    }
+
+    suspend fun updateFriendPartyByIds(userId: String, friendId: String, friendParty: Boolean) {
+        api.updateFriendPartyByIds(userId, friendId, friendParty)
     }
 }

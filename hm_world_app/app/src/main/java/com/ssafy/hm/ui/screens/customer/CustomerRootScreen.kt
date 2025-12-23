@@ -79,7 +79,7 @@ fun CustomerRootScreen(
     onReserveAttraction: (Int, List<String>) -> Unit,
     onAddFriend: (String) -> Unit,
     onRemoveFriend: (Int) -> Unit,
-    onToggleParty: (Int, Boolean) -> Unit,
+    onToggleParty: (Int, String, Boolean) -> Unit,
     onRefreshFriends: () -> Unit,
     clearSelection: () -> Unit,
     clearToasts: () -> Unit

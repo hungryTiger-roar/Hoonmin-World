@@ -79,7 +79,12 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	@Transactional
 	public boolean receiveOrder(Integer orderId) {
-		return ordersRepo.receiveOrder(orderId) == 1;
+		int updated = ordersRepo.receiveOrder(orderId);
+		if (updated == 1) {
+			return true;
+		}
+		Orders existing = ordersRepo.selectById(orderId);
+		return existing != null && Boolean.TRUE.equals(existing.getOrderReceived());
 	}
 	
 	@Override

@@ -545,7 +545,7 @@ private fun AppNavHost(
                 onReserveAttraction = { attId, userIds -> lineVm.createLine(attId, userIds) },
                 onAddFriend = { friendVm.addFriend(it) },
                 onRemoveFriend = { friendVm.removeFriend(it) },
-                onToggleParty = { id, party -> friendVm.updateFriendParty(id, party) },
+                onToggleParty = { id, friendId, party -> friendVm.updateFriendParty(id, friendId, party) },
                 onRefreshFriends = { friendVm.loadFriends() },
                 clearSelection = { catalogVm.clearSelection() },
                 clearToasts = {

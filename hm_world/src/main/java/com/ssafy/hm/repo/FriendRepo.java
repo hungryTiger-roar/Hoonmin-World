@@ -14,5 +14,6 @@ public interface FriendRepo {
 	List<Friend> selectByUserTicket(String userId);
 	List<Friend> selectByUserTicketNoAtt(String userId);
 	int updateParty(@Param("id") Integer id, @Param("friendParty") Boolean friendParty);
+	int updatePartyByIds(@Param("userId") String userId, @Param("friendId") String friendId, @Param("friendParty") Boolean friendParty);
 	int delete(Integer id);
 }

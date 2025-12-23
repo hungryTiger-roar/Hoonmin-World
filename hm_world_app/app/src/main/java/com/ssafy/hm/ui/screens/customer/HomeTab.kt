@@ -292,28 +292,42 @@ fun NoticeItem(title: String?, date: String, isNew: Boolean, onClick: () -> Unit
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            if (isNew) {
-                Surface(
-                    color = Color.Red,
-                    shape = RoundedCornerShape(4.dp),
-                    modifier = Modifier.padding(end = 8.dp)
-                ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (isNew) {
+                        Surface(
+                            color = Color.Red,
+                            shape = RoundedCornerShape(4.dp),
+                            modifier = Modifier.padding(end = 8.dp)
+                        ) {
+                            Text(
+                                text = "NEW",
+                                color = Color.White,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
                     Text(
-                        text = "NEW",
-                        color = Color.White,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        text = title ?: "",
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 16.sp,
+                        modifier = Modifier.weight(1f)
                     )
                 }
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = date,
+                    color = Color.Gray,
+                    fontSize = 12.sp
+                )
             }
-            Text(
-                text = title ?: "",
-                fontWeight = FontWeight.Medium,
-                fontSize = 16.sp,
-                modifier = Modifier.weight(1f)
-            )
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
                 contentDescription = "Go to notice",
@@ -321,13 +335,5 @@ fun NoticeItem(title: String?, date: String, isNew: Boolean, onClick: () -> Unit
                 tint = Color.Gray
             )
         }
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = date,
-            color = Color.Gray,
-            fontSize = 12.sp,
-            textAlign = TextAlign.Start,
-            modifier = Modifier.fillMaxWidth()
-        )
     }
 }
