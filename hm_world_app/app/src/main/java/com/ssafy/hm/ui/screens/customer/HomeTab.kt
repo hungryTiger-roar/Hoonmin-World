@@ -1,9 +1,19 @@
-package com.ssafy.hm.ui.screens.customer
+﻿package com.ssafy.hm.ui.screens.customer
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -27,7 +37,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -35,27 +44,21 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.ssafy.hm.data.model.HomeBoard
 import com.ssafy.hm.data.model.HomeImage
-import com.ssafy.hm.ui.state.OrderState
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Locale
-
 import java.util.Date
+import java.util.Locale
 
 @Composable
 fun HomeTab(
     images: List<HomeImage>,
     boards: List<HomeBoard>,
-    orderState: OrderState,
+    hasTicket: Boolean,
     paddingValues: PaddingValues,
     onBoardClick: (HomeBoard) -> Unit,
     onTicketPurchaseClick: () -> Unit
 ) {
-    val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-    val today = sdf.format(Date())
-    val hasTicket = orderState.orders.any { it.orderTime.startsWith(today) }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -63,7 +66,6 @@ fun HomeTab(
             .verticalScroll(rememberScrollState())
             .background(Color(0xFFF7F7F7))
     ) {
-//        TopHeader()
         HomeCarousel(images)
         Spacer(modifier = Modifier.height(20.dp))
         TicketStatusCard(
@@ -72,27 +74,6 @@ fun HomeTab(
         )
         Spacer(modifier = Modifier.height(24.dp))
         NoticeBoard(boards, onBoardClick = onBoardClick)
-    }
-}
-
-@Composable
-fun TopHeader() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                brush = Brush.horizontalGradient(
-                    colors = listOf(Color(0xFF8A2BE2), Color(0xFFFF69B4))
-                )
-            )
-            .padding(top = 24.dp, bottom = 16.dp, start = 20.dp, end = 20.dp)
-    ) {
-//        Image(
-//            painter = painterResource(id = R.drawable.logo), // drawable 폴더에 있는 이미지
-//            contentDescription = "App Logo",
-//            modifier = Modifier.size(48.dp), // 원하는 크기
-//            contentScale = ContentScale.Fit
-//        )
     }
 }
 
@@ -107,9 +88,7 @@ fun HomeCarousel(images: List<HomeImage>) {
         }
     }
 
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -133,7 +112,7 @@ fun HomeCarousel(images: List<HomeImage>) {
                                 .background(Color.Gray.copy(alpha = 0.3f)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("이미지를 준비 중입니다.", color = Color.Gray)
+                            Text("이미지를 준비중입니다.", color = Color.Gray)
                         }
                     }
                 }
@@ -157,7 +136,6 @@ fun HomeCarousel(images: List<HomeImage>) {
         }
     }
 }
-
 
 @Composable
 fun TicketStatusCard(hasTicket: Boolean, onClick: () -> Unit) {
@@ -184,12 +162,12 @@ fun TicketStatusCard(hasTicket: Boolean, onClick: () -> Unit) {
             Column(modifier = Modifier.weight(1f)) {
                 if (hasTicket) {
                     Text(
-                        text = "훈민월드에 오신걸 환영합니다.😘",
+                        text = "훈민월드에 오신 것을 환영합니다!",
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )
                     Text(
-                        text = "행복 가득한 시간 보내세요!",
+                        text = "행복 가득한 하루를 보내세요!",
                         color = Color.Gray,
                         fontSize = 14.sp
                     )
@@ -200,7 +178,7 @@ fun TicketStatusCard(hasTicket: Boolean, onClick: () -> Unit) {
                         fontSize = 16.sp
                     )
                     Text(
-                        text = "탭하여 티켓 구매하기",
+                        text = "당일권 티켓 구매하기",
                         color = Color(0xFF6200EE),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold
@@ -265,7 +243,6 @@ fun NoticeBoard(boards: List<HomeBoard>, onBoardClick: (HomeBoard) -> Unit) {
                                 isNew = !boardCalendar.before(twoWeeksAgo)
                             }
                         } catch (e: Exception) {
-                            // Handle parsing exception if the format is unexpected
                             formattedDate = "날짜 없음"
                             isNew = false
                         }
@@ -331,3 +308,4 @@ fun NoticeItem(title: String?, date: String, isNew: Boolean, onClick: () -> Unit
         )
     }
 }
+

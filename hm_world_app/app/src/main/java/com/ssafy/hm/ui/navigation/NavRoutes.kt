@@ -1,7 +1,7 @@
 package com.ssafy.hm.ui.navigation
 
 sealed class NavRoutes(val route: String) {
-    // 앱 시작 시 잠깐 보여줄 스플래시 화면
+    // Navigation routes
     data object Splash : NavRoutes("splash")
     data object Login : NavRoutes("login")
     data object SignUp : NavRoutes("signup")
