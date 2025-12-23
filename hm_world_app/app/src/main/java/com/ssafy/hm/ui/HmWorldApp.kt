@@ -521,12 +521,12 @@ private fun AppNavHost(
                 orderState = orderState,
                 friendState = friendState,
                 lineState = lineState,
-<<<<<<< HEAD
+
                 initialTab = initialTab,
-=======
+
                 account = account,
                 accounts = friendState.accounts,
->>>>>>> 후니
+
                 onLogout = {
                     authVm.logout()
                     navController.navigate(NavRoutes.Login.route) { popUpTo(0) }

@@ -1,4 +1,4 @@
-package com.ssafy.hm.ui.screens.customer
+﻿package com.ssafy.hm.ui.screens.customer
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -39,7 +39,9 @@ fun ChatbotOverlay(onDismiss: () -> Unit) {
             ) {
                 Text("챗봇", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 Text("챗봇 화면입니다. (기능 미구현)")
-                Button(onClick = onDismiss, modifier = Modifier.align(Alignment.End)) { Text("닫기") }
+                Button(onClick = onDismiss, modifier = Modifier.align(Alignment.End)) {
+                    Text("닫기")
+                }
             }
         }
     }
