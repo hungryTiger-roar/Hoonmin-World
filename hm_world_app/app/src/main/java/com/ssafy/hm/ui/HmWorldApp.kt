@@ -76,6 +76,7 @@ import com.ssafy.hm.ui.state.OrderViewModelFactory
 import com.ssafy.hm.ui.screens.customer.TicketPurchaseScreen
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.ssafy.hm.ui.screens.customer.AttractionReservationScreen
 import com.ssafy.hm.ui.screens.customer.HomeBoardScreen
 import com.google.firebase.messaging.FirebaseMessaging
 import com.ssafy.hm.data.model.FcmTokenRequest
@@ -648,14 +649,15 @@ private fun AppNavHost(
             AttractionDetailScreen(
                 attraction = attraction,
                 reviews = catalogState.attractionReviews,
-                userId = account?.userId,
+                account = account, // Pass the full account object
+                allAttractions = catalogState.attractions,
                 userNames = userNames,
                 onBack = {
                     catalogVm.clearSelection()
                     navController.popBackStack()
                 },
                 onReserve = {
-                    Toast.makeText(context, "준비 중입니다.", Toast.LENGTH_SHORT).show()
+                    navController.navigate(NavRoutes.AttractionReservation.create(attId))
                 },
                 onSubmitReview = { rating, comment ->
                     catalogVm.addAttractionReview(attId, account?.userId, rating, comment)
@@ -666,6 +668,26 @@ private fun AppNavHost(
                 onDeleteReview = { reviewId, attId2 ->
                     catalogVm.deleteAttractionReview(reviewId, attId2)
                 }
+            )
+        }
+        composable(
+            route = NavRoutes.AttractionReservation.route,
+            arguments = listOf(navArgument("attId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val attId = backStackEntry.arguments?.getInt("attId") ?: 0
+            val attraction = catalogState.attractions.firstOrNull { it.attId == attId }
+            AttractionReservationScreen(
+                attraction = attraction,
+                onBack = { navController.popBackStack() },
+                onReservationComplete = {
+                    Toast.makeText(context, "예약이 완료되었습니다.", Toast.LENGTH_SHORT).show()
+                    navController.navigate(NavRoutes.CustomerMain.create(2)) {
+                        popUpTo(NavRoutes.CustomerMain.route) { inclusive = true }
+                    }
+                },
+                friendViewModel = friendVm,
+                authViewModel = authVm,
+                lineViewModel = lineVm
             )
         }
         composable(
