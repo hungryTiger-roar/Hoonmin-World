@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.ssafy.hm.data.model.Attraction
 import com.ssafy.hm.data.model.AttractionReview
+import com.ssafy.hm.data.model.FriendWithDetails
 
 @Composable
 fun AttractionTab(list: List<Attraction>, onSelect: (Int) -> Unit, paddingValues: PaddingValues) {
@@ -184,25 +185,56 @@ fun AttractionInfoCard(attraction: Attraction, onCardClick: () -> Unit) {
 fun AttractionDetailDialog(
     att: Attraction,
     reviews: List<AttractionReview>,
-    onReserve: () -> Unit,
+    availableFriends: List<FriendWithDetails>,
+    initialSelectedIds: Set<String>,
+    onReserve: (List<String>) -> Unit,
     onDismiss: () -> Unit
 ) {
+    var selectedIds by remember(att, initialSelectedIds) {
+        mutableStateOf(initialSelectedIds)
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
             Row {
-                TextButton(onClick = onReserve) { Text("대기/줄서기") }
-                TextButton(onClick = onDismiss) { Text("닫기") }
+                TextButton(onClick = { onReserve(selectedIds.toList()) }) { Text("??/???") }
+                TextButton(onClick = onDismiss) { Text("??") }
             }
         },
         title = { Text(att.attName ?: "") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(att.attComment ?: "")
-                Text("최대 수용: ${att.attCapacity}명 누적: ${att.attTotal}")
-                Text("리뷰 (${reviews.size})", fontWeight = FontWeight.Bold)
-                reviews.forEach { r -> Text("- ${r.attReviewComment ?: ""} (${r.attRating}점)") }
+                Text("??: ${att.attCapacity}? / ??: ${att.attTotal}")
+                Text("?? (${reviews.size})", fontWeight = FontWeight.Bold)
+                reviews.forEach { r -> Text("- ${r.attReviewComment ?: ""} (${r.attRating}?)") }
+                if (availableFriends.isNotEmpty()) {
+                    Text("?? ??? ???? ?????.", fontSize = 12.sp, color = Color.Gray)
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        availableFriends.forEach { friend ->
+                            val friendId = friend.friend.friendId
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text("${friend.account.name ?: "????"} ($friendId)")
+                                Checkbox(
+                                    checked = selectedIds.contains(friendId),
+                                    onCheckedChange = { checked ->
+                                        selectedIds = if (checked) {
+                                            selectedIds + friendId
+                                        } else {
+                                            selectedIds - friendId
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     )
 }
+

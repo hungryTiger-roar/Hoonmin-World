@@ -30,6 +30,15 @@ public class FriendServiceImpl implements FriendService {
 	}
 
 	@Override
+	@Transactional
+	public boolean updateFriendParty(Integer id, Boolean friendParty) {
+		if (id == null || friendParty == null) {
+			return false;
+		}
+		return friendRepo.updateParty(id, friendParty) == 1;
+	}
+
+	@Override
 	public List<Friend> getFriends(String userId) {
 		return friendRepo.selectByUser(userId);
 	}
