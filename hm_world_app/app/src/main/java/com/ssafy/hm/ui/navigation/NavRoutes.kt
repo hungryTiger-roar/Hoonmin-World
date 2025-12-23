@@ -32,7 +32,12 @@ sealed class NavRoutes(val route: String) {
     data object AdminNoticeEdit : NavRoutes("admin/notice/edit/{boardId}") {
         fun create(boardId: Int) = "admin/notice/edit/$boardId"
     }
-    data object CustomerMain : NavRoutes("customer/main")
+    data object CustomerMain : NavRoutes("customer/main?tab={tab}") {
+        fun create(tab: Int = 2) = "customer/main?tab=$tab"
+    }
+    data object Cart : NavRoutes("customer/cart")
+    data object StoreSelect : NavRoutes("customer/store-select")
+    data object OrderDetail : NavRoutes("customer/order-detail")
     data object TicketPurchase : NavRoutes("customer/ticket-purchase")
     data object NoticeDetail : NavRoutes("notice/{id}") {
         fun create(id: Int) = "notice/$id"

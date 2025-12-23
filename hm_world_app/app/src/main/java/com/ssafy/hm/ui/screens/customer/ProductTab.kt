@@ -1,8 +1,20 @@
-package com.ssafy.hm.ui.screens.customer
+﻿package com.ssafy.hm.ui.screens.customer
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -14,10 +26,27 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.ReceiptLong
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Store
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,14 +56,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.ssafy.hm.R
 import com.ssafy.hm.data.model.BuyImage
 import com.ssafy.hm.data.model.Item
-import com.ssafy.hm.data.model.ItemReview // Moved this import to the top
 import kotlinx.coroutines.delay
 
 @Composable
@@ -43,43 +70,38 @@ fun ProductTab(
     buyImages: List<BuyImage>,
     onSelect: (Int) -> Unit,
     onAddCart: (Item) -> Unit,
+    onOpenCart: () -> Unit,
+    onOpenOrderHistory: () -> Unit,
     paddingValues: PaddingValues
 ) {
     var query by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("전체") }
 
-    // 1. 기존 Column을 Box로 변경하여 고정 UI와 스크롤 UI를 분리합니다.
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(paddingValues) // Scaffold로부터 받은 패딩 적용
+            .padding(paddingValues)
             .background(Color(0xFFF9F9F9))
     ) {
-        // --- 스크롤되지 않는 고정 영역 ---
-        ProductTopBar()
+        ProductTopBar(onCartClick = onOpenCart, onPurchaseHistoryClick = onOpenOrderHistory)
         Spacer(modifier = Modifier.height(8.dp))
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
             ProductSearchBar(query = query, onQueryChange = { query = it })
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // --- 여기부터 스크롤되는 영역 ---
         val filteredList = list.filter {
             (selectedCategory == "전체" || it.itemCategory == selectedCategory) &&
-                    (query.isBlank() || it.itemName.contains(query, ignoreCase = true))
+                (query.isBlank() || it.itemName.contains(query, ignoreCase = true))
         }
 
-        // 2. LazyVerticalGrid를 사용하여 스크롤 영역을 만듭니다.
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
             modifier = Modifier.padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            // 그리드의 상단과 하단에 패딩을 추가합니다.
             contentPadding = PaddingValues(top = 8.dp, bottom = 30.dp)
         ) {
-            // 3. 고정 UI였던 컴포저블들을 LazyGrid의 'item'으로 추가합니다.
-            //    span을 사용하여 이 아이템들이 한 줄을 모두 차지하도록 설정합니다.
             item(span = { GridItemSpan(2) }) {
                 ProductCarousel(images = buyImages)
             }
@@ -92,7 +114,7 @@ fun ProductTab(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        "추천 상품",
+                        text = "추천 상품",
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
                         modifier = Modifier.padding(bottom = 8.dp)
@@ -100,7 +122,6 @@ fun ProductTab(
                 }
             }
 
-            // 4. 기존 상품 목록을 'items'로 추가합니다.
             items(filteredList, key = { it.itemId }) { item ->
                 ProductCard(
                     item = item,
@@ -112,9 +133,8 @@ fun ProductTab(
     }
 }
 
-
 @Composable
-fun ProductTopBar() {
+fun ProductTopBar(onCartClick: () -> Unit, onPurchaseHistoryClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -130,12 +150,16 @@ fun ProductTopBar() {
         Spacer(modifier = Modifier.width(8.dp))
         Text("훈민월드", fontWeight = FontWeight.Bold, fontSize = 20.sp)
         Spacer(modifier = Modifier.weight(1f))
-        TextButton(onClick = { /* TODO: 구매내역 화면 이동 */ }) {
-            Icon(imageVector = Icons.Default.ReceiptLong, contentDescription = "Purchase History", tint = Color.Gray)
+        TextButton(onClick = onPurchaseHistoryClick) {
+            Icon(
+                imageVector = Icons.Default.ReceiptLong,
+                contentDescription = "Purchase History",
+                tint = Color.Gray
+            )
             Spacer(modifier = Modifier.width(4.dp))
             Text("구매내역", color = Color.Gray)
         }
-        IconButton(onClick = { /* TODO: 장바구니 화면 이동 */ }) {
+        IconButton(onClick = onCartClick) {
             Icon(Icons.Default.ShoppingCart, contentDescription = "Cart", tint = Color.Gray)
         }
     }
@@ -197,7 +221,7 @@ fun ProductCarousel(images: List<BuyImage>) {
                                 .background(Color.Gray.copy(alpha = 0.3f)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("이미지를 준비 중입니다.", color = Color.Gray)
+                            Text("이미지를 준비중입니다.", color = Color.Gray)
                         }
                     }
                 }
@@ -224,7 +248,7 @@ fun ProductCarousel(images: List<BuyImage>) {
 
 @Composable
 fun CategoryButtons(selectedCategory: String, onCategorySelected: (String) -> Unit) {
-    val categories = listOf("전체", "신상품", "시그니쳐", "악세사리", "의류")
+    val categories = listOf("전체", "신상품", "문구/잡화", "액세서리", "의류")
 
     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         items(categories) { category ->
@@ -240,24 +264,6 @@ fun CategoryButtons(selectedCategory: String, onCategorySelected: (String) -> Un
             ) {
                 Text(category)
             }
-        }
-    }
-}
-
-@Composable
-fun ProductGrid(
-    items: List<Item>,
-    onItemClick: (Int) -> Unit,
-    onAddToCartClick: (Item) -> Unit
-) {
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        modifier = Modifier.padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        items(items, key = { it.itemId }) { item ->
-            ProductCard(item = item, onAddToCartClick = { onAddToCartClick(item) }, onCardClick = { onItemClick(item.itemId) })
         }
     }
 }
@@ -284,27 +290,35 @@ fun ProductCard(item: Item, onAddToCartClick: () -> Unit, onCardClick: () -> Uni
                     error = painterResource(id = R.drawable.noimage),
                     fallback = painterResource(id = R.drawable.noimage)
                 )
-                if (item.itemCategory == "신상품") { // Example condition for "NEW" badge
-                     Surface(
+                if (item.itemCategory == "신상품") {
+                    Surface(
                         color = Color(0xFFE91E63).copy(alpha = 0.9f),
                         shape = RoundedCornerShape(bottomStart = 8.dp),
                         modifier = Modifier.padding(top = 8.dp, end = 8.dp)
                     ) {
-                        Row(modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
-                           Icon(Icons.Default.Star, contentDescription = "New", tint=Color.White, modifier = Modifier.size(14.dp))
-                           Spacer(modifier = Modifier.width(2.dp))
-                           Text(
+                        Row(
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = "New",
+                                tint = Color.White,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(2.dp))
+                            Text(
                                 text = "NEW",
                                 color = Color.White,
                                 fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
                 }
             }
             Column(modifier = Modifier.padding(12.dp)) {
-                Text(item.itemName ?: "", fontWeight = FontWeight.Bold, maxLines = 1)
+                Text(item.itemName, fontWeight = FontWeight.Bold, maxLines = 1)
                 Spacer(modifier = Modifier.height(4.dp))
                 Text("${item.itemPrice}원", color = Color.Gray)
                 Spacer(modifier = Modifier.height(8.dp))
@@ -312,7 +326,7 @@ fun ProductCard(item: Item, onAddToCartClick: () -> Unit, onCardClick: () -> Uni
                     onClick = onAddToCartClick,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
-                    contentPadding = PaddingValues(0.dp) // Remove default padding
+                    contentPadding = PaddingValues(0.dp)
                 ) {
                     Box(
                         modifier = Modifier
@@ -322,7 +336,7 @@ fun ProductCard(item: Item, onAddToCartClick: () -> Unit, onCardClick: () -> Uni
                                     colors = listOf(Color(0xFF8A2BE2), Color(0xFFFF69B4))
                                 )
                             )
-                            .padding(vertical = 12.dp), // Apply padding to the Box
+                            .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text("담기", color = Color.White)
@@ -333,30 +347,4 @@ fun ProductCard(item: Item, onAddToCartClick: () -> Unit, onCardClick: () -> Uni
     }
 }
 
-@Composable
-fun ItemDetailDialog(
-    item: Item,
-    reviews: List<ItemReview>,
-    onAddCart: (Item) -> Unit, // Modified to accept Item
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            Row {
-                TextButton(onClick = { onAddCart(item) }) { Text("장바구니") } // Pass item to onAddCart
-                TextButton(onClick = onDismiss) { Text("닫기") }
-            }
-        },
-        title = { Text(item.itemName ?: "") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("가격 ${item.itemPrice}원")
-                Text(item.itemComment ?: "")
-                Text("리뷰 (${reviews.size})", fontWeight = FontWeight.Bold)
-                reviews.forEach { r -> Text("- ${r.itemReviewComment ?: ""} (${r.itemRating}점)") }
-            }
-        }
-    )
-}
 

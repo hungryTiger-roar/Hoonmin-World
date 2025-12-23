@@ -1,4 +1,4 @@
-package com.ssafy.hm.ui.screens.customer
+﻿package com.ssafy.hm.ui.screens.customer
 
 import android.widget.Toast
 import androidx.compose.material.icons.Icons
@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
@@ -44,10 +45,13 @@ fun CustomerRootScreen(
     orderState: OrderState,
     friendState: FriendState,
     lineState: LineState,
+    initialTab: Int,
     onLogout: () -> Unit,
     onRefresh: () -> Unit,
     onLoadAttraction: (Int) -> Unit,
-    onLoadItem: (Int) -> Unit,
+    onOpenItemDetail: (Int) -> Unit,
+    onOpenCart: () -> Unit,
+    onOpenOrderHistory: () -> Unit,
     onAddCart: (Item) -> Unit,
     onUpdateCart: (Item, Int) -> Unit,
     onCreateOrder: (Int) -> Unit,
@@ -60,28 +64,24 @@ fun CustomerRootScreen(
     clearSelection: () -> Unit,
     clearToasts: () -> Unit
 ) {
-    var tab by remember { mutableStateOf(2) }
-    var showCart by remember { mutableStateOf(false) }
+    var tab by rememberSaveable { mutableStateOf(initialTab) }
     var showChat by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-    LaunchedEffect(tab) {
-        if (tab != 1) showCart = false
-    }
 
     LaunchedEffect(orderState.error ?: friendState.error ?: lineState.error) {
         (orderState.error ?: friendState.error ?: lineState.error)?.let { msg ->
             Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
         }
     }
-    LaunchedEffect(orderState.toast ?: friendState.toast ?: lineState.toast) {
-        (orderState.toast ?: friendState.toast ?: lineState.toast)?.let { msg ->
+    LaunchedEffect(friendState.toast ?: lineState.toast) {
+        (friendState.toast ?: lineState.toast)?.let { msg ->
             Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
             clearToasts()
         }
     }
 
-    val navItems = listOf("어트랙션 예약", "상품 구매", "홈", "지도", "내정보")
+    val navItems = listOf("\uC5B4\uD2B8\uB799\uC158 \uC608\uC57D", "\uC0C1\uD488 \uAD6C\uB9E4", "\uD648", "\uC9C0\uB3C4", "\uB0B4 \uC815\uBCF4")
     val navIcons = listOf(Icons.Default.Info, Icons.Default.AddShoppingCart, Icons.Default.Info, Icons.Default.Map, Icons.Default.Person)
 
     Scaffold(
@@ -110,8 +110,10 @@ fun CustomerRootScreen(
             1 -> ProductTab(
                 list = catalogState.items,
                 buyImages = catalogState.buyImages,
-                onSelect = onLoadItem,
+                onSelect = onOpenItemDetail,
                 onAddCart = onAddCart,
+                onOpenCart = onOpenCart,
+                onOpenOrderHistory = onOpenOrderHistory,
                 paddingValues = innerPadding
             )
             2 -> HomeTab(
@@ -135,21 +137,6 @@ fun CustomerRootScreen(
                 paddingValues = innerPadding
             )
         }
-
-        if (showCart) {
-            CartDialog(
-                cart = orderState.cart,
-                onChange = onUpdateCart,
-                onOrder = { store ->
-                    onCreateOrder(store)
-                    showCart = false
-                },
-                onDismiss = { showCart = false }
-            )
-        }
-        catalogState.selectedItem?.let {
-            ItemDetailDialog(it, catalogState.itemReviews, onAddCart = { onAddCart(it) }) { clearSelection() }
-        }
         catalogState.selectedAttraction?.let {
             AttractionDetailDialog(it, catalogState.attractionReviews, onReserve = {
                 onReserveAttraction(it.attId, friendState.availableFriends.map { f -> f.friend.friendId })
@@ -158,3 +145,9 @@ fun CustomerRootScreen(
         if (showChat) ChatbotOverlay { showChat = false }
     }
 }
+
+
+
+
+
+

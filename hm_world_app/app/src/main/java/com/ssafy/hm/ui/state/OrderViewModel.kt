@@ -1,4 +1,4 @@
-package com.ssafy.hm.ui.state
+﻿package com.ssafy.hm.ui.state
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -50,7 +50,7 @@ class OrderViewModel(
         _state.update { it.copy(toast = null) }
     }
 
-    fun createOrder(store: Int) {
+    fun createOrder(store: Int, onSuccess: (() -> Unit)? = null) {
         val user = currentUser ?: return
         val cart = _state.value.cart
         if (cart.isEmpty()) return
@@ -62,6 +62,7 @@ class OrderViewModel(
             }.onSuccess {
                 _state.update { it.copy(cart = emptyMap(), toast = "주문이 완료되었습니다.") }
                 loadOrders()
+                onSuccess?.invoke()
             }.onFailure { e ->
                 _state.update { it.copy(error = e.message) }
             }

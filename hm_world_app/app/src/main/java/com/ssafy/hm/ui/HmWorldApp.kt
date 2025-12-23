@@ -1,4 +1,4 @@
-package com.ssafy.hm.ui
+﻿package com.ssafy.hm.ui
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -46,7 +46,11 @@ import com.ssafy.hm.ui.screens.admin.AdminAttractionLineManagementScreen
 import com.ssafy.hm.ui.screens.admin.AdminNotificationManagementScreen
 import com.ssafy.hm.ui.screens.auth.LoginScreen
 import com.ssafy.hm.ui.screens.auth.SignUpScreen
+import com.ssafy.hm.ui.screens.customer.CartScreen
 import com.ssafy.hm.ui.screens.customer.CustomerRootScreen
+import com.ssafy.hm.ui.screens.customer.OrderDetailScreen
+import com.ssafy.hm.ui.screens.customer.ProductDetailScreen
+import com.ssafy.hm.ui.screens.customer.StoreSelectScreen
 import com.ssafy.hm.ui.theme.AuroraBlue
 import com.ssafy.hm.ui.theme.AuroraGlow
 import com.ssafy.hm.ui.theme.AuroraPink
@@ -133,7 +137,7 @@ fun HmWorldApp() {
             val target = if (acct.userId.equals("staff", ignoreCase = true)) {
                 NavRoutes.AdminDashboard.route
             } else {
-                NavRoutes.CustomerMain.route
+                NavRoutes.CustomerMain.create(2)
             }
             navController.navigate(target) {
                 popUpTo(0) { inclusive = true }
@@ -146,7 +150,7 @@ fun HmWorldApp() {
     }
     LaunchedEffect(authState.registrationCompleted) {
         if (authState.registrationCompleted) {
-            Toast.makeText(context, "회원가입이 완료되었습니다.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "?뚯썝媛?낆씠 ?꾨즺?섏뿀?듬땲??", Toast.LENGTH_SHORT).show()
         }
     }
     LaunchedEffect(homeState.error ?: catalogState.error ?: orderState.error ?: adminOrderState.error ?: adminLineState.error ?: friendState.error ?: lineState.error) {
@@ -158,6 +162,12 @@ fun HmWorldApp() {
         homeState.toast?.let {
             Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
             homeVm.clearToast()
+        }
+    }
+    LaunchedEffect(orderState.toast) {
+        orderState.toast?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            orderVm.clearToast()
         }
     }
     LaunchedEffect(adminOrderState.toast) {
@@ -224,12 +234,12 @@ private fun AppNavHost(
     loading: Boolean
 ) {
     val context = LocalContext.current
-    // 시작 화면을 스플래시로 두고 main 이미지를 먼저 보여준다.
+    // ?쒖옉 ?붾㈃???ㅽ뵆?섏떆濡??먭퀬 main ?대?吏瑜?癒쇱? 蹂댁뿬以??
     NavHost(navController = navController, startDestination = NavRoutes.Splash.route) {
         composable(NavRoutes.Splash.route) {
             SplashScreen()
             LaunchedEffect(Unit) {
-                // 1초 후 로그인 화면으로 이동
+                // 1珥???濡쒓렇???붾㈃?쇰줈 ?대룞
                 kotlinx.coroutines.delay(1000)
                 navController.navigate(NavRoutes.Login.route) {
                     popUpTo(NavRoutes.Splash.route) { inclusive = true }
@@ -376,7 +386,7 @@ private fun AppNavHost(
                 )
             } else {
                 LaunchedEffect(Unit) {
-                    Toast.makeText(context, "어트랙션 정보를 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "?댄듃?숈뀡 ?뺣낫瑜?李얠쓣 ???놁뒿?덈떎.", Toast.LENGTH_SHORT).show()
                     navController.popBackStack()
                 }
             }
@@ -479,20 +489,30 @@ private fun AppNavHost(
                 }
             )
         }
-        composable(NavRoutes.CustomerMain.route) {
+        composable(
+            route = NavRoutes.CustomerMain.route,
+            arguments = listOf(navArgument("tab") {
+                type = NavType.IntType
+                defaultValue = 2
+            })
+        ) { backStackEntry ->
+            val initialTab = backStackEntry.arguments?.getInt("tab") ?: 2
             CustomerRootScreen(
                 homeState = homeState,
                 catalogState = catalogState,
                 orderState = orderState,
                 friendState = friendState,
                 lineState = lineState,
+                initialTab = initialTab,
                 onLogout = {
                     authVm.logout()
                     navController.navigate(NavRoutes.Login.route) { popUpTo(0) }
                 },
                 onRefresh = { homeVm.refresh(); catalogVm.refresh() },
                 onLoadAttraction = { catalogVm.loadAttractionDetail(it) },
-                onLoadItem = { catalogVm.loadItemDetail(it) },
+                onOpenItemDetail = { navController.navigate(NavRoutes.ItemDetail.create(it)) },
+                onOpenCart = { navController.navigate(NavRoutes.Cart.route) },
+                onOpenOrderHistory = { navController.navigate(NavRoutes.OrderDetail.route) },
                 onAddCart = { orderVm.addToCart(it) },
                 onUpdateCart = { item, qty -> orderVm.updateCart(item, qty) },
                 onCreateOrder = { orderVm.createOrder(it) },
@@ -519,7 +539,7 @@ private fun AppNavHost(
             } else {
                 // Handle case where board is not found
                 LaunchedEffect(Unit) {
-                    Toast.makeText(context, "공지사항을 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "怨듭??ы빆??李얠쓣 ???놁뒿?덈떎.", Toast.LENGTH_SHORT).show()
                     navController.popBackStack()
                 }
             }
@@ -527,6 +547,64 @@ private fun AppNavHost(
         composable(NavRoutes.TicketPurchase.route) {
             TicketPurchaseScreen(
                 onBack = { navController.popBackStack() }
+            )
+        }
+        composable(NavRoutes.Cart.route) {
+            CartScreen(
+                cart = orderState.cart,
+                onChange = { item, qty -> orderVm.updateCart(item, qty) },
+                onCheckout = { navController.navigate(NavRoutes.StoreSelect.route) },
+                onBack = { navController.popBackStack() },
+                onContinueShopping = {
+                    navController.navigate(NavRoutes.CustomerMain.create(1)) {
+                        popUpTo(NavRoutes.CustomerMain.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+        composable(NavRoutes.StoreSelect.route) {
+            StoreSelectScreen(
+                onBack = { navController.popBackStack() },
+                onSelectStore = { storeId ->
+                    orderVm.createOrder(storeId) {
+                        navController.navigate(NavRoutes.OrderDetail.route) {
+                            popUpTo(NavRoutes.Cart.route) { inclusive = true }
+                        }
+                    }
+                }
+            )
+        }
+        composable(NavRoutes.OrderDetail.route) {
+            OrderDetailScreen(
+                orders = orderState.orders,
+                orderDetails = orderState.orderDetails,
+                items = catalogState.items.associateBy { it.itemId },
+                onBack = { navController.popBackStack() },
+                onGoShopping = {
+                    navController.navigate(NavRoutes.CustomerMain.create(1)) {
+                        popUpTo(NavRoutes.CustomerMain.route) { inclusive = true }
+                    }
+                },
+                onRefresh = { orderVm.loadOrders() }
+            )
+        }
+        composable(
+            route = NavRoutes.ItemDetail.route,
+            arguments = listOf(navArgument("id") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val itemId = backStackEntry.arguments?.getInt("id") ?: 0
+            LaunchedEffect(itemId) { catalogVm.loadItemDetail(itemId) }
+            val item = catalogState.selectedItem?.takeIf { it.itemId == itemId }
+                ?: catalogState.items.firstOrNull { it.itemId == itemId }
+            ProductDetailScreen(
+                item = item,
+                reviews = catalogState.itemReviews,
+                onBack = {
+                    catalogVm.clearSelection()
+                    navController.popBackStack()
+                },
+                onAddCart = { orderVm.addToCart(it) },
+                onOpenCart = { navController.navigate(NavRoutes.Cart.route) }
             )
         }
     }
