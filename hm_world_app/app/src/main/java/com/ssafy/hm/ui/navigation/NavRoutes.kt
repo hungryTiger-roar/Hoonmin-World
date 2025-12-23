@@ -48,4 +48,7 @@ sealed class NavRoutes(val route: String) {
     data object AttractionDetail : NavRoutes("att/{id}") {
         fun create(id: Int) = "att/$id"
     }
+    data object AttractionReservation : NavRoutes("att/reservation/{attId}") {
+        fun create(attId: Int) = "att/reservation/$attId"
+    }
 }

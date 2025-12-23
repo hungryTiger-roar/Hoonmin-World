@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
+import com.ssafy.hm.data.model.Account
 import com.ssafy.hm.data.model.Attraction
 import com.ssafy.hm.data.model.AttractionReview
 import java.util.Locale
@@ -61,7 +62,8 @@ import java.util.Locale
 fun AttractionDetailScreen(
     attraction: Attraction?,
     reviews: List<AttractionReview>,
-    userId: String?,
+    account: Account?,
+    allAttractions: List<Attraction>,
     userNames: Map<String, String>,
     onBack: () -> Unit,
     onReserve: () -> Unit,
@@ -103,6 +105,25 @@ fun AttractionDetailScreen(
             }
         },
         bottomBar = {
+            val reservedAttId = account?.attId
+            val buttonEnabled: Boolean
+            val buttonText: String
+
+            if (reservedAttId != null) {
+                val reservedAttractionName = allAttractions.find { it.attId == reservedAttId }?.attName ?: "알 수 없는 놀이기구"
+                buttonText = "$reservedAttractionName 예약 중!"
+                buttonEnabled = false
+            } else {
+                buttonText = "예약하기"
+                buttonEnabled = true
+            }
+
+            val buttonColors = if (buttonEnabled) {
+                listOf(Color(0xFF9C27FF), Color(0xFFFF5AA4))
+            } else {
+                listOf(Color.Gray, Color.LightGray)
+            }
+
             Button(
                 onClick = onReserve,
                 modifier = Modifier
@@ -112,21 +133,20 @@ fun AttractionDetailScreen(
                     .height(52.dp),
                 shape = RoundedCornerShape(18.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                contentPadding = PaddingValues(0.dp)
+                contentPadding = PaddingValues(0.dp),
+                enabled = buttonEnabled
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(
-                            brush = Brush.horizontalGradient(
-                                colors = listOf(Color(0xFF9C27FF), Color(0xFFFF5AA4))
-                            ),
+                            brush = Brush.horizontalGradient(buttonColors),
                             shape = RoundedCornerShape(18.dp)
                         ),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "예약하기",
+                        text = buttonText,
                         color = Color.White,
                         fontWeight = FontWeight.Bold
                     )
@@ -263,7 +283,7 @@ fun AttractionDetailScreen(
                             Text("(${reviews.size})", color = Color.Gray, fontSize = 12.sp)
                         }
 
-                        val hasMyReview = !userId.isNullOrBlank() && reviews.any { it.userId == userId }
+                        val hasMyReview = !(account?.userId).isNullOrBlank() && reviews.any { it.userId == account?.userId }
                         if (!hasMyReview) {
                             Row (
                                 modifier = Modifier.fillMaxWidth(),
@@ -300,7 +320,7 @@ fun AttractionDetailScreen(
                                         rating = review.attRating,
                                         comment = review.attReviewComment ?: "",
                                         date = review.attTime,
-                                        isMine = review.userId == userId,
+                                        isMine = review.userId == account?.userId,
                                         onEdit = { editTarget.value = review },
                                         onDelete = { deleteTarget.value = review }
                                     )
