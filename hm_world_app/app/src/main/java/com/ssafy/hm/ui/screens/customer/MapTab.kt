@@ -187,13 +187,24 @@ private fun rememberMapViewWithLifecycle(): MapView {
                 Lifecycle.Event.ON_RESUME -> mapView.onResume()
                 Lifecycle.Event.ON_PAUSE -> mapView.onPause()
                 Lifecycle.Event.ON_STOP -> mapView.onStop()
-                Lifecycle.Event.ON_DESTROY -> mapView.onDestroy()
                 else -> Unit
             }
         }
         lifecycle.addObserver(observer)
+        when {
+            lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) -> {
+                mapView.onStart()
+                mapView.onResume()
+            }
+            lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED) -> {
+                mapView.onStart()
+            }
+            else -> Unit
+        }
         onDispose {
             lifecycle.removeObserver(observer)
+            mapView.onPause()
+            mapView.onStop()
             mapView.onDestroy()
         }
     }

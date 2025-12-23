@@ -119,6 +119,12 @@ interface HmApi {
     @DELETE("/friends/{id}")
     suspend fun removeFriend(@Path("id") id: Int): Void
 
+    @POST("/friends/{id}/party")
+    suspend fun updateFriendPartyPost(@Path("id") id: Int, @Body request: FriendPartyRequest): Void
+
+    @PATCH("/friends/{id}/party")
+    suspend fun updateFriendPartyPatch(@Path("id") id: Int, @Body request: FriendPartyRequest): Void
+
     @POST("/line/{attId}")
     suspend fun createLine(@Path("attId") attId: Int, @Body req: AttractionLineCreateRequest): Int
 
