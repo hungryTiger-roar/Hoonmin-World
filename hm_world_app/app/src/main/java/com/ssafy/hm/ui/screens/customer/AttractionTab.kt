@@ -2,7 +2,17 @@ package com.ssafy.hm.ui.screens.customer
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -12,8 +22,19 @@ import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,18 +42,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.ssafy.hm.R
 import com.ssafy.hm.data.model.Attraction
-import com.ssafy.hm.data.model.AttractionReview
-import com.ssafy.hm.data.model.FriendWithDetails
 
 @Composable
-fun AttractionTab(list: List<Attraction>, onSelect: (Int) -> Unit, paddingValues: PaddingValues) {
+fun AttractionTab(
+    list: List<Attraction>,
+    onSelect: (Int) -> Unit,
+    paddingValues: PaddingValues
+) {
     var query by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("전체") }
 
@@ -56,7 +78,7 @@ fun AttractionTab(list: List<Attraction>, onSelect: (Int) -> Unit, paddingValues
 
         val filteredList = list.filter {
             (selectedCategory == "전체" || it.attCategory == selectedCategory) &&
-                    (query.isBlank() || it.attName?.contains(query, ignoreCase = true) == true)
+                (query.isBlank() || it.attName?.contains(query, ignoreCase = true) == true)
         }
 
         LazyColumn(
@@ -71,19 +93,19 @@ fun AttractionTab(list: List<Attraction>, onSelect: (Int) -> Unit, paddingValues
 }
 
 @Composable
-fun AttractionTopBar() {
-    Box(
+private fun AttractionTopBar() {
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 12.dp),
-        contentAlignment = Alignment.Center
+        horizontalArrangement = Arrangement.Center
     ) {
         Text(text = "어트랙션 예약", fontSize = 20.sp, fontWeight = FontWeight.Bold)
     }
 }
 
 @Composable
-fun AttractionSearchBar(query: String, onQueryChange: (String) -> Unit) {
+private fun AttractionSearchBar(query: String, onQueryChange: (String) -> Unit) {
     TextField(
         value = query,
         onValueChange = onQueryChange,
@@ -102,8 +124,8 @@ fun AttractionSearchBar(query: String, onQueryChange: (String) -> Unit) {
 }
 
 @Composable
-fun AttractionCategoryButtons(selectedCategory: String, onCategorySelected: (String) -> Unit) {
-    val categories = listOf("전체", "인기", "짧은 대기시간", "스릴", "가족", "어린이")
+private fun AttractionCategoryButtons(selectedCategory: String, onCategorySelected: (String) -> Unit) {
+    val categories = listOf("전체", "스릴", "가족", "어린이", "공연")
     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         items(categories) { category ->
             val isSelected = category == selectedCategory
@@ -123,7 +145,7 @@ fun AttractionCategoryButtons(selectedCategory: String, onCategorySelected: (Str
 }
 
 @Composable
-fun AttractionInfoCard(attraction: Attraction, onCardClick: () -> Unit) {
+private fun AttractionInfoCard(attraction: Attraction, onCardClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -141,12 +163,17 @@ fun AttractionInfoCard(attraction: Attraction, onCardClick: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = attraction.attName ?: "이름 없음",
+                    text = attraction.attName ?: "어트랙션",
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Groups, contentDescription = "Capacity", modifier = Modifier.size(16.dp), tint = Color.Gray)
+                    Icon(
+                        Icons.Default.Groups,
+                        contentDescription = "Capacity",
+                        modifier = Modifier.size(16.dp),
+                        tint = Color.Gray
+                    )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text("최대 ${attraction.attCapacity}명", fontSize = 14.sp, color = Color.Gray)
                 }
@@ -156,18 +183,26 @@ fun AttractionInfoCard(attraction: Attraction, onCardClick: () -> Unit) {
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-                // 예약 명수 (임시 주석)
-                 Row(verticalAlignment = Alignment.CenterVertically) {
-                     Icon(Icons.Default.LocationOn, contentDescription = "Waiting Count", modifier = Modifier.size(16.dp), tint = Color.Red.copy(alpha=0.7f))
-                     Spacer(modifier = Modifier.width(4.dp))
-                     Text("대기 120명", fontSize = 14.sp, color = Color.Gray) // 예시: "대기 ${attraction.waitingCount}명"
-                 }
-                // 예상 대기 시간 (임시 주석)
-                 Row(verticalAlignment = Alignment.CenterVertically) {
-                     Icon(Icons.Default.AccessTime, contentDescription = "Wait Time", modifier = Modifier.size(16.dp), tint = Color.Gray)
-                     Spacer(modifier = Modifier.width(4.dp))
-                     Text("예상 50분", fontSize = 14.sp, color = Color.Gray) // 예시: "예상 ${attraction.waitTime}분"
-                 }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.LocationOn,
+                        contentDescription = "Waiting Count",
+                        modifier = Modifier.size(16.dp),
+                        tint = Color.Red.copy(alpha = 0.7f)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("대기 120명", fontSize = 14.sp, color = Color.Gray)
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.AccessTime,
+                        contentDescription = "Wait Time",
+                        modifier = Modifier.size(16.dp),
+                        tint = Color.Gray
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("대기 50분", fontSize = 14.sp, color = Color.Gray)
+                }
             }
             Spacer(modifier = Modifier.width(16.dp))
             AsyncImage(
@@ -184,62 +219,3 @@ fun AttractionInfoCard(attraction: Attraction, onCardClick: () -> Unit) {
         }
     }
 }
-
-
-@Composable
-fun AttractionDetailDialog(
-    att: Attraction,
-    reviews: List<AttractionReview>,
-    availableFriends: List<FriendWithDetails>,
-    initialSelectedIds: Set<String>,
-    onReserve: (List<String>) -> Unit,
-    onDismiss: () -> Unit
-) {
-    var selectedIds by remember(att, initialSelectedIds) {
-        mutableStateOf(initialSelectedIds)
-    }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            Row {
-                TextButton(onClick = { onReserve(selectedIds.toList()) }) { Text("??/???") }
-                TextButton(onClick = onDismiss) { Text("??") }
-            }
-        },
-        title = { Text(att.attName ?: "") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(att.attComment ?: "")
-                Text("??: ${att.attCapacity}? / ??: ${att.attTotal}")
-                Text("?? (${reviews.size})", fontWeight = FontWeight.Bold)
-                reviews.forEach { r -> Text("- ${r.attReviewComment ?: ""} (${r.attRating}?)") }
-                if (availableFriends.isNotEmpty()) {
-                    Text("?? ??? ???? ?????.", fontSize = 12.sp, color = Color.Gray)
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        availableFriends.forEach { friend ->
-                            val friendId = friend.friend.friendId
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text("${friend.account.name ?: "????"} ($friendId)")
-                                Checkbox(
-                                    checked = selectedIds.contains(friendId),
-                                    onCheckedChange = { checked ->
-                                        selectedIds = if (checked) {
-                                            selectedIds + friendId
-                                        } else {
-                                            selectedIds - friendId
-                                        }
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    )
-}
-

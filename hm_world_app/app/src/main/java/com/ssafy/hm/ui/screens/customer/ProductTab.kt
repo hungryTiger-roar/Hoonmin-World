@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -71,11 +72,13 @@ fun ProductTab(
     onSelect: (Int) -> Unit,
     onAddCart: (Item) -> Unit,
     onOpenCart: () -> Unit,
+    cartCount: Int,
     onOpenOrderHistory: () -> Unit,
     paddingValues: PaddingValues
 ) {
     var query by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("전체") }
+    val actionColor = Color.Black
 
     Column(
         modifier = Modifier
@@ -83,7 +86,12 @@ fun ProductTab(
             .padding(paddingValues)
             .background(Color(0xFFF9F9F9))
     ) {
-        ProductTopBar(onCartClick = onOpenCart, onPurchaseHistoryClick = onOpenOrderHistory)
+        ProductTopBar(
+            onCartClick = onOpenCart,
+            onPurchaseHistoryClick = onOpenOrderHistory,
+            cartCount = cartCount,
+            actionColor = actionColor
+        )
         Spacer(modifier = Modifier.height(8.dp))
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
             ProductSearchBar(query = query, onQueryChange = { query = it })
@@ -134,7 +142,12 @@ fun ProductTab(
 }
 
 @Composable
-fun ProductTopBar(onCartClick: () -> Unit, onPurchaseHistoryClick: () -> Unit) {
+fun ProductTopBar(
+    onCartClick: () -> Unit,
+    onPurchaseHistoryClick: () -> Unit,
+    cartCount: Int,
+    actionColor: Color
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -154,13 +167,34 @@ fun ProductTopBar(onCartClick: () -> Unit, onPurchaseHistoryClick: () -> Unit) {
             Icon(
                 imageVector = Icons.Default.ReceiptLong,
                 contentDescription = "Purchase History",
-                tint = Color.Gray
+                tint = actionColor
             )
             Spacer(modifier = Modifier.width(4.dp))
-            Text("구매내역", color = Color.Gray)
+            Text("구매내역", color = actionColor)
         }
-        IconButton(onClick = onCartClick) {
-            Icon(Icons.Default.ShoppingCart, contentDescription = "Cart", tint = Color.Gray)
+        CartIconWithBadge(cartCount = cartCount, onClick = onCartClick, tint = actionColor)
+    }
+}
+
+@Composable
+private fun CartIconWithBadge(cartCount: Int, onClick: () -> Unit, tint: Color) {
+    Box {
+        IconButton(onClick = onClick) {
+            Icon(Icons.Default.ShoppingCart, contentDescription = "Cart", tint = tint)
+        }
+        if (cartCount > 0) {
+            val label = if (cartCount > 99) "99+" else cartCount.toString()
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .offset(x = (-2).dp, y = 2.dp)
+                    .size(18.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFFF4D6D)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = label, color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            }
         }
     }
 }
@@ -346,5 +380,3 @@ fun ProductCard(item: Item, onAddToCartClick: () -> Unit, onCardClick: () -> Uni
         }
     }
 }
-
-
