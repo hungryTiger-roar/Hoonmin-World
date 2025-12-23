@@ -70,10 +70,11 @@ class AdminOrderViewModelFactory : ViewModelProvider.Factory {
 
 class FriendViewModelFactory : ViewModelProvider.Factory {
     private val friendRepo = FriendRepository(NetworkModule.api)
+    private val accountRepo = AccountRepository(NetworkModule.api)
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(FriendViewModel::class.java)) {
-            return FriendViewModel(friendRepo) as T
+            return FriendViewModel(friendRepo, accountRepo) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class: $modelClass")
     }
