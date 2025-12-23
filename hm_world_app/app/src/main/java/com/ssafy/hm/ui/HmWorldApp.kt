@@ -72,6 +72,12 @@ import com.ssafy.hm.ui.screens.customer.TicketPurchaseScreen
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.ssafy.hm.ui.screens.customer.HomeBoardScreen
+import com.google.firebase.messaging.FirebaseMessaging
+import com.ssafy.hm.data.model.FcmTokenRequest
+import com.ssafy.hm.data.network.NetworkModule
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
 fun HmWorldApp() {
@@ -130,6 +136,16 @@ fun HmWorldApp() {
             }
             orderVm.setUser(acct.userId)
             friendVm.setUser(acct.userId)
+            FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val token = task.result
+                    CoroutineScope(Dispatchers.IO).launch {
+                        runCatching {
+                            NetworkModule.api.registerFcmToken(FcmTokenRequest(acct.userId, token))
+                        }
+                    }
+                }
+            }
             val target = if (acct.userId.equals("staff", ignoreCase = true)) {
                 NavRoutes.AdminDashboard.route
             } else {
@@ -198,6 +214,7 @@ fun HmWorldApp() {
             adminLineState = adminLineState,
             friendState = friendState,
             lineState = lineState,
+            account = authState.account,
             loading = authState.loading
         )
     }
@@ -221,6 +238,7 @@ private fun AppNavHost(
     adminLineState: com.ssafy.hm.ui.state.AdminAttractionLineState,
     friendState: com.ssafy.hm.ui.state.FriendState,
     lineState: com.ssafy.hm.ui.state.LineState,
+    account: com.ssafy.hm.data.model.Account?,
     loading: Boolean
 ) {
     val context = LocalContext.current
@@ -486,6 +504,8 @@ private fun AppNavHost(
                 orderState = orderState,
                 friendState = friendState,
                 lineState = lineState,
+                account = account,
+                accounts = friendState.accounts,
                 onLogout = {
                     authVm.logout()
                     navController.navigate(NavRoutes.Login.route) { popUpTo(0) }
@@ -502,6 +522,8 @@ private fun AppNavHost(
                 onReserveAttraction = { attId, userIds -> lineVm.createLine(attId, userIds) },
                 onAddFriend = { friendVm.addFriend(it) },
                 onRemoveFriend = { friendVm.removeFriend(it) },
+                onToggleParty = { id, party -> friendVm.updateFriendParty(id, party) },
+                onRefreshFriends = { friendVm.loadFriends() },
                 clearSelection = { catalogVm.clearSelection() },
                 clearToasts = {
                     orderVm.clearToast(); friendVm.clearToast()

@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,11 +16,12 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import com.ssafy.hm.dto.Friend;
+import com.ssafy.hm.dto.FriendPartyRequest;
 import com.ssafy.hm.service.FriendService;
 
 @RestController
 @RequestMapping("/friends")
-@Tag(name = "친구", description = "친구 관리")
+@Tag(name = "Friend", description = "Friend management")
 public class FriendController {
 
 	private final FriendService friendService;
@@ -40,6 +42,20 @@ public class FriendController {
 	public ResponseEntity<Void> remove(@PathVariable Integer id) {
 		boolean removed = friendService.removeFriend(id);
 		return removed ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+	}
+
+	@PatchMapping("/{id}/party")
+	@Operation(summary = "Update friend party")
+	public ResponseEntity<Void> updateParty(@PathVariable Integer id, @RequestBody(required = false) FriendPartyRequest request) {
+		boolean updated = friendService.updateFriendParty(id, request == null ? null : request.getFriendParty());
+		return updated ? ResponseEntity.noContent().build() : ResponseEntity.badRequest().build();
+	}
+
+	@PostMapping("/{id}/party")
+	@Operation(summary = "Update friend party (POST)")
+	public ResponseEntity<Void> updatePartyPost(@PathVariable Integer id, @RequestBody(required = false) FriendPartyRequest request) {
+		boolean updated = friendService.updateFriendParty(id, request == null ? null : request.getFriendParty());
+		return updated ? ResponseEntity.noContent().build() : ResponseEntity.badRequest().build();
 	}
 
 	@GetMapping("/user/{userId}")

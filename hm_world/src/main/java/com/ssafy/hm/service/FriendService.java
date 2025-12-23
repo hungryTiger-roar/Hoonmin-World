@@ -7,6 +7,7 @@ import com.ssafy.hm.dto.Friend;
 public interface FriendService {
 	boolean addFriend(Friend friend);
 	boolean removeFriend(Integer id);
+	boolean updateFriendParty(Integer id, Boolean friendParty);
 	List<Friend> getFriends(String userId);
 	List<Friend> getFriendsTicket(String userId);
 	List<Friend> getFriendsTicketNoAtt(String userId);

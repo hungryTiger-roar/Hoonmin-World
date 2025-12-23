@@ -52,7 +52,7 @@ fun AdminAttractionListScreen(
 
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
-            title = { Text("\uC5B4\uD2B8\uB799\uC158 \uAD00\uB9AC", fontWeight = FontWeight.Bold) },
+            title = { Text("어트랙션 관리", fontWeight = FontWeight.Bold) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
                     Icon(Icons.Default.ArrowBack, contentDescription = "back")
@@ -60,13 +60,15 @@ fun AdminAttractionListScreen(
             }
         )
 
-        Column(modifier = Modifier.padding(16.dp).navigationBarsPadding()) {
+        Column(modifier = Modifier
+            .padding(16.dp)
+            .navigationBarsPadding()) {
             OutlinedTextField(
                 value = queryState.value,
                 onValueChange = { queryState.value = it },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                label = { Text("\uC5B4\uD2B8\uB799\uC158 \uAC80\uC0C9") },
+                label = { Text("어트랙션 검색") },
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
@@ -98,15 +100,15 @@ fun AdminAttractionListScreen(
                         ) {
                             AsyncImage(
                                 model = attraction.attPic,
-                                contentDescription = "\uC5B4\uD2B8\uB799\uC158 \uC774\uBBF8\uC9C0",
+                                contentDescription = "어트랙션 이미지",
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(160.dp)
                             )
                             attraction.attName?.let { Text(it, fontWeight = FontWeight.Bold) }
-                            Text("\uB300\uAE30 \uC778\uC6D0: $waitCount\uBA85")
-                            Text("\uC608\uC0C1 \uB300\uAE30\uC2DC\uAC04: ${waitMinutes}\uBD84")
-                            Text("\uCD5C\uB300 \uD0D1\uC2B9 \uC778\uC6D0: $capacity\uBA85")
+                            Text("대기 인원: ${waitCount}명")
+                            Text("예상 대기시간: ${waitMinutes}분")
+                            Text("최대 탑승 인원: ${capacity}명")
                         }
                     }
                 }

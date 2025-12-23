@@ -13,10 +13,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -27,6 +29,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.zIndex
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import com.ssafy.hm.R
 import com.ssafy.hm.data.model.Item
 import com.ssafy.hm.ui.state.CatalogState
 import com.ssafy.hm.ui.state.FriendState
@@ -34,6 +53,11 @@ import com.ssafy.hm.ui.state.HomeState
 import com.ssafy.hm.ui.state.LineState
 import com.ssafy.hm.ui.state.OrderState
 import com.ssafy.hm.data.model.HomeBoard
+import com.ssafy.hm.data.model.Account
+import com.ssafy.hm.ui.theme.AuroraGlow
+import com.ssafy.hm.ui.theme.AuroraMist
+import com.ssafy.hm.ui.theme.AuroraPurple
+import com.ssafy.hm.ui.theme.AuroraPurpleDark
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,6 +68,8 @@ fun CustomerRootScreen(
     orderState: OrderState,
     friendState: FriendState,
     lineState: LineState,
+    account: Account?,
+    accounts: List<Account>,
     onLogout: () -> Unit,
     onRefresh: () -> Unit,
     onLoadAttraction: (Int) -> Unit,
@@ -57,6 +83,8 @@ fun CustomerRootScreen(
     onReserveAttraction: (Int, List<String>) -> Unit,
     onAddFriend: (String) -> Unit,
     onRemoveFriend: (Int) -> Unit,
+    onToggleParty: (Int, Boolean) -> Unit,
+    onRefreshFriends: () -> Unit,
     clearSelection: () -> Unit,
     clearToasts: () -> Unit
 ) {
@@ -67,6 +95,7 @@ fun CustomerRootScreen(
 
     LaunchedEffect(tab) {
         if (tab != 1) showCart = false
+        if (tab == 4) onRefreshFriends()
     }
 
     LaunchedEffect(orderState.error ?: friendState.error ?: lineState.error) {
@@ -82,17 +111,98 @@ fun CustomerRootScreen(
     }
 
     val navItems = listOf("어트랙션 예약", "상품 구매", "홈", "지도", "내정보")
-    val navIcons = listOf(Icons.Default.Info, Icons.Default.AddShoppingCart, Icons.Default.Info, Icons.Default.Map, Icons.Default.Person)
+    val navIconRes = listOf(
+        R.drawable.icons8_50,
+        R.drawable.icons8_32,
+        R.drawable.homeicon_32
+    )
 
     Scaffold(
         bottomBar = {
-            NavigationBar(modifier = Modifier.navigationBarsPadding()) {
-                navItems.forEachIndexed { idx, label ->
-                    NavigationBarItem(
-                        selected = tab == idx,
-                        onClick = { tab = idx },
-                        icon = { Icon(navIcons[idx], contentDescription = label) },
-                        label = { Text(label) }
+            val navBarHeight = 56.dp
+            val homeOuterSize = 72.dp
+            val homeLift = 20.dp
+            val homeShadow = 12.dp
+            val homePressedShadow = 20.dp
+            val homeInteraction = remember { MutableInteractionSource() }
+            val isHomePressed by homeInteraction.collectIsPressedAsState()
+            Box(
+                modifier = Modifier
+                    .navigationBarsPadding()
+                    .height(navBarHeight)
+                    .fillMaxWidth()
+                    .graphicsLayer { clip = false }
+            ) {
+                NavigationBar(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(navBarHeight)
+                        .align(Alignment.BottomCenter)
+                        .graphicsLayer { clip = false }
+                ) {
+                    navItems.forEachIndexed { idx, label ->
+                        NavigationBarItem(
+                            selected = tab == idx,
+                            onClick = { tab = idx },
+                            icon = {
+                                val iconTint = LocalContentColor.current
+                                val otherIconSize = 24.dp
+                                when (idx) {
+                                    0, 1 -> Icon(
+                                        painter = painterResource(id = navIconRes[idx]),
+                                        contentDescription = label,
+                                        modifier = Modifier.size(otherIconSize),
+                                        tint = iconTint
+                                    )
+                                    2 -> Box(modifier = Modifier.size(homeOuterSize))
+                                    3 -> Icon(
+                                        Icons.Default.Map,
+                                        contentDescription = label,
+                                        modifier = Modifier.size(otherIconSize),
+                                        tint = iconTint
+                                    )
+                                    else -> Icon(
+                                        Icons.Default.Person,
+                                        contentDescription = label,
+                                        modifier = Modifier.size(otherIconSize),
+                                        tint = iconTint
+                                    )
+                                }
+                            },
+                            label = {},
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = AuroraGlow,
+                                selectedTextColor = AuroraGlow,
+                                unselectedIconColor = Color.Black,
+                                unselectedTextColor = Color.Black,
+                                indicatorColor = Color.Transparent
+                            )
+                        )
+                    }
+                }
+                val isSelected = tab == 2
+                val bgColor = if (isSelected) AuroraMist else Color.White
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .offset(y = -homeLift)
+                        .size(homeOuterSize)
+                        .shadow(
+                            if (isHomePressed) homePressedShadow else homeShadow,
+                            CircleShape
+                        )
+                        .background(bgColor, CircleShape)
+                        .zIndex(1f)
+                        .clickable(
+                            interactionSource = homeInteraction,
+                            indication = null
+                        ) { tab = 2 },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = navIconRes[2]),
+                        contentDescription = navItems[2],
+                        tint = Color.Unspecified
                     )
                 }
             }
@@ -129,10 +239,13 @@ fun CustomerRootScreen(
                 onReceive = onReceiveOrder,
                 friends = friendState.friends,
                 availableFriends = friendState.availableFriends,
+                accounts = accounts,
                 onAddFriend = onAddFriend,
                 onRemoveFriend = onRemoveFriend,
+                onToggleParty = onToggleParty,
                 onLogout = onLogout,
-                paddingValues = innerPadding
+                paddingValues = innerPadding,
+                account = account
             )
         }
 
@@ -151,9 +264,18 @@ fun CustomerRootScreen(
             ItemDetailDialog(it, catalogState.itemReviews, onAddCart = { onAddCart(it) }) { clearSelection() }
         }
         catalogState.selectedAttraction?.let {
-            AttractionDetailDialog(it, catalogState.attractionReviews, onReserve = {
-                onReserveAttraction(it.attId, friendState.availableFriends.map { f -> f.friend.friendId })
-            }) { clearSelection() }
+            val partyFriendIds = friendState.availableFriends
+                .filter { f -> f.friend.friendParty }
+                .map { f -> f.friend.friendId }
+                .toSet()
+            AttractionDetailDialog(
+                att = it,
+                reviews = catalogState.attractionReviews,
+                availableFriends = friendState.availableFriends,
+                initialSelectedIds = partyFriendIds,
+                onReserve = { selectedIds -> onReserveAttraction(it.attId, selectedIds) },
+                onDismiss = { clearSelection() }
+            )
         }
         if (showChat) ChatbotOverlay { showChat = false }
     }

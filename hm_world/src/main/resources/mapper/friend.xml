@@ -54,4 +54,10 @@
 		delete from friend where id = #{id};
 	</delete>
 
+	<update id="updateParty">
+		update friend
+		set friend_party = #{friendParty}
+		where id = #{id};
+	</update>
+
 </mapper>

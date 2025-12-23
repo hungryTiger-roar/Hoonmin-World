@@ -7,6 +7,10 @@ data class Friend(
     val friendParty: Boolean = false
 )
 
+data class FriendPartyRequest(
+    val friendParty: Boolean
+)
+
 data class FriendWithDetails(
     val friend: Friend,
     val account: Account
