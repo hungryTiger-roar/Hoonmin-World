@@ -706,9 +706,3 @@ private fun AppNavHost(
         }
     }
 }
-<<<<<<< HEAD
-=======
-
-
-
->>>>>>> 미니
