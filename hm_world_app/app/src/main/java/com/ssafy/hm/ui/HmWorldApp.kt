@@ -49,6 +49,7 @@ import com.ssafy.hm.ui.screens.auth.SignUpScreen
 import com.ssafy.hm.ui.screens.customer.CartScreen
 import com.ssafy.hm.ui.screens.customer.CustomerRootScreen
 import com.ssafy.hm.ui.screens.customer.OrderDetailScreen
+import com.ssafy.hm.ui.screens.customer.AttractionDetailScreen
 import com.ssafy.hm.ui.screens.customer.ProductDetailScreen
 import com.ssafy.hm.ui.screens.customer.StoreSelectScreen
 import com.ssafy.hm.ui.theme.AuroraBlue
@@ -166,7 +167,7 @@ fun HmWorldApp() {
     }
     LaunchedEffect(authState.registrationCompleted) {
         if (authState.registrationCompleted) {
-            Toast.makeText(context, "?뚯썝媛?낆씠 ?꾨즺?섏뿀?듬땲??", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "회원가입이 완료되었습니다.", Toast.LENGTH_SHORT).show()
         }
     }
     LaunchedEffect(homeState.error ?: catalogState.error ?: orderState.error ?: adminOrderState.error ?: adminLineState.error ?: friendState.error ?: lineState.error) {
@@ -252,12 +253,12 @@ private fun AppNavHost(
     loading: Boolean
 ) {
     val context = LocalContext.current
-    // ?쒖옉 ?붾㈃???ㅽ뵆?섏떆濡??먭퀬 main ?대?吏瑜?癒쇱? 蹂댁뿬以??
+    // App navigation host
     NavHost(navController = navController, startDestination = NavRoutes.Splash.route) {
         composable(NavRoutes.Splash.route) {
             SplashScreen()
             LaunchedEffect(Unit) {
-                // 1珥???濡쒓렇???붾㈃?쇰줈 ?대룞
+                // Delay to show splash before login
                 kotlinx.coroutines.delay(1000)
                 navController.navigate(NavRoutes.Login.route) {
                     popUpTo(NavRoutes.Splash.route) { inclusive = true }
@@ -404,7 +405,7 @@ private fun AppNavHost(
                 )
             } else {
                 LaunchedEffect(Unit) {
-                    Toast.makeText(context, "?댄듃?숈뀡 ?뺣낫瑜?李얠쓣 ???놁뒿?덈떎.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "어트랙션 정보를 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
                     navController.popBackStack()
                 }
             }
@@ -532,7 +533,7 @@ private fun AppNavHost(
                     navController.navigate(NavRoutes.Login.route) { popUpTo(0) }
                 },
                 onRefresh = { homeVm.refresh(); catalogVm.refresh() },
-                onLoadAttraction = { catalogVm.loadAttractionDetail(it) },
+                onOpenAttractionDetail = { navController.navigate(NavRoutes.AttractionDetail.create(it)) },
                 onOpenItemDetail = { navController.navigate(NavRoutes.ItemDetail.create(it)) },
                 onOpenCart = { navController.navigate(NavRoutes.Cart.route) },
                 onOpenOrderHistory = { navController.navigate(NavRoutes.OrderDetail.route) },
@@ -564,7 +565,7 @@ private fun AppNavHost(
             } else {
                 // Handle case where board is not found
                 LaunchedEffect(Unit) {
-                    Toast.makeText(context, "怨듭??ы빆??李얠쓣 ???놁뒿?덈떎.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "공지사항을 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
                     navController.popBackStack()
                 }
             }
@@ -610,7 +611,61 @@ private fun AppNavHost(
                         popUpTo(NavRoutes.CustomerMain.route) { inclusive = true }
                     }
                 },
-                onRefresh = { orderVm.loadOrders() }
+                onRefresh = { orderVm.loadOrders() },
+                userId = account?.userId,
+                onSubmitReview = { itemId, rating, comment ->
+                    catalogVm.addItemReview(itemId, account?.userId, rating, comment)
+                },
+                onReorder = { order, details ->
+                    details.forEach { detail ->
+                        val item = catalogState.items.firstOrNull { it.itemId == detail.itemId } ?: return@forEach
+                        val current = orderState.cart[item] ?: 0
+                        orderVm.updateCart(item, current + detail.orderQuantity)
+                    }
+                    android.widget.Toast
+                        .makeText(context, "상품이 장바구니에 담겼습니다.", android.widget.Toast.LENGTH_SHORT)
+                        .show()
+                    navController.navigate(NavRoutes.Cart.route)
+                }
+            )
+        }
+        composable(
+            route = NavRoutes.AttractionDetail.route,
+            arguments = listOf(navArgument("id") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val attId = backStackEntry.arguments?.getInt("id") ?: 0
+            LaunchedEffect(attId) { catalogVm.loadAttractionDetail(attId) }
+            val attraction = catalogState.selectedAttraction?.takeIf { it.attId == attId }
+                ?: catalogState.attractions.firstOrNull { it.attId == attId }
+            val userNames = mutableMapOf<String, String>().apply {
+                friendState.accounts.forEach { acct ->
+                    this[acct.userId] = acct.name ?: acct.userId
+                }
+                account?.let { acct ->
+                    this[acct.userId] = acct.name ?: acct.userId
+                }
+            }
+            AttractionDetailScreen(
+                attraction = attraction,
+                reviews = catalogState.attractionReviews,
+                userId = account?.userId,
+                userNames = userNames,
+                onBack = {
+                    catalogVm.clearSelection()
+                    navController.popBackStack()
+                },
+                onReserve = {
+                    Toast.makeText(context, "준비 중입니다.", Toast.LENGTH_SHORT).show()
+                },
+                onSubmitReview = { rating, comment ->
+                    catalogVm.addAttractionReview(attId, account?.userId, rating, comment)
+                },
+                onUpdateReview = { reviewId, attId2, rating, comment ->
+                    catalogVm.updateAttractionReview(reviewId, attId2, account?.userId, rating, comment)
+                },
+                onDeleteReview = { reviewId, attId2 ->
+                    catalogVm.deleteAttractionReview(reviewId, attId2)
+                }
             )
         }
         composable(
@@ -621,6 +676,14 @@ private fun AppNavHost(
             LaunchedEffect(itemId) { catalogVm.loadItemDetail(itemId) }
             val item = catalogState.selectedItem?.takeIf { it.itemId == itemId }
                 ?: catalogState.items.firstOrNull { it.itemId == itemId }
+            val userNames = mutableMapOf<String, String>().apply {
+                friendState.accounts.forEach { acct ->
+                    this[acct.userId] = acct.name ?: acct.userId
+                }
+                account?.let { acct ->
+                    this[acct.userId] = acct.name ?: acct.userId
+                }
+            }
             ProductDetailScreen(
                 item = item,
                 reviews = catalogState.itemReviews,
@@ -629,8 +692,20 @@ private fun AppNavHost(
                     navController.popBackStack()
                 },
                 onAddCart = { orderVm.addToCart(it) },
-                onOpenCart = { navController.navigate(NavRoutes.Cart.route) }
+                onOpenCart = { navController.navigate(NavRoutes.Cart.route) },
+                cartCount = orderState.cart.size,
+                userId = account?.userId,
+                userNames = userNames,
+                onUpdateReview = { reviewId, itemId, rating, comment ->
+                    catalogVm.updateItemReview(reviewId, itemId, account?.userId, rating, comment)
+                },
+                onDeleteReview = { reviewId, itemId ->
+                    catalogVm.deleteItemReview(reviewId, itemId)
+                }
             )
         }
     }
 }
+
+
+

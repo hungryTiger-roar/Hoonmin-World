@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -23,18 +22,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.ReceiptLong
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -48,41 +47,38 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
-import com.ssafy.hm.R
-import com.ssafy.hm.data.model.Item
-import com.ssafy.hm.data.model.ItemReview
-import java.text.NumberFormat
+import com.ssafy.hm.data.model.Attraction
+import com.ssafy.hm.data.model.AttractionReview
 import java.util.Locale
 
 @Composable
-fun ProductDetailScreen(
-    item: Item?,
-    reviews: List<ItemReview>,
-    onBack: () -> Unit,
-    onAddCart: (Item) -> Unit,
-    onOpenCart: () -> Unit,
-    cartCount: Int,
+fun AttractionDetailScreen(
+    attraction: Attraction?,
+    reviews: List<AttractionReview>,
     userId: String?,
     userNames: Map<String, String>,
+    onBack: () -> Unit,
+    onReserve: () -> Unit,
+    onSubmitReview: (Float, String) -> Unit,
     onUpdateReview: (Int, Int, Float, String) -> Unit,
     onDeleteReview: (Int, Int) -> Unit
 ) {
     val context = LocalContext.current
     val background = Color(0xFFF7F3FA)
     val contentColor = Color(0xFF2A2430)
-    val actionColor = Color.Black
     val cardModifier = Modifier
         .fillMaxWidth()
         .padding(horizontal = 16.dp)
 
-    val editTarget = remember { mutableStateOf<ItemReview?>(null) }
-    val deleteTarget = remember { mutableStateOf<ItemReview?>(null) }
+    val showReviewDialog = remember { mutableStateOf(false) }
+    val editTarget = remember { mutableStateOf<AttractionReview?>(null) }
+    val deleteTarget = remember { mutableStateOf<AttractionReview?>(null) }
 
     Scaffold(
         containerColor = background,
@@ -98,66 +94,57 @@ fun ProductDetailScreen(
                     Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                 }
                 Text(
-                    text = "상품 상세",
+                    text = "어트랙션 상세",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = contentColor,
                     modifier = Modifier.weight(1f)
                 )
-                CartIconWithBadge(
-                    cartCount = cartCount,
-                    onClick = onOpenCart,
-                    tint = actionColor
-                )
+                Spacer(modifier = Modifier.size(40.dp))
             }
         },
         bottomBar = {
-            if (item != null) {
-                Button(
-                    onClick = { onAddCart(item) },
+            Button(
+                onClick = onReserve,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(horizontal = 20.dp, vertical = 16.dp)
+                    .height(52.dp),
+                shape = RoundedCornerShape(18.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                contentPadding = PaddingValues(0.dp)
+            ) {
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .navigationBarsPadding()
-                        .padding(horizontal = 20.dp, vertical = 16.dp)
-                        .height(52.dp),
-                    shape = RoundedCornerShape(18.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                    contentPadding = PaddingValues(0.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                brush = Brush.horizontalGradient(
-                                    colors = listOf(Color(0xFF9C27FF), Color(0xFFFF5AA4))
-                                ),
-                                shape = RoundedCornerShape(18.dp)
+                        .fillMaxSize()
+                        .background(
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(Color(0xFF9C27FF), Color(0xFFFF5AA4))
                             ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "장바구니에 담기",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                            shape = RoundedCornerShape(18.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "예약하기",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         }
     ) { innerPadding ->
-        if (item == null) {
+        if (attraction == null) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = "상품 정보를 불러오는 중...", color = Color.Gray)
+                Text(text = "어트랙션 정보를 불러오는 중...", color = Color.Gray)
             }
             return@Scaffold
         }
-
-        val priceText = NumberFormat.getNumberInstance(Locale.KOREA).format(item.itemPrice)
-        val isNew = item.itemCategory == "신상품"
 
         androidx.compose.foundation.lazy.LazyColumn(
             modifier = Modifier
@@ -168,15 +155,12 @@ fun ProductDetailScreen(
         ) {
             item {
                 AsyncImage(
-                    model = item.itemPic?.takeIf { it.isNotBlank() },
-                    contentDescription = item.itemName,
+                    model = attraction.attPic,
+                    contentDescription = attraction.attName,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(240.dp),
-                    contentScale = ContentScale.Crop,
-                    placeholder = painterResource(id = R.drawable.noimage),
-                    error = painterResource(id = R.drawable.noimage),
-                    fallback = painterResource(id = R.drawable.noimage)
+                    contentScale = ContentScale.Crop
                 )
             }
 
@@ -191,57 +175,20 @@ fun ProductDetailScreen(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        if (isNew) {
-                            Surface(
-                                color = Color(0xFFE91E63),
-                                shape = RoundedCornerShape(10.dp)
-                            ) {
-                                Text(
-                                    text = "NEW",
-                                    color = Color.White,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                )
-                            }
-                        }
                         Text(
-                            text = item.itemName,
+                            text = attraction.attName ?: "어트랙션",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = contentColor
                         )
                         Text(
-                            text = "${priceText}원",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFFE44A9B)
-                        )
-                        Text(
-                            text = item.itemCategory ?: "",
-                            color = Color.Gray,
-                            fontSize = 13.sp
-                        )
-                    }
-                }
-            }
-
-            item {
-                Card(
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    modifier = cardModifier
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = item.itemComment ?: "",
-                            color = contentColor,
+                            text = attraction.attComment ?: "",
                             fontSize = 14.sp,
-                            lineHeight = 20.sp
+                            color = Color(0xFF7A7282)
                         )
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            CategoryChip(text = attraction.attCategory ?: "카테고리")
+                        }
                     }
                 }
             }
@@ -254,35 +201,38 @@ fun ProductDetailScreen(
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Text(
-                            text = "수령 안내",
-                            fontWeight = FontWeight.Bold,
-                            color = contentColor
-                        )
-                        GuideRow(
-                            icon = Icons.Default.LocationOn,
-                            tint = Color(0xFFF06292),
-                            text = "파크 내 지정된 수령 장소에서 픽업 가능합니다"
-                        )
-                        GuideRow(
-                            icon = Icons.Default.AccessTime,
-                            tint = Color(0xFFFFA726),
-                            text = "주문 후 약 30분 소요됩니다"
-                        )
-                        GuideRow(
-                            icon = Icons.Default.ReceiptLong,
-                            tint = Color(0xFF42A5F5),
-                            text = "모바일 결제 후 주문번호로 수령하세요"
-                        )
+                        Text("현재 상태", fontWeight = FontWeight.Bold, color = contentColor)
+                        StatusRow(Icons.Default.LocationOn, "대기 인원", "45명", Color(0xFFE91E63))
+                        StatusRow(Icons.Default.AccessTime, "예상 대기시간", "15분", Color(0xFFFFB74D))
+                        StatusRow(Icons.Default.Groups, "최대 탑승 인원", "${attraction.attCapacity}명", Color(0xFF64B5F6))
+                    }
+                }
+            }
+
+            item {
+                Card(
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    modifier = cardModifier
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Text("이용 안내", fontWeight = FontWeight.Bold, color = contentColor)
+                        InfoRow("예약 후 지정된 시간에 탑승 게이트로 방문해주세요")
+                        InfoRow("친구와 함께 예약하면 같은 시간대에 탑승할 수 있어요")
+                        InfoRow("안전을 위해 신장/건강 제한이 있을 수 있습니다")
+                        InfoRow("예약 확인은 마이페이지에서 확인 가능합니다")
                     }
                 }
             }
 
             item {
                 val avg = if (reviews.isNotEmpty()) {
-                    reviews.map { it.itemRating.toDouble() }.average()
+                    reviews.map { it.attRating.toDouble() }.average()
                 } else {
                     0.0
                 }
@@ -290,9 +240,7 @@ fun ProductDetailScreen(
                 Card(
                     shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
-                    modifier = Modifier
-                        .then(cardModifier)
-                        .padding(bottom = 8.dp)
+                    modifier = cardModifier
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
@@ -302,40 +250,56 @@ fun ProductDetailScreen(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = "상품 리뷰",
-                                fontWeight = FontWeight.Bold,
-                                color = contentColor,
-                                modifier = Modifier.weight(1f)
-                            )
+                            Text("이용 후기", fontWeight = FontWeight.Bold, color = contentColor, modifier = Modifier.weight(1f))
                             Icon(
                                 imageVector = Icons.Default.Star,
-                                contentDescription = "Average Rating",
+                                contentDescription = null,
                                 tint = Color(0xFFFFC107),
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.size(4.dp))
-                            Text(
-                                text = avgText,
-                                fontWeight = FontWeight.SemiBold,
-                                color = contentColor
-                            )
+                            Text(avgText, fontWeight = FontWeight.SemiBold, color = contentColor)
                             Spacer(modifier = Modifier.size(6.dp))
+                            Text("(${reviews.size})", color = Color.Gray, fontSize = 12.sp)
+                        }
+
+                        val hasMyReview = !userId.isNullOrBlank() && reviews.any { it.userId == userId }
+                        if (!hasMyReview) {
+                            Row (
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.End
+                            ){
+                                Button(
+                                    onClick = { showReviewDialog.value = true },
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(
+                                            0xFFEDE7F6
+                                        )
+                                    ),
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                                ) {
+                                    Text("리뷰 작성하기", color = Color(0xFF7A7282), fontSize = 12.sp)
+                                }
+                            }
+                        } else {
                             Text(
-                                text = "(${reviews.size})",
-                                color = Color.Gray,
+                                text = "이용 후기는 하루에 한 번만 작성하실 수 있습니다.",
+                                color = Color(0xFF7A7282),
                                 fontSize = 12.sp
                             )
                         }
 
                         if (reviews.isEmpty()) {
-                            Text(text = "리뷰가 아직 없습니다.", color = Color.Gray, fontSize = 13.sp)
+                            Text("아직 후기가 없습니다.", color = Color.Gray, fontSize = 13.sp)
                         } else {
-                            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                 reviews.forEach { review ->
-                                    ReviewItem(
-                                        review = review,
-                                        displayName = userNames[review.userId] ?: review.userId ?: "익명",
+                                    ReviewRow(
+                                        name = userNames[review.userId] ?: review.userId ?: "익명",
+                                        rating = review.attRating,
+                                        comment = review.attReviewComment ?: "",
+                                        date = review.attTime,
                                         isMine = review.userId == userId,
                                         onEdit = { editTarget.value = review },
                                         onDelete = { deleteTarget.value = review }
@@ -349,14 +313,24 @@ fun ProductDetailScreen(
         }
     }
 
+    if (showReviewDialog.value) {
+        ReviewDialog(
+            onDismiss = { showReviewDialog.value = false },
+            onSubmit = { rating, comment ->
+                onSubmitReview(rating, comment)
+                showReviewDialog.value = false
+            }
+        )
+    }
+
     editTarget.value?.let { review ->
         ReviewEditDialog(
-            itemName = item?.itemName ?: "",
-            initialRating = review.itemRating,
-            initialComment = review.itemReviewComment ?: "",
+            title = "이용 후기 수정",
+            initialRating = review.attRating,
+            initialComment = review.attReviewComment ?: "",
             onDismiss = { editTarget.value = null },
             onSubmit = { rating, comment ->
-                onUpdateReview(review.itemReviewId, review.itemId, rating, comment)
+                onUpdateReview(review.attReviewId, review.attId, rating, comment)
                 android.widget.Toast
                     .makeText(context, "리뷰가 수정되었습니다.", android.widget.Toast.LENGTH_SHORT)
                     .show()
@@ -372,7 +346,7 @@ fun ProductDetailScreen(
             text = { Text("리뷰를 삭제하시겠습니까?") },
             confirmButton = {
                 Button(onClick = {
-                    onDeleteReview(review.itemReviewId, review.itemId)
+                    onDeleteReview(review.attReviewId, review.attId)
                     android.widget.Toast
                         .makeText(context, "삭제되었습니다.", android.widget.Toast.LENGTH_SHORT)
                         .show()
@@ -387,92 +361,67 @@ fun ProductDetailScreen(
 }
 
 @Composable
-private fun CartIconWithBadge(cartCount: Int, onClick: () -> Unit, tint: Color) {
-    Box {
-        IconButton(onClick = onClick) {
-            Icon(Icons.Default.ShoppingCart, contentDescription = "Cart", tint = tint)
-        }
-        if (cartCount > 0) {
-            val label = if (cartCount > 99) "99+" else cartCount.toString()
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .offset(x = (-2).dp, y = 2.dp)
-                    .size(18.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFFFF4D6D)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = label, color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-            }
-        }
-    }
-}
-
-@Composable
-private fun GuideRow(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    tint: Color,
-    text: String
-) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = tint,
-            modifier = Modifier.size(18.dp)
+private fun CategoryChip(text: String) {
+    Surface(
+        color = Color(0xFFF1E7FF),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Text(
+            text = text,
+            color = Color(0xFF7A7282),
+            fontSize = 12.sp,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
         )
-        Spacer(modifier = Modifier.size(8.dp))
-        Text(text = text, color = Color(0xFF4A4451), fontSize = 13.sp)
     }
 }
 
 @Composable
-private fun ReviewItem(
-    review: ItemReview,
-    displayName: String,
+private fun StatusRow(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, value: String, color: Color) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(18.dp))
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(label, color = Color(0xFF4A4451), fontSize = 13.sp)
+        Spacer(modifier = Modifier.weight(1f))
+        Text(value, color = color, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+    }
+}
+
+@Composable
+private fun InfoRow(text: String) {
+    Row(verticalAlignment = Alignment.Top) {
+        Box(
+            modifier = Modifier
+                .padding(top = 10.dp)
+                .size(6.dp)
+                .clip(CircleShape)
+                .background(Color(0xFFFFC107))
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(text, color = Color(0xFF4A4451), fontSize = 13.sp)
+    }
+}
+
+@Composable
+private fun ReviewRow(
+    name: String,
+    rating: Float,
+    comment: String,
+    date: String,
     isMine: Boolean,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = displayName,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF2A2430),
-                modifier = Modifier.weight(1f)
-            )
-            Text(
-                text = review.itemTime,
-                color = Color.Gray,
-                fontSize = 12.sp
-            )
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(name, fontWeight = FontWeight.SemiBold, color = Color(0xFF2A2430), modifier = Modifier.weight(1f))
+            Text(date, color = Color.Gray, fontSize = 12.sp)
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = Icons.Default.Star,
-                contentDescription = "Rating",
-                tint = Color(0xFFFFC107),
-                modifier = Modifier.size(16.dp)
-            )
-            Spacer(modifier = Modifier.size(4.dp))
-            Text(
-                text = review.itemRating.toString(),
-                fontSize = 13.sp,
-                color = Color(0xFF2A2430)
-            )
+            Icon(Icons.Default.Star, contentDescription = null, tint = Color(0xFFFFC107), modifier = Modifier.size(16.dp))
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(String.format(Locale.KOREA, "%.1f", rating), fontSize = 12.sp, color = Color(0xFF2A2430))
         }
-        Text(
-            text = review.itemReviewComment ?: "",
-            color = Color(0xFF4A4451),
-            fontSize = 13.sp,
-            maxLines = 3,
-            overflow = TextOverflow.Ellipsis
-        )
+        Text(comment, color = Color(0xFF4A4451), fontSize = 13.sp, maxLines = 3, overflow = TextOverflow.Ellipsis)
         if (isMine) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 Text(
@@ -495,8 +444,19 @@ private fun ReviewItem(
 }
 
 @Composable
+private fun ReviewDialog(onDismiss: () -> Unit, onSubmit: (Float, String) -> Unit) {
+    ReviewEditDialog(
+        title = "이용 후기 작성",
+        initialRating = 5f,
+        initialComment = "",
+        onDismiss = onDismiss,
+        onSubmit = onSubmit
+    )
+}
+
+@Composable
 private fun ReviewEditDialog(
-    itemName: String,
+    title: String,
     initialRating: Float,
     initialComment: String,
     onDismiss: () -> Unit,
@@ -505,35 +465,20 @@ private fun ReviewEditDialog(
     val rating = remember { mutableStateOf(initialRating.toInt().coerceIn(1, 5)) }
     val comment = remember { mutableStateOf(initialComment) }
 
-    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
+    Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = RoundedCornerShape(16.dp),
             color = Color.White,
             tonalElevation = 6.dp
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "리뷰 작성",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        modifier = Modifier.weight(1f)
-                    )
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text(title, fontWeight = FontWeight.Bold, fontSize = 16.sp, modifier = Modifier.weight(1f))
                     IconButton(onClick = onDismiss) {
                         Icon(Icons.Default.Close, contentDescription = "Close")
                     }
                 }
-
-                Text(
-                    text = itemName,
-                    color = Color(0xFF7A7282),
-                    fontSize = 12.sp
-                )
-                Spacer(modifier = Modifier.height(14.dp))
-
+                Spacer(modifier = Modifier.height(10.dp))
                 Text("별점", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -550,17 +495,13 @@ private fun ReviewEditDialog(
                         Spacer(modifier = Modifier.width(4.dp))
                     }
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = rating.value.toString(),
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF2A2430)
-                    )
+                    Text(rating.value.toString(), fontWeight = FontWeight.SemiBold)
                 }
 
                 Spacer(modifier = Modifier.height(14.dp))
                 Text("리뷰 내용", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                 Spacer(modifier = Modifier.height(8.dp))
-                androidx.compose.material3.OutlinedTextField(
+                OutlinedTextField(
                     value = comment.value,
                     onValueChange = { comment.value = it },
                     placeholder = { Text("리뷰를 작성해주세요...") },
