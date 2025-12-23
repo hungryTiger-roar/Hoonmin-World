@@ -1,5 +1,13 @@
 ﻿package com.ssafy.hm.ui.screens.customer
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -27,6 +35,9 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -36,18 +47,24 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,16 +72,26 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
 import com.ssafy.hm.R
 import com.ssafy.hm.data.model.BuyImage
 import com.ssafy.hm.data.model.Item
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Objects
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductTab(
     list: List<Item>,
@@ -80,67 +107,228 @@ fun ProductTab(
     var selectedCategory by remember { mutableStateOf("전체") }
     val actionColor = Color.Black
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)
-            .background(Color(0xFFF9F9F9))
-    ) {
-        ProductTopBar(
-            onCartClick = onOpenCart,
-            onPurchaseHistoryClick = onOpenOrderHistory,
-            cartCount = cartCount,
-            actionColor = actionColor
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-            ProductSearchBar(query = query, onQueryChange = { query = it })
-            Spacer(modifier = Modifier.height(16.dp))
-        }
+    val sheetState = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
+    var showBottomSheet by remember { mutableStateOf(false) }
 
-        val filteredList = list.filter {
-            (selectedCategory == "전체" || it.itemCategory == selectedCategory) &&
-                (query.isBlank() || it.itemName.contains(query, ignoreCase = true))
-        }
+    val context = LocalContext.current
+    var hasImage by remember { mutableStateOf(false) }
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
 
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            modifier = Modifier.padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(top = 8.dp, bottom = 30.dp)
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture(),
+        onResult = { success ->
+            hasImage = success
+        }
+    )
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri ->
+            if (uri != null) {
+                hasImage = true
+                imageUri = uri
+            }
+        }
+    )
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (isGranted) {
+                Toast.makeText(context, "Permission Granted", Toast.LENGTH_SHORT).show()
+                val newImageUri = createImageUri(context)
+                imageUri = newImageUri
+                cameraLauncher.launch(newImageUri)
+            } else {
+                Toast.makeText(context, "Permission Denied", Toast.LENGTH_SHORT).show()
+            }
+        }
+    )
+
+    Scaffold(
+        modifier = Modifier.padding(paddingValues),
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { showBottomSheet = true },
+                containerColor = Color(0xFF6A5AE0),
+                shape = CircleShape
+            ) {
+                Icon(Icons.Default.AutoAwesome, contentDescription = "AI Image Search", tint = Color.White)
+            }
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .background(Color(0xFFF9F9F9))
         ) {
-            item(span = { GridItemSpan(2) }) {
-                ProductCarousel(images = buyImages)
+            ProductTopBar(
+                onCartClick = onOpenCart,
+                onPurchaseHistoryClick = onOpenOrderHistory,
+                cartCount = cartCount,
+                actionColor = actionColor
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                ProductSearchBar(query = query, onQueryChange = { query = it })
+                Spacer(modifier = Modifier.height(16.dp))
             }
 
-            item(span = { GridItemSpan(2) }) {
-                Column {
-                    CategoryButtons(
-                        selectedCategory = selectedCategory,
-                        onCategorySelected = { selectedCategory = it }
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "추천 상품",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        modifier = Modifier.padding(bottom = 8.dp)
+            val filteredList = list.filter {
+                (selectedCategory == "전체" || it.itemCategory == selectedCategory) &&
+                        (query.isBlank() || it.itemName.contains(query, ignoreCase = true))
+            }
+
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                modifier = Modifier.padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                contentPadding = PaddingValues(top = 8.dp, bottom = 30.dp)
+            ) {
+                item(span = { GridItemSpan(2) }) {
+                    ProductCarousel(images = buyImages)
+                }
+
+                item(span = { GridItemSpan(2) }) {
+                    Column {
+                        CategoryButtons(
+                            selectedCategory = selectedCategory,
+                            onCategorySelected = { selectedCategory = it }
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "추천 상품",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                    }
+                }
+
+                items(filteredList, key = { it.itemId }) { item ->
+                    ProductCard(
+                        item = item,
+                        onAddToCartClick = { onAddCart(item) },
+                        onCardClick = { onSelect(item.itemId) }
                     )
                 }
             }
+        }
 
-            items(filteredList, key = { it.itemId }) { item ->
-                ProductCard(
-                    item = item,
-                    onAddToCartClick = { onAddCart(item) },
-                    onCardClick = { onSelect(item.itemId) }
+        if (showBottomSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showBottomSheet = false },
+                sheetState = sheetState
+            ) {
+                AiImageSearchSheet(
+                    onOpenCamera = {
+                        scope.launch { sheetState.hide() }.invokeOnCompletion {
+                            if (!sheetState.isVisible) {
+                                showBottomSheet = false
+                                val permissionCheckResult = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
+                                if (permissionCheckResult == PackageManager.PERMISSION_GRANTED) {
+                                    val newImageUri = createImageUri(context)
+                                    imageUri = newImageUri
+                                    cameraLauncher.launch(newImageUri)
+                                } else {
+                                    permissionLauncher.launch(Manifest.permission.CAMERA)
+                                }
+                            }
+                        }
+                    },
+                    onOpenGallery = {
+                        scope.launch { sheetState.hide() }.invokeOnCompletion {
+                            if (!sheetState.isVisible) {
+                                showBottomSheet = false
+                                galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                            }
+                        }
+                    }
                 )
             }
         }
     }
 }
 
+private fun createImageUri(context: Context): Uri {
+    val imagePath = File(context.cacheDir, "images")
+    if (!imagePath.exists()) imagePath.mkdirs()
+    val imageFile = File.createTempFile(
+        "camera_${System.currentTimeMillis()}",
+        ".jpg",
+        imagePath
+    )
+    val authority = "${context.packageName}.fileprovider"
+    return FileProvider.getUriForFile(
+        Objects.requireNonNull(context),
+        authority,
+        imageFile
+    )
+}
+
+@Composable
+fun AiImageSearchSheet(onOpenCamera: () -> Unit, onOpenGallery: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("AI 이미지 검색", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+        Spacer(modifier = Modifier.height(8.dp))
+        Text("사진을 업로드하면 비슷한 상품을 찾아드려요", color = Color.Gray)
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onOpenCamera),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFFCE4EC).copy(alpha = 0.5f))
+        ) {
+            Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Default.CameraAlt,
+                    contentDescription = "Camera",
+                    tint = Color(0xFFE91E63),
+                    modifier = Modifier.size(32.dp)
+                )
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
+                    Text("카메라 열기", fontWeight = FontWeight.SemiBold, color = Color.Black)
+                    Text("지금 바로 사진 찍기", color = Color.Gray, fontSize = 12.sp)
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onOpenGallery),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD).copy(alpha = 0.5f))
+        ) {
+            Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Default.PhotoLibrary,
+                    contentDescription = "Gallery",
+                    tint = Color(0xFF1976D2),
+                    modifier = Modifier.size(32.dp)
+                )
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
+                    Text("갤러리에서 선택", fontWeight = FontWeight.SemiBold, color = Color.Black)
+                    Text("저장된 사진 선택하기", color = Color.Gray, fontSize = 12.sp)
+                }
+            }
+        }
+    }
+}
 @Composable
 fun ProductTopBar(
     onCartClick: () -> Unit,
