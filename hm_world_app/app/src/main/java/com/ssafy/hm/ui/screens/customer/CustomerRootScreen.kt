@@ -66,7 +66,7 @@ fun CustomerRootScreen(
     accounts: List<Account>,
     onLogout: () -> Unit,
     onRefresh: () -> Unit,
-    onLoadAttraction: (Int) -> Unit,
+    onOpenAttractionDetail: (Int) -> Unit,
     onOpenItemDetail: (Int) -> Unit,
     onOpenCart: () -> Unit,
     onOpenOrderHistory: () -> Unit,
@@ -210,20 +210,21 @@ fun CustomerRootScreen(
         }
     ) { innerPadding ->
         when (tab) {
-            0 -> AttractionTab(catalogState.attractions, onLoadAttraction, innerPadding)
+            0 -> AttractionTab(catalogState.attractions, onOpenAttractionDetail, innerPadding)
             1 -> ProductTab(
                 list = catalogState.items,
                 buyImages = catalogState.buyImages,
                 onSelect = onOpenItemDetail,
                 onAddCart = onAddCart,
                 onOpenCart = onOpenCart,
+                cartCount = orderState.cart.size,
                 onOpenOrderHistory = onOpenOrderHistory,
                 paddingValues = innerPadding
             )
             2 -> HomeTab(
                 images = homeState.homeImages,
                 boards = homeState.boards,
-                orderState = orderState,
+                hasTicket = (account?.ticket == true),
                 paddingValues = innerPadding,
                 onBoardClick = onBoardClick,
                 onTicketPurchaseClick = onTicketPurchaseClick
@@ -245,25 +246,11 @@ fun CustomerRootScreen(
             )
         }
 
-                catalogState.selectedAttraction?.let { attraction ->
-            val partyFriendIds = friendState.availableFriends
-                .filter { f -> f.friend.friendParty }
-                .map { f -> f.friend.friendId }
-                .toSet()
-            AttractionDetailDialog(
-                att = attraction,
-                reviews = catalogState.attractionReviews,
-                availableFriends = friendState.availableFriends,
-                initialSelectedIds = partyFriendIds,
-                onReserve = { selectedIds ->
-                    onReserveAttraction(attraction.attId, selectedIds)
-                },
-                onDismiss = { clearSelection() }
-            )
-        }
         if (showChat) ChatbotOverlay { showChat = false }
     }
 }
+
+
 
 
 

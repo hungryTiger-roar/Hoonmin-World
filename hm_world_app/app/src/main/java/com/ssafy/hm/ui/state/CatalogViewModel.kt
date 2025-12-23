@@ -14,6 +14,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 data class CatalogState(
     val loading: Boolean = false,
@@ -188,6 +191,210 @@ class CatalogViewModel(
                     _state.value = prev.copy(error = e.message)
                     refresh()
                 }
+        }
+    }
+
+    fun addItemReview(
+        itemId: Int,
+        userId: String?,
+        rating: Float,
+        comment: String?
+    ) {
+        if (userId.isNullOrBlank()) {
+            _state.update { it.copy(error = "리뷰 작성에는 로그인된 계정 정보가 필요합니다.") }
+            return
+        }
+        viewModelScope.launch {
+            runCatching {
+                val now = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+                val review = ItemReview(
+                    itemReviewId = 0,
+                    userId = userId,
+                    itemId = itemId,
+                    itemReviewComment = comment,
+                    itemRating = rating,
+                    itemTime = now
+                )
+                reviewRepo.addItemReview(review)
+                reviewRepo.getItemReviews(itemId)
+            }.onSuccess { reviews ->
+                _state.update { state ->
+                    if (state.selectedItem?.itemId == itemId) {
+                        state.copy(itemReviews = reviews)
+                    } else {
+                        state
+                    }
+                }
+            }.onFailure { e ->
+                _state.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
+    fun addAttractionReview(
+        attId: Int,
+        userId: String?,
+        rating: Float,
+        comment: String?
+    ) {
+        if (userId.isNullOrBlank()) {
+            _state.update { it.copy(error = "리뷰 작성에는 로그인된 계정 정보가 필요합니다.") }
+            _state.update { it.copy(error = "리뷰 수정에는 로그인된 계정 정보가 필요합니다.") }
+        }
+        viewModelScope.launch {
+            runCatching {
+                val now = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+                val review = AttractionReview(
+                    attReviewId = 0,
+                    attId = attId,
+                    userId = userId,
+                    attReviewComment = comment,
+                    attRating = rating,
+                    attTime = now
+                )
+                reviewRepo.addAttractionReview(review)
+                reviewRepo.getAttractionReviews(attId)
+            }.onSuccess { reviews ->
+                _state.update { state ->
+                    if (state.selectedAttraction?.attId == attId) {
+                        state.copy(attractionReviews = reviews)
+                    } else {
+                        state
+                    }
+                }
+            }.onFailure { e ->
+                _state.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
+    fun updateItemReview(
+        itemReviewId: Int,
+        itemId: Int,
+        userId: String?,
+        rating: Float,
+        comment: String?
+    ) {
+        if (userId.isNullOrBlank()) {
+            _state.update { it.copy(error = "리뷰 수정에는 로그인된 계정 정보가 필요합니다.") }
+            return
+        }
+        viewModelScope.launch {
+            val now = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+            _state.update { state ->
+                val updated = state.itemReviews.map { review ->
+                    if (review.itemReviewId == itemReviewId) {
+                        review.copy(
+                            itemRating = rating,
+                            itemReviewComment = comment,
+                            itemTime = now
+                        )
+                    } else {
+                        review
+                    }
+                }
+                state.copy(itemReviews = updated)
+            }
+            runCatching {
+                val review = ItemReview(
+                    itemReviewId = itemReviewId,
+                    userId = userId,
+                    itemId = itemId,
+                    itemReviewComment = comment,
+                    itemRating = rating,
+                    itemTime = now
+                )
+                reviewRepo.updateItemReview(itemReviewId, review)
+                reviewRepo.getItemReviews(itemId)
+            }.onSuccess { reviews ->
+                _state.update { it.copy(itemReviews = reviews) }
+            }.onFailure { e ->
+                _state.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
+    fun deleteItemReview(itemReviewId: Int, itemId: Int) {
+        viewModelScope.launch {
+            _state.update { state ->
+                state.copy(itemReviews = state.itemReviews.filterNot { it.itemReviewId == itemReviewId })
+            }
+            runCatching {
+                reviewRepo.deleteItemReview(itemReviewId)
+                reviewRepo.getItemReviews(itemId)
+            }.onSuccess { reviews ->
+                _state.update { it.copy(itemReviews = reviews) }
+            }.onFailure { e ->
+                val msg = e.message
+                if (msg != null && msg.startsWith("Response")) return@onFailure
+                _state.update { it.copy(error = msg) }
+            }
+        }
+    }
+
+    fun updateAttractionReview(
+        attReviewId: Int,
+        attId: Int,
+        userId: String?,
+        rating: Float,
+        comment: String?
+    ) {
+        if (userId.isNullOrBlank()) {
+            _state.update { it.copy(error = "리뷰 수정에는 로그인된 계정 정보가 필요합니다.") }
+            return
+        }
+        viewModelScope.launch {
+            val now = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+            _state.update { state ->
+                val updated = state.attractionReviews.map { review ->
+                    if (review.attReviewId == attReviewId) {
+                        review.copy(
+                            attRating = rating,
+                            attReviewComment = comment,
+                            attTime = now
+                        )
+                    } else {
+                        review
+                    }
+                }
+                state.copy(attractionReviews = updated)
+            }
+            runCatching {
+                val review = AttractionReview(
+                    attReviewId = attReviewId,
+                    attId = attId,
+                    userId = userId,
+                    attReviewComment = comment,
+                    attRating = rating,
+                    attTime = now
+                )
+                reviewRepo.updateAttractionReview(attReviewId, review)
+                reviewRepo.getAttractionReviews(attId)
+            }.onSuccess { reviews ->
+                _state.update { it.copy(attractionReviews = reviews) }
+            }.onFailure { e ->
+                val msg = e.message
+                if (msg != null && msg.startsWith("Response")) return@onFailure
+                _state.update { it.copy(error = msg) }
+            }
+        }
+    }
+
+    fun deleteAttractionReview(attReviewId: Int, attId: Int) {
+        viewModelScope.launch {
+            _state.update { state ->
+                state.copy(attractionReviews = state.attractionReviews.filterNot { it.attReviewId == attReviewId })
+            }
+            runCatching {
+                reviewRepo.deleteAttractionReview(attReviewId)
+                reviewRepo.getAttractionReviews(attId)
+            }.onSuccess { reviews ->
+                _state.update { it.copy(attractionReviews = reviews) }
+            }.onFailure { e ->
+                val msg = e.message
+                if (msg != null && msg.startsWith("Response")) return@onFailure
+                _state.update { it.copy(error = msg) }
+            }
         }
     }
 }
