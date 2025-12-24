@@ -544,19 +544,16 @@ private fun AppNavHost(
                 onReceiveOrder = { orderVm.receiveOrder(it) },
                 onBoardClick = { board: HomeBoard -> navController.navigate(NavRoutes.NoticeDetail.create(board.boardId)) },
                 onTicketPurchaseClick = { navController.navigate(NavRoutes.TicketPurchase.route) },
-                onCancelReservation = {
-                    account?.userId?.let { lineVm.cancelReservation(it) }
-                },
                 onReserveAttraction = { attId, userIds -> lineVm.createLine(attId, userIds) {} },
                 onAddFriend = { friendVm.addFriend(it) },
                 onRemoveFriend = { friendVm.removeFriend(it) },
                 onToggleParty = { id, friendId, party -> friendVm.updateFriendParty(id, friendId, party) },
                 onRefreshFriends = { friendVm.loadFriends() },
-                onRefreshReservation = { lineVm.refreshReservationStatus(account?.userId) },
+                onRefreshReservation = { lineVm.refreshReservationStatus() },
                 onFindReservation = { userId, attIds -> lineVm.findReservation(userId, attIds) },
                 clearSelection = { catalogVm.clearSelection() },
                 clearToasts = {
-                    orderVm.clearToast(); friendVm.clearToast(); lineVm.clearToast()
+                    orderVm.clearToast(); friendVm.clearToast()
                 }
             )
         }
@@ -655,7 +652,6 @@ private fun AppNavHost(
                 attraction = attraction,
                 reviews = catalogState.attractionReviews,
                 account = account, // Pass the full account object
-                reservedAttId = lineState.reservedAttId,
                 allAttractions = catalogState.attractions,
                 userNames = userNames,
                 onBack = {
