@@ -8,4 +8,5 @@ class AccountRepository(private val api: HmApi) {
     suspend fun register(account: Account): Account = api.register(account)
     suspend fun getAccount(userId: String): Account = api.getAccount(userId)
     suspend fun getAccounts(): List<Account> = api.getAccounts()
+    suspend fun updateAccount(account: Account): Account = api.updateAccount(account.userId, account)
 }

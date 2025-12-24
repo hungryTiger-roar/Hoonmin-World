@@ -74,6 +74,7 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
     implementation("com.google.android.gms:play-services-maps:18.2.0")
+    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.17.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
