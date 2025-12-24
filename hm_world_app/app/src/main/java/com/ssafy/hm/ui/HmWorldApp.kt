@@ -538,6 +538,8 @@ private fun AppNavHost(
                 onOpenItemDetail = { navController.navigate(NavRoutes.ItemDetail.create(it)) },
                 onOpenCart = { navController.navigate(NavRoutes.Cart.route) },
                 onOpenOrderHistory = { navController.navigate(NavRoutes.OrderDetail.route) },
+                onAiSearch = { part -> catalogVm.searchByImage(part) },
+                onClearAiSearch = { catalogVm.clearAiSearch() },
                 onAddCart = { orderVm.addToCart(it) },
                 onUpdateCart = { item, qty -> orderVm.updateCart(item, qty) },
                 onCreateOrder = { orderVm.createOrder(it) },
