@@ -15,6 +15,8 @@ data class LineState(
     val reservedAttId: Int? = null,
     val reservedLineId: Int? = null,
     val reservedAheadCount: Int? = null,
+    val waitingAttId: Int? = null,
+    val waitingUserIds: Set<String> = emptySet(),
     val toast: String? = null,
     val error: String? = null
 )
@@ -89,18 +91,94 @@ class LineViewModel(
         }
     }
 
-    fun refreshReservationStatus() {
+    fun refreshReservationStatus(userId: String? = null) {
         val attId = _state.value.reservedAttId ?: return
         val lineId = _state.value.reservedLineId ?: return
         viewModelScope.launch {
             runCatching {
                 val lines = lineRepo.getLinesByAttraction(attId)
+                val currentLine = lines.firstOrNull { it.lineId == lineId } ?: return@runCatching null
+                if (userId != null && currentLine.members.none { it.userId == userId }) {
+                    return@runCatching null
+                }
                 lines.filter { it.lineId < lineId }.sumOf { it.members.size }
             }.onSuccess { aheadCount ->
-                _state.update { it.copy(reservedAheadCount = aheadCount, error = null) }
+                if (aheadCount == null) {
+                    _state.update {
+                        it.copy(
+                            reservedAttId = null,
+                            reservedLineId = null,
+                            reservedAheadCount = null,
+                            error = null
+                        )
+                    }
+                } else {
+                    _state.update { it.copy(reservedAheadCount = aheadCount, error = null) }
+                }
             }.onFailure { e ->
                 _state.update { it.copy(error = e.message) }
             }
+        }
+    }
+
+    fun loadWaitingUsers(attId: Int) {
+        viewModelScope.launch {
+            runCatching {
+                val lines = lineRepo.getLinesByAttraction(attId)
+                lines.flatMap { it.members }.map { it.userId }.toSet()
+            }.onSuccess { users ->
+                _state.update {
+                    it.copy(
+                        waitingAttId = attId,
+                        waitingUserIds = users,
+                        error = null
+                    )
+                }
+            }.onFailure { e ->
+                _state.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
+    fun clearWaitingUsers() {
+        _state.update { it.copy(waitingAttId = null, waitingUserIds = emptySet()) }
+    }
+
+    fun cancelReservation(userId: String) {
+        val lineId = _state.value.reservedLineId ?: return
+        viewModelScope.launch {
+            runCatching { lineRepo.deleteLineMember(lineId, userId) }
+                .onSuccess {
+                    _state.update {
+                        it.copy(
+                            reservedAttId = null,
+                            reservedLineId = null,
+                            reservedAheadCount = null,
+                            waitingUserIds = it.waitingUserIds - userId,
+                            toast = "예약이 취소되었습니다.",
+                            error = null
+                        )
+                    }
+                }
+                .onFailure { e ->
+                    val stillMember = runCatching {
+                        lineRepo.getLineMembers(lineId).any { it.userId == userId }
+                    }.getOrNull()
+                    if (stillMember == false) {
+                        _state.update {
+                            it.copy(
+                                reservedAttId = null,
+                                reservedLineId = null,
+                                reservedAheadCount = null,
+                                waitingUserIds = it.waitingUserIds - userId,
+                                toast = "예약이 취소되었습니다.",
+                                error = null
+                            )
+                        }
+                    } else {
+                        _state.update { it.copy(error = e.message) }
+                    }
+                }
         }
     }
 
