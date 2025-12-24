@@ -20,6 +20,9 @@ interface HmApi {
     @GET("/accounts")
     suspend fun getAccounts(): List<Account>
 
+    @PUT("/accounts/{userId}")
+    suspend fun updateAccount(@Path("userId") userId: String, @Body account: Account): Account
+
     @GET("/attractions")
     suspend fun getAttractions(): List<Attraction>
 

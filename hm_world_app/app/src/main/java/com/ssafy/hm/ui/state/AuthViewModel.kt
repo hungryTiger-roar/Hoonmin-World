@@ -107,4 +107,25 @@ class AuthViewModel(
             }
         }
     }
+
+    fun updateAccounts(accounts: List<Account>, onComplete: (Boolean) -> Unit) {
+        if (accounts.isEmpty()) {
+            onComplete(false)
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(loading = true, error = null) }
+            runCatching {
+                accounts.forEach { repo.updateAccount(it) }
+            }.onSuccess {
+                val current = _uiState.value.account
+                val updated = accounts.firstOrNull { it.userId == current?.userId }
+                _uiState.update { it.copy(loading = false, account = updated ?: current) }
+                onComplete(true)
+            }.onFailure { e ->
+                _uiState.update { it.copy(loading = false, error = e.message) }
+                onComplete(false)
+            }
+        }
+    }
 }

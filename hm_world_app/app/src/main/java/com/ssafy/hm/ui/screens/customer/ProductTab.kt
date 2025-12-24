@@ -180,7 +180,6 @@ fun ProductTab(
                 cartCount = cartCount,
                 actionColor = actionColor
             )
-            Spacer(modifier = Modifier.height(8.dp))
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 ProductSearchBar(query = query, onQueryChange = { query = it })
                 Spacer(modifier = Modifier.height(16.dp))
@@ -353,7 +352,7 @@ fun ProductTopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(

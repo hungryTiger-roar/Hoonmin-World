@@ -61,6 +61,7 @@ import com.ssafy.hm.ui.theme.AuroraPurple
 @Composable
 fun AttractionReservationScreen(
     attraction: Attraction?,
+    attractions: List<Attraction>,
     onBack: () -> Unit,
     onReservationComplete: () -> Unit,
     friendViewModel: FriendViewModel,
@@ -78,10 +79,10 @@ fun AttractionReservationScreen(
         friendViewModel.loadFriends()
     }
 
-    LaunchedEffect(attraction?.attId) {
-        val attId = attraction?.attId
-        if (attId != null) {
-            lineViewModel.loadWaitingUsers(attId)
+    LaunchedEffect(attractions) {
+        val attIds = attractions.map { it.attId }
+        if (attIds.isNotEmpty()) {
+            lineViewModel.loadWaitingUsers(attIds)
         } else {
             lineViewModel.clearWaitingUsers()
         }

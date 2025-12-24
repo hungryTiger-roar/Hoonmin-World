@@ -12,4 +12,5 @@ public interface FriendService {
 	List<Friend> getFriends(String userId);
 	List<Friend> getFriendsTicket(String userId);
 	List<Friend> getFriendsTicketNoAtt(String userId);
+	List<Friend> getFriendsTicketNotPurchased(String userId);
 }
