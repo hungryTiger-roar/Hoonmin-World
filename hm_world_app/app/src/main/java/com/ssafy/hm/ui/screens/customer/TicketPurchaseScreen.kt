@@ -14,9 +14,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import android.widget.Toast
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -25,6 +27,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -61,12 +64,14 @@ fun TicketPurchaseScreen(
 ) {
     val authState by authViewModel.uiState.collectAsState()
     val friendState by friendViewModel.state.collectAsState()
+    val context = LocalContext.current
 
     val filteredFriends = friendState.friends.filter { friendWithDetails ->
         !friendWithDetails.account.ticket
     }
     var expanded by remember { mutableStateOf(false) }
     var selectedFriends by remember { mutableStateOf<Set<FriendWithDetails>>(emptySet()) }
+    var showDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(authState.account) {
         authState.account?.let {
@@ -75,25 +80,31 @@ fun TicketPurchaseScreen(
     }
 
     val userAge = authState.account?.birth?.let { getAge(it) }
-    val userTicketType = userAge?.let { getTicketType(it) }
-
-    val totalTickets = 1 + selectedFriends.size
-    val adultCount = (if (userTicketType == "성인") 1 else 0) + selectedFriends.count {
-        it.account.birth?.let { birth -> getTicketType(getAge(birth)) } == "성인"
+    val counts = mutableMapOf<TicketCategory, Int>().withDefault { 0 }
+    fun countTicket(age: Int?) {
+        val category = ticketCategory(age)
+        counts[category] = counts.getValue(category) + 1
     }
-    val teenCount = (if (userTicketType == "청소년") 1 else 0) + selectedFriends.count {
-        it.account.birth?.let { birth -> getTicketType(getAge(birth)) } == "청소년"
+    authState.account?.let { _ -> countTicket(userAge) }
+    selectedFriends.forEach { friend ->
+        val friendAge = friend.account.birth?.let { getAge(it) }
+        countTicket(friendAge)
     }
-    val childCount = (if (userTicketType == "어린이") 1 else 0) + selectedFriends.count {
-        it.account.birth?.let { birth -> getTicketType(getAge(birth)) } == "어린이"
+    val totalTickets = counts.values.sum()
+    val adultCount = counts[TicketCategory.ADULT] ?: 0
+    val teenCount = counts[TicketCategory.TEEN] ?: 0
+    val childCount = counts[TicketCategory.CHILD] ?: 0
+    val babyCount = counts[TicketCategory.BABY] ?: 0
+    val totalPrice = counts.entries.sumOf { (category, qty) -> category.price * qty }
+
+    val ticketBreakdown = buildString {
+        append("성인 ${adultCount}장")
+        append(" · 청소년 ${teenCount}장")
+        append(" · 어린이 ${childCount}장")
+        if (babyCount > 0) {
+            append(" · 유아 ${babyCount}장")
+        }
     }
-
-    val totalPrice = (adultCount * 45000) + (teenCount * 35000) + (childCount * 30000)
-
-    val summary = mutableListOf<String>()
-    if (adultCount > 0) summary.add("성인 $adultCount"+"명")
-    if (teenCount > 0) summary.add("청소년 $teenCount"+"명")
-    if (childCount > 0) summary.add("어린이 $childCount"+"명")
 
 
     Scaffold(
@@ -119,11 +130,13 @@ fun TicketPurchaseScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
-                    Text(summary.joinToString(", "), fontSize = 16.sp)
-                    Text("총 ${totalTickets}매", fontSize = 16.sp)
-                    Text("${totalPrice}원", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text(ticketBreakdown, fontSize = 16.sp)
+                    Text(
+                        text = "총 ${totalTickets}매 · ${formatCurrency(totalPrice)}원",
+                        fontSize = 16.sp
+                    )
                 }
-                Button(onClick = { /*TODO*/ }) {
+                Button(onClick = { showDialog = true }) {
                     Text("구매하기")
                 }
             }
@@ -153,6 +166,47 @@ fun TicketPurchaseScreen(
                 }
             )
         }
+    }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("티켓 구매") },
+            text = {
+                Text(
+                    "성인 ${adultCount}장, 청소년 ${teenCount}장, 어린이 ${childCount}장 총 ${formatCurrency(totalPrice)}원 결제하시겠습니까?"
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDialog = false
+                        val targets = buildList {
+                            authState.account?.let { add(it.copy(ticket = true)) }
+                            selectedFriends.forEach { add(it.account.copy(ticket = true)) }
+                        }
+                        authViewModel.updateAccounts(targets) { success ->
+                            if (success) {
+                                friendViewModel.loadFriends()
+                                authViewModel.refreshAccount()
+                                selectedFriends = emptySet()
+                                expanded = false
+                                Toast.makeText(context, "티켓이 결제되었습니다.", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(context, "티켓 결제에 실패했습니다.", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                ) {
+                    Text("확인")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDialog = false }) {
+                    Text("취소")
+                }
+            }
+        )
     }
 }
 
@@ -253,7 +307,19 @@ fun FriendPurchaseCard(
                                 }
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(friendDetails.account.name ?: "이름 없음")
+                            val friendAge = friendDetails.account.birth?.let { getAge(it) }
+                            val category = ticketCategory(friendAge)
+                            Column {
+                                Text(
+                                    "${friendDetails.account.name ?: "이름 없음"} (${friendDetails.account.userId})",
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Text(
+                                    "${category.label} · ${formatCurrency(category.price)}원",
+                                    fontSize = 12.sp,
+                                    color = Color.Gray
+                                )
+                            }
                         }
                     }
                 }
@@ -263,29 +329,58 @@ fun FriendPurchaseCard(
 }
 
 
-fun getAge(birthDate: String): Int? {
-    return try {
-        val formatter = DateTimeFormatter.ofPattern("yyyyMMdd")
-        val birth = LocalDate.parse(birthDate, formatter)
+fun getAge(birthDate: String?): Int? {
+    if (birthDate.isNullOrBlank()) {
+        return null
+    }
+    val parsers = listOf(
+        DateTimeFormatter.ofPattern("yyyyMMdd"),
+        DateTimeFormatter.ofPattern("yyyy-MM-dd"),
+        DateTimeFormatter.ofPattern("yyyy.MM.dd"),
+        DateTimeFormatter.ofPattern("yyyy/MM/dd")
+    )
+    val birth = parsers.asSequence().mapNotNull { formatter ->
+        runCatching { LocalDate.parse(birthDate, formatter) }.getOrNull()
+    }.firstOrNull() ?: run {
+        val digits = birthDate.filter { it.isDigit() }
+        if (digits.length >= 8) {
+            kotlin.runCatching {
+                LocalDate.parse(digits.substring(0, 8), DateTimeFormatter.ofPattern("yyyyMMdd"))
+            }.getOrNull()
+        } else {
+            null
+        }
+    }
+    return birth?.let {
         val today = LocalDate.now()
-        var age = today.year - birth.year
-        if (birth.month > today.month || (birth.month == today.month && birth.dayOfMonth > today.dayOfMonth)) {
+        var age = today.year - it.year
+        if (it.month > today.month || (it.month == today.month && it.dayOfMonth > today.dayOfMonth)) {
             age--
         }
         age
-    } catch (e: Exception) {
-        null
     }
 }
 
-fun getTicketType(age: Int?): String {
-    if (age == null) return "알수없음"
+enum class TicketCategory(val label: String, val price: Int) {
+    ADULT("성인", 45000),
+    TEEN("청소년", 35000),
+    CHILD("어린이", 30000),
+    BABY("유아", 0)
+}
+
+fun ticketCategory(age: Int?): TicketCategory {
     return when {
-        age >= 19 -> "성인"
-        age in 13..18 -> "청소년"
-        age in 4..12 -> "어린이"
-        else -> "유아"
+        age == null -> TicketCategory.ADULT
+        age >= 19 -> TicketCategory.ADULT
+        age in 13..18 -> TicketCategory.TEEN
+        age in 4..12 -> TicketCategory.CHILD
+        age in 0..3 -> TicketCategory.BABY
+        else -> TicketCategory.ADULT
     }
+}
+
+fun formatCurrency(amount: Int): String {
+    return "%,d".format(amount)
 }
 
 

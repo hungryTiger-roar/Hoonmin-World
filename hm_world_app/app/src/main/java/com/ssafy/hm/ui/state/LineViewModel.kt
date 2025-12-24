@@ -15,6 +15,9 @@ data class LineState(
     val reservedAttId: Int? = null,
     val reservedLineId: Int? = null,
     val reservedAheadCount: Int? = null,
+    val waitingAttId: Int? = null,
+    val waitingUserIds: Set<String> = emptySet(),
+    val waitingCounts: Map<Int, Int> = emptyMap(),
     val toast: String? = null,
     val error: String? = null
 )
@@ -101,6 +104,91 @@ class LineViewModel(
             }.onFailure { e ->
                 _state.update { it.copy(error = e.message) }
             }
+        }
+    }
+
+    fun loadWaitingCounts(attIds: List<Int>) {
+        if (attIds.isEmpty()) {
+            _state.update { it.copy(waitingCounts = emptyMap()) }
+            return
+        }
+        viewModelScope.launch {
+            runCatching {
+                val counts = mutableMapOf<Int, Int>()
+                attIds.forEach { attId ->
+                    val lines = lineRepo.getLinesByAttraction(attId)
+                    counts[attId] = lines.sumOf { it.members.size }
+                }
+                counts.toMap()
+            }.onSuccess { counts ->
+                _state.update { it.copy(waitingCounts = counts, error = null) }
+            }.onFailure { e ->
+                _state.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
+    fun loadWaitingUsers(attIds: List<Int>) {
+        viewModelScope.launch {
+            runCatching {
+                attIds
+                    .flatMap { attId -> lineRepo.getLinesByAttraction(attId) }
+                    .flatMap { it.members }
+                    .map { it.userId }
+                    .toSet()
+            }.onSuccess { users ->
+                _state.update {
+                    it.copy(
+                        waitingAttId = attIds.firstOrNull(),
+                        waitingUserIds = users,
+                        error = null
+                    )
+                }
+            }.onFailure { e ->
+                _state.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
+    fun clearWaitingUsers() {
+        _state.update { it.copy(waitingAttId = null, waitingUserIds = emptySet()) }
+    }
+
+    fun cancelReservation(userId: String) {
+        val lineId = _state.value.reservedLineId ?: return
+        viewModelScope.launch {
+            runCatching { lineRepo.deleteLineMember(lineId, userId) }
+                .onSuccess {
+                    _state.update {
+                        it.copy(
+                            reservedAttId = null,
+                            reservedLineId = null,
+                            reservedAheadCount = null,
+                            waitingUserIds = it.waitingUserIds - userId,
+                            toast = "예약이 취소되었습니다.",
+                            error = null
+                        )
+                    }
+                }
+                .onFailure { e ->
+                    val stillMember = runCatching {
+                        lineRepo.getLineMembers(lineId).any { it.userId == userId }
+                    }.getOrNull()
+                    if (stillMember == false) {
+                        _state.update {
+                            it.copy(
+                                reservedAttId = null,
+                                reservedLineId = null,
+                                reservedAheadCount = null,
+                                waitingUserIds = it.waitingUserIds - userId,
+                                toast = "예약이 취소되었습니다.",
+                                error = null
+                            )
+                        }
+                    } else {
+                        _state.update { it.copy(error = e.message) }
+                    }
+                }
         }
     }
 

@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -31,15 +33,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -52,16 +55,21 @@ import com.ssafy.hm.data.model.Attraction
 @Composable
 fun AttractionTab(
     list: List<Attraction>,
+    waitingCounts: Map<Int, Int>,
     onSelect: (Int) -> Unit,
     paddingValues: PaddingValues
 ) {
     var query by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("전체") }
+    val layoutDirection = LocalLayoutDirection.current
+    val topInset = paddingValues.calculateTopPadding()
+    val startInset = paddingValues.calculateStartPadding(layoutDirection)
+    val endInset = paddingValues.calculateEndPadding(layoutDirection)
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(paddingValues)
+            .padding(start = startInset, top = topInset, end = endInset)
             .background(Color(0xFFF9F9F9))
     ) {
         AttractionTopBar()
@@ -76,9 +84,26 @@ fun AttractionTab(
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        val filteredList = list.filter {
-            (selectedCategory == "전체" || it.attCategory == selectedCategory) &&
-                (query.isBlank() || it.attName?.contains(query, ignoreCase = true) == true)
+        val popularIds = remember(list, waitingCounts) {
+            list.sortedByDescending { waitingCounts[it.attId] ?: 0 }
+                .take(3)
+                .map { it.attId }
+                .toSet()
+        }
+
+        val filteredList = run {
+            val categoryFiltered = list.filter { attraction ->
+                when (selectedCategory) {
+                    "전체" -> true
+                    "인기" -> true
+                    else -> attraction.attCategory == selectedCategory
+                } && (query.isBlank() || attraction.attName?.contains(query, ignoreCase = true) == true)
+            }
+            if (selectedCategory == "인기") {
+                categoryFiltered.filter { popularIds.contains(it.attId) }
+            } else {
+                categoryFiltered
+            }
         }
 
         LazyColumn(
@@ -86,12 +111,25 @@ fun AttractionTab(
                 start = 16.dp,
                 top = 8.dp,
                 end = 16.dp,
-                bottom = 30.dp
+                bottom = 56.dp
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(filteredList, key = { it.attId }) { attraction ->
-                AttractionInfoCard(attraction = attraction, onCardClick = { onSelect(attraction.attId) })
+                val waitingCount = waitingCounts[attraction.attId] ?: 0
+                val capacity = (attraction.attCapacity ?: 0).takeIf { it > 0 } ?: 1
+                val waitMinutes = if (waitingCount <= 0) {
+                    0
+                } else {
+                    ((waitingCount + capacity - 1) / capacity) * 10
+                }
+                AttractionInfoCard(
+                    attraction = attraction,
+                    waitingCount = waitingCount,
+                    waitMinutes = waitMinutes,
+                    isPopular = popularIds.contains(attraction.attId),
+                    onCardClick = { onSelect(attraction.attId) }
+                )
             }
         }
     }
@@ -130,7 +168,7 @@ private fun AttractionSearchBar(query: String, onQueryChange: (String) -> Unit) 
 
 @Composable
 private fun AttractionCategoryButtons(selectedCategory: String, onCategorySelected: (String) -> Unit) {
-    val categories = listOf("전체", "스릴", "가족", "어린이", "공연")
+    val categories = listOf("전체", "인기", "스릴", "가족", "어린이")
     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         items(categories) { category ->
             val isSelected = category == selectedCategory
@@ -150,7 +188,13 @@ private fun AttractionCategoryButtons(selectedCategory: String, onCategorySelect
 }
 
 @Composable
-private fun AttractionInfoCard(attraction: Attraction, onCardClick: () -> Unit) {
+private fun AttractionInfoCard(
+    attraction: Attraction,
+    waitingCount: Int,
+    waitMinutes: Int,
+    isPopular: Boolean,
+    onCardClick: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -167,11 +211,26 @@ private fun AttractionInfoCard(attraction: Attraction, onCardClick: () -> Unit) 
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(
-                    text = attraction.attName ?: "어트랙션",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (isPopular) {
+                        Text(
+                            text = "인기",
+                            color = Color.White,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier
+                                .background(Color(0xFFFF6A00), RoundedCornerShape(6.dp))
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                    }
+                    Text(
+                        text = attraction.attName ?: "놀이기구",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         Icons.Default.Groups,
@@ -180,7 +239,7 @@ private fun AttractionInfoCard(attraction: Attraction, onCardClick: () -> Unit) 
                         tint = Color.Gray
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("최대 ${attraction.attCapacity}명", fontSize = 14.sp, color = Color.Gray)
+                    Text("탑승 ${attraction.attCapacity}명", fontSize = 14.sp, color = Color.Gray)
                 }
                 Text(
                     text = attraction.attComment ?: "",
@@ -196,7 +255,7 @@ private fun AttractionInfoCard(attraction: Attraction, onCardClick: () -> Unit) 
                         tint = Color.Red.copy(alpha = 0.7f)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("대기 120명", fontSize = 14.sp, color = Color.Gray)
+                    Text("대기 ${waitingCount}명", fontSize = 14.sp, color = Color.Gray)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
@@ -206,7 +265,7 @@ private fun AttractionInfoCard(attraction: Attraction, onCardClick: () -> Unit) 
                         tint = Color.Gray
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("대기 50분", fontSize = 14.sp, color = Color.Gray)
+                    Text("예상 대기 ${waitMinutes}분", fontSize = 14.sp, color = Color.Gray)
                 }
             }
             Spacer(modifier = Modifier.width(16.dp))
