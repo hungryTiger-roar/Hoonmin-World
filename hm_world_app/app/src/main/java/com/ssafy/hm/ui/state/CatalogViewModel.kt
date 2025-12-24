@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssafy.hm.data.model.Attraction
 import com.ssafy.hm.data.model.AttractionReview
+import com.ssafy.hm.data.model.AiSearchResult
 import com.ssafy.hm.data.model.BuyImage
 import com.ssafy.hm.data.model.Item
 import com.ssafy.hm.data.model.ItemReview
@@ -17,6 +18,7 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import okhttp3.MultipartBody
 
 data class CatalogState(
     val loading: Boolean = false,
@@ -27,7 +29,10 @@ data class CatalogState(
     val selectedAttraction: Attraction? = null,
     val selectedItem: Item? = null,
     val attractionReviews: List<AttractionReview> = emptyList(),
-    val itemReviews: List<ItemReview> = emptyList()
+    val itemReviews: List<ItemReview> = emptyList(),
+    val aiLoading: Boolean = false,
+    val aiResultIds: List<Int> = emptyList(),
+    val aiResults: List<AiSearchResult> = emptyList()
 )
 
 class CatalogViewModel(
@@ -88,6 +93,29 @@ class CatalogViewModel(
                 _state.update { it.copy(error = e.message) }
             }
         }
+    }
+
+    fun searchByImage(part: MultipartBody.Part) {
+        viewModelScope.launch {
+            _state.update { it.copy(aiLoading = true, error = null) }
+            runCatching {
+                itemRepo.searchByImage(part)
+            }.onSuccess { results ->
+                _state.update {
+                    it.copy(
+                        aiLoading = false,
+                        aiResultIds = results.map { it.itemId },
+                        aiResults = results
+                    )
+                }
+            }.onFailure { e ->
+                _state.update { it.copy(aiLoading = false, error = e.message) }
+            }
+        }
+    }
+
+    fun clearAiSearch() {
+        _state.update { it.copy(aiResultIds = emptyList(), aiResults = emptyList()) }
     }
 
     fun clearSelection() {
