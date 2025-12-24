@@ -26,11 +26,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -71,6 +69,7 @@ fun AttractionReservationScreen(
 ) {
     val friendState by friendViewModel.state.collectAsState()
     val authState by authViewModel.uiState.collectAsState()
+    val lineState by lineViewModel.state.collectAsState()
     val currentUser = authState.account
 
     var selectedFriends by remember { mutableStateOf<Set<String>>(emptySet()) }
@@ -79,21 +78,34 @@ fun AttractionReservationScreen(
         friendViewModel.loadFriends()
     }
 
-    LaunchedEffect(friendState.friends, currentUser) {
+    LaunchedEffect(attraction?.attId) {
+        val attId = attraction?.attId
+        if (attId != null) {
+            lineViewModel.loadWaitingUsers(attId)
+        } else {
+            lineViewModel.clearWaitingUsers()
+        }
+    }
+
+    val waitingUserIds = lineState.waitingUserIds
+
+    LaunchedEffect(friendState.friends, currentUser, waitingUserIds) {
         val currentUserId = currentUser?.userId ?: ""
         val initialSelected = friendState.friends
             .filter { (it.account.ticket ?: false) && it.friend.friendParty }
             .map { it.friend.friendId }
+            .filterNot { waitingUserIds.contains(it) }
             .toMutableSet()
-        // Add current user if they have a ticket and are in a party (or just always add them if they have a ticket)
-        if (currentUser?.ticket == true) {
+        if (currentUser?.ticket == true && !waitingUserIds.contains(currentUserId)) {
             initialSelected.add(currentUserId)
         }
         selectedFriends = initialSelected
     }
 
-    val friendsWithTickets = remember(friendState.friends) {
-        friendState.friends.filter { it.account.ticket ?: false }
+    val friendsWithTickets = remember(friendState.friends, waitingUserIds) {
+        friendState.friends
+            .filter { it.account.ticket ?: false }
+            .sortedBy { waitingUserIds.contains(it.friend.friendId) }
     }
 
     val selectedCount = selectedFriends.size
@@ -101,7 +113,7 @@ fun AttractionReservationScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("인원 선택", fontWeight = FontWeight.Bold) },
+                title = { Text("어트랙션 예약", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "뒤로가기")
@@ -137,7 +149,11 @@ fun AttractionReservationScreen(
                         .fillMaxSize()
                         .background(
                             brush = Brush.horizontalGradient(
-                                colors = if (selectedCount > 0 && attraction != null) listOf(Color(0xFF9C27FF), Color(0xFFFF5AA4)) else listOf(Color.Gray, Color.LightGray)
+                                colors = if (selectedCount > 0 && attraction != null) {
+                                    listOf(Color(0xFF9C27FF), Color(0xFFFF5AA4))
+                                } else {
+                                    listOf(Color.Gray, Color.LightGray)
+                                }
                             )
                         ),
                     contentAlignment = Alignment.Center
@@ -166,12 +182,12 @@ fun AttractionReservationScreen(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = attraction.attName ?: "어트랙션",
+                                text = attraction.attName ?: "놀이기구",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 22.sp
                             )
                             Text(
-                                text = "최대 ${attraction.attCapacity}명 탑승 가능",
+                                text = "탑승 가능 인원 ${attraction.attCapacity}명 / 회차",
                                 color = Color.Gray,
                                 fontSize = 14.sp
                             )
@@ -184,7 +200,7 @@ fun AttractionReservationScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                             ) {
-                                Text("선택된 인원", fontSize = 12.sp, color = AuroraPurple)
+                                Text("예약 인원", fontSize = 12.sp, color = AuroraPurple)
                                 Text(
                                     "${selectedCount}명",
                                     fontSize = 20.sp,
@@ -203,7 +219,7 @@ fun AttractionReservationScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = "오늘 티켓이 있는 친구들만 표시됩니다",
+                            text = "오늘 티켓을 보유한 친구만 예약할 수 있습니다.",
                             modifier = Modifier.padding(16.dp),
                             fontSize = 14.sp
                         )
@@ -213,11 +229,14 @@ fun AttractionReservationScreen(
 
                     LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         items(friendsWithTickets, key = { it.friend.id }) { friendDetails ->
+                            val friendId = friendDetails.friend.friendId
+                            val isWaiting = waitingUserIds.contains(friendId)
                             FriendSelectItem(
                                 friendDetails = friendDetails,
-                                isSelected = friendDetails.friend.friendId in selectedFriends,
+                                isSelected = friendId in selectedFriends,
+                                isWaiting = isWaiting,
                                 onToggle = { isChecked ->
-                                    val friendId = friendDetails.friend.friendId
+                                    if (isWaiting) return@FriendSelectItem
                                     val newSelected = selectedFriends.toMutableSet()
                                     if (isChecked) {
                                         newSelected.add(friendId)
@@ -233,7 +252,7 @@ fun AttractionReservationScreen(
                 }
             } else {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("어트랙션 정보를 불러오지 못했습니다.")
+                    Text("놀이기구 정보를 불러오지 못했습니다.")
                 }
             }
         }
@@ -244,13 +263,18 @@ fun AttractionReservationScreen(
 fun FriendSelectItem(
     friendDetails: FriendWithDetails,
     isSelected: Boolean,
+    isWaiting: Boolean,
     onToggle: (Boolean) -> Unit
 ) {
+    val cardColor = if (isWaiting) Color(0xFFEAEAEA) else Color.White
+    val textColor = if (isWaiting) Color.Gray else Color.Black
+    val subTextColor = if (isWaiting) Color.Gray else Color.Gray
+    val avatarColor = if (isWaiting) Color.LightGray else AuroraGlow.copy(alpha = if (isSelected) 1f else 0.3f)
+
     Card(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = cardColor),
     ) {
         Row(
             modifier = Modifier
@@ -262,21 +286,36 @@ fun FriendSelectItem(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(AuroraGlow.copy(alpha = if (isSelected) 1f else 0.3f)),
+                    .background(avatarColor),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = friendDetails.account.name?.firstOrNull()?.toString() ?: "",
-                    color = if (isSelected) Color.White else AuroraPurple,
+                    color = if (isWaiting) Color.White else if (isSelected) Color.White else AuroraPurple,
                     fontWeight = FontWeight.Bold
                 )
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = friendDetails.account.name ?: "", fontWeight = FontWeight.Bold)
-                Text(text = "@${friendDetails.account.userId}", color = Color.Gray, fontSize = 12.sp)
+                Text(
+                    text = friendDetails.account.name ?: "",
+                    fontWeight = FontWeight.Bold,
+                    color = textColor
+                )
+                Text(
+                    text = "@${friendDetails.account.userId}",
+                    color = subTextColor,
+                    fontSize = 12.sp
+                )
+                if (isWaiting) {
+                    Text(
+                        text = "이미 대기중 입니다",
+                        color = Color(0xFFB85C5C),
+                        fontSize = 12.sp
+                    )
+                }
             }
-            IconButton(onClick = { onToggle(!isSelected) }) {
+            IconButton(onClick = { onToggle(!isSelected) }, enabled = !isWaiting) {
                 Icon(
                     imageVector = if (isSelected) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircleOutline,
                     contentDescription = "선택",
