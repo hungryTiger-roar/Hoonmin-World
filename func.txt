@@ -1,0 +1,14 @@
+0. 주제
+   놀이공원 고객 여정을 Compose 기반 고객 앱과 Spring Boot 서버로 연결한 O2O 플랫폼으로, 추천·예약·티켓·프로필을 통합 제공.
+
+1. 핵심 UI
+   Compose + Material3로 Home/Attraction/Product/Profile/Reservation 흐름을 정리하고, 인기·신상품 뱃지와 FAB 마법봉, 티켓 요약/다이얼로그를 구현.
+
+2. 기능 기둥
+   ONNX MiniLM 추천, LineViewModel 연동 실시간 예약/노쇼/티켓 상태, 친구 티켓 구매와 토스트/다이얼로그 반영, Profile 등급·프로그레스바, 상품/카테고리 필터 강화.
+
+3. 아키텍처
+   MVVM + Repository + Retrofit/API, StateFlow 기반 상태 관리, Line/Friend/Auth וכו ViewModel 분리, HmWorldApp이 navigation/refresh 로직 조정.
+
+4. 관리자 연계
+   Admin 스크린(라인, 대시보드, 리뷰 등)과 Spring 백오피스가 FCM/트랜잭션 분리, 방문 기록, 매너포인트 관리 등을 지원하며 향후 NFC/결제/통계 확장 기대.
