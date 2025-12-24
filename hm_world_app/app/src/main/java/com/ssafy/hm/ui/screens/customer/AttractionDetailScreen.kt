@@ -63,6 +63,7 @@ fun AttractionDetailScreen(
     attraction: Attraction?,
     reviews: List<AttractionReview>,
     account: Account?,
+    reservedAttId: Int?,
     allAttractions: List<Attraction>,
     userNames: Map<String, String>,
     onBack: () -> Unit,
@@ -105,12 +106,12 @@ fun AttractionDetailScreen(
             }
         },
         bottomBar = {
-            val reservedAttId = account?.attId
             val buttonEnabled: Boolean
             val buttonText: String
 
             if (reservedAttId != null) {
-                val reservedAttractionName = allAttractions.find { it.attId == reservedAttId }?.attName ?: "알 수 없는 놀이기구"
+                val reservedAttractionName = allAttractions.find { it.attId == reservedAttId }?.attName
+                    ?: "알 수 없는 놀이기구"
                 buttonText = "$reservedAttractionName 예약 중!"
                 buttonEnabled = false
             } else {
