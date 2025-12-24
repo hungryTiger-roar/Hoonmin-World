@@ -23,7 +23,7 @@ class LineViewModel(
     private val _state = MutableStateFlow(LineState())
     val state: StateFlow<LineState> = _state
 
-    fun createLine(attId: Int, userIds: List<String>) {
+    fun createLine(attId: Int, userIds: List<String>, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
             runCatching {
                 val req = AttractionLineCreateRequest(attId = attId, userIds = userIds)
@@ -34,10 +34,12 @@ class LineViewModel(
                 _state.update {
                     val map = it.lineMembers.toMutableMap()
                     map[lineId] = members
-                    it.copy(lineMembers = map, toast = "줄서기 완료")
+                    it.copy(lineMembers = map)
                 }
+                onResult(true)
             }.onFailure { e ->
                 _state.update { it.copy(error = e.message) }
+                onResult(false)
             }
         }
     }
