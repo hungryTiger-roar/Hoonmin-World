@@ -228,10 +228,10 @@ fun CustomerRootScreen(
             if (tab == 2) {
                 FloatingActionButton(
                     onClick = { showRecommend = true },
-                    containerColor = Color(0xFF6A5AE0)
+                    containerColor = Color(0xFF9A8BFF)
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_magic_wand),
+                        painter = painterResource(id = R.drawable.outline_ads_click_24),
                         contentDescription = "recommend"
                     )
                 }

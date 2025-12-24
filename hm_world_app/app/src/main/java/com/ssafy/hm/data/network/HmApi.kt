@@ -177,7 +177,7 @@ interface HmApi {
     suspend fun uploadImage(@Part upload_file: MultipartBody.Part): ResponseBody
 
     @Multipart
-    @POST("/ai/search-by-image")
+    @POST("/ai/image-category")
     suspend fun classifyImageCategory(@Part file: MultipartBody.Part): CategoryResponse
 
     @POST("/notifications/token")

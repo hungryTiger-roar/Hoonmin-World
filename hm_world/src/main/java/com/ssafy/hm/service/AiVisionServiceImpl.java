@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class AiVisionServiceImpl implements AiVisionService {
 
-    private static final String API_KEY = "sk124";
+    private static final String API_KEY = "S14P02DE02-2089edb8-661f-42ae-8f09-3d6ed900e8c0";
     private static final String OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 
     @Override
