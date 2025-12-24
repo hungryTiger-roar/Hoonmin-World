@@ -27,14 +27,10 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -62,13 +58,10 @@ fun HomeTab(
     attractions: List<Attraction>,
     hasTicket: Boolean,
     reservedAttId: Int?,
-    reservedLineId: Int?,
     reservedAheadCount: Int?,
     paddingValues: PaddingValues,
     onBoardClick: (HomeBoard) -> Unit,
-    onTicketPurchaseClick: () -> Unit,
-    onNoShow: () -> Unit,
-    onRefreshReservation: () -> Unit
+    onTicketPurchaseClick: () -> Unit
 ) {
     val reservationMessage = if (hasTicket && reservedAttId != null && reservedAheadCount != null) {
         val attraction = attractions.firstOrNull { it.attId == reservedAttId }
@@ -84,14 +77,6 @@ fun HomeTab(
         null
     }
 
-    LaunchedEffect(hasTicket, reservedAttId, reservedLineId) {
-        if (!hasTicket || reservedAttId == null || reservedLineId == null) return@LaunchedEffect
-        while (true) {
-            onRefreshReservation()
-            delay(5000)
-        }
-    }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -104,8 +89,7 @@ fun HomeTab(
         TicketStatusCard(
             hasTicket = hasTicket,
             reservationMessage = reservationMessage,
-            onClick = onTicketPurchaseClick,
-            onNoShow = onNoShow
+            onClick = onTicketPurchaseClick
         )
         Spacer(modifier = Modifier.height(24.dp))
         NoticeBoard(boards, onBoardClick = onBoardClick)
@@ -176,11 +160,8 @@ fun HomeCarousel(images: List<HomeImage>) {
 fun TicketStatusCard(
     hasTicket: Boolean,
     reservationMessage: String?,
-    onClick: () -> Unit,
-    onNoShow: () -> Unit
+    onClick: () -> Unit
 ) {
-    val showNoShowDialog = remember { mutableStateOf(false) }
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -236,11 +217,7 @@ fun TicketStatusCard(
                     )
                 }
             }
-            if (hasTicket && !reservationMessage.isNullOrBlank()) {
-                OutlinedButton(onClick = { showNoShowDialog.value = true }) {
-                    Text("예약 취소", color = Color(0xFFD32F2F))
-                }
-            } else if (!hasTicket) {
+            if (!hasTicket) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
                     contentDescription = "Go to purchase",
@@ -249,29 +226,6 @@ fun TicketStatusCard(
                 )
             }
         }
-    }
-
-    if (showNoShowDialog.value) {
-        AlertDialog(
-            onDismissRequest = { showNoShowDialog.value = false },
-            title = { Text("예약 취소") },
-            text = { Text("정말로 취소하시겠습니까?") },
-            confirmButton = {
-                OutlinedButton(
-                    onClick = {
-                        showNoShowDialog.value = false
-                        onNoShow()
-                    }
-                ) {
-                    Text("확인")
-                }
-            },
-            dismissButton = {
-                OutlinedButton(onClick = { showNoShowDialog.value = false }) {
-                    Text("취소")
-                }
-            }
-        )
     }
 }
 

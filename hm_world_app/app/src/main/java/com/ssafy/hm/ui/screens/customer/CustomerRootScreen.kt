@@ -76,7 +76,6 @@ fun CustomerRootScreen(
     onReceiveOrder: (Int) -> Unit,
     onBoardClick: (HomeBoard) -> Unit,
     onTicketPurchaseClick: () -> Unit,
-    onCancelReservation: () -> Unit,
     onReserveAttraction: (Int, List<String>) -> Unit,
     onAddFriend: (String) -> Unit,
     onRemoveFriend: (Int) -> Unit,
@@ -242,13 +241,10 @@ fun CustomerRootScreen(
                 attractions = catalogState.attractions,
                 hasTicket = (account?.ticket == true),
                 reservedAttId = lineState.reservedAttId,
-                reservedLineId = lineState.reservedLineId,
                 reservedAheadCount = lineState.reservedAheadCount,
                 paddingValues = innerPadding,
                 onBoardClick = onBoardClick,
-                onTicketPurchaseClick = onTicketPurchaseClick,
-                onNoShow = onCancelReservation,
-                onRefreshReservation = onRefreshReservation
+                onTicketPurchaseClick = onTicketPurchaseClick
             )
             3 -> MapTab(innerPadding)
             else -> ProfileTab(
