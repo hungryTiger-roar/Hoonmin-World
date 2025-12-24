@@ -224,8 +224,14 @@ fun CustomerRootScreen(
         },
         floatingActionButton = {
             if (tab == 2) {
-                FloatingActionButton(onClick = { showRecommend = true }, containerColor = Color(0xFF6A5AE0)) {
-                    Icon(Icons.Default.AutoAwesome, contentDescription = "recommend")
+                FloatingActionButton(
+                    onClick = { showRecommend = true },
+                    containerColor = Color(0xFF6A5AE0)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_magic_wand),
+                        contentDescription = "recommend"
+                    )
                 }
             }
         }
