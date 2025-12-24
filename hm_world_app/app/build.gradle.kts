@@ -74,6 +74,8 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
     implementation("com.google.android.gms:play-services-maps:18.2.0")
+    // onDeviceAI
+    implementation("org.tensorflow:tensorflow-lite:2.12.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
