@@ -248,8 +248,8 @@ fun CustomerRootScreen(
             1 -> ProductTab(
                 list = catalogState.items,
                 buyImages = catalogState.buyImages,
-                aiResultIds = catalogState.aiResultIds,
-                aiResults = catalogState.aiResults,
+                aiCategory = catalogState.aiCategory,
+                aiCategoryItems = catalogState.aiCategoryItems,
                 aiLoading = catalogState.aiLoading,
                 onAiSearch = onAiSearch,
                 onClearAiSearch = onClearAiSearch,

@@ -5,7 +5,6 @@ import okhttp3.MultipartBody
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.*
-import com.ssafy.hm.data.model.AiSearchResult
 
 interface HmApi {
 
@@ -179,7 +178,7 @@ interface HmApi {
 
     @Multipart
     @POST("/ai/search-by-image")
-    suspend fun searchByImage(@Part file: MultipartBody.Part): List<AiSearchResult>
+    suspend fun classifyImageCategory(@Part file: MultipartBody.Part): CategoryResponse
 
     @POST("/notifications/token")
     suspend fun registerFcmToken(@Body request: FcmTokenRequest): Void

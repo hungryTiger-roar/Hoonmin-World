@@ -72,4 +72,40 @@ public class OpenAiClient {
         List<Map<String, Object>> data = (List<Map<String, Object>>) res.getBody().get("data");
         return (List<Double>) data.get(0).get("embedding");
     }
+
+    public String classifyImageCategory(String imageBase64DataUrl) throws Exception {
+        String url = baseUrl + "/v1/chat/completions";
+        Map<String, Object> payload = Map.of(
+            "model", "gpt-4.1-mini",
+            "temperature", 0,
+            "messages", List.of(
+                Map.of("role", "system", "content", "너는 이미지 카테고리 분류기다."),
+                Map.of(
+                    "role", "user",
+                    "content", List.of(
+                        Map.of("type", "text", "text", "아래 이미지를 보고 다음 카테고리 중 하나만 단답으로 출력해. [의류, 악세사리, 인형, 휴대폰] 다른 말은 절대 하지 마."),
+                        Map.of("type", "image_url", "image_url", Map.of("url", imageBase64DataUrl))
+                    )
+                )
+            )
+        );
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(apiKey);
+
+        ResponseEntity<Map> res = restTemplate.exchange(
+            url,
+            HttpMethod.POST,
+            new HttpEntity<>(payload, headers),
+            Map.class
+        );
+
+        List<Map<String, Object>> choices = (List<Map<String, Object>>) res.getBody().get("choices");
+        if (choices.isEmpty()) {
+            return "";
+        }
+        Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
+        return message.get("content") != null ? message.get("content").toString() : "";
+    }
 }
