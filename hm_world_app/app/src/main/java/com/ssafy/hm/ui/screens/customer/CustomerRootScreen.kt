@@ -123,6 +123,7 @@ fun CustomerRootScreen(
         R.drawable.icons8_32,
         R.drawable.homeicon_32
     )
+    val itemMap = remember(catalogState.items) { catalogState.items.associateBy { it.itemId } }
 
     Scaffold(
         bottomBar = {
@@ -249,6 +250,7 @@ fun CustomerRootScreen(
             else -> ProfileTab(
                 orders = orderState.orders,
                 details = orderState.orderDetails,
+                items = itemMap,
                 onReceive = onReceiveOrder,
                 friends = friendState.friends,
                 availableFriends = friendState.availableFriends,

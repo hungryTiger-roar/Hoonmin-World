@@ -40,6 +40,7 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -71,19 +72,23 @@ import androidx.compose.ui.unit.sp
 import com.ssafy.hm.R
 import com.ssafy.hm.data.model.Account
 import com.ssafy.hm.data.model.FriendWithDetails
+import com.ssafy.hm.data.model.Item
 import com.ssafy.hm.data.model.OrderDetail
 import com.ssafy.hm.data.model.Orders
 import com.ssafy.hm.ui.theme.AuroraGlow
 import com.ssafy.hm.ui.theme.AuroraMist
 import com.ssafy.hm.ui.theme.AuroraPurple
 import com.ssafy.hm.ui.theme.AuroraPink
+import java.text.NumberFormat
 import java.util.Calendar
+import java.util.Locale
 import kotlin.math.abs
 
 @Composable
 fun ProfileTab(
     orders: List<Orders>,
     details: Map<Int, List<OrderDetail>>,
+    items: Map<Int, Item>,
     onReceive: (Int) -> Unit,
     friends: List<FriendWithDetails>,
     availableFriends: List<FriendWithDetails>,
@@ -115,6 +120,19 @@ fun ProfileTab(
     LaunchedEffect(friends) {
         removedFriendIds = emptySet()
     }
+
+    val totalSpent = remember(orders, details, items) {
+        orders.sumOf { order ->
+            details[order.orderId].orEmpty().sumOf { detail ->
+                val price = items[detail.itemId]?.itemPrice ?: 0
+                price * detail.orderQuantity
+            }
+        }
+    }
+    val moneyFormat = remember { NumberFormat.getNumberInstance(Locale.KOREA) }
+    val spentText = remember(totalSpent) { moneyFormat.format(totalSpent) }
+    val gradeStatus = remember(totalSpent) { resolveSpendingStatus(totalSpent) }
+    val remainingText = remember(gradeStatus.remaining) { moneyFormat.format(gradeStatus.remaining) }
 
     if (editing) {
         EditProfileScreen(
@@ -221,9 +239,9 @@ fun ProfileTab(
                                 .background(
                                     Brush.radialGradient(
                                         colors = listOf(
-                                            AuroraGlow.copy(alpha = 0.7f),
-                                            AuroraPurple.copy(alpha = 0.35f),
-                                            Color.White.copy(alpha = 0.9f)
+                                        AuroraGlow.copy(alpha = 0.7f),
+                                        AuroraPurple.copy(alpha = 0.35f),
+                                        Color.White.copy(alpha = 0.9f)
                                         )
                                     ),
                                     CircleShape
@@ -251,13 +269,50 @@ fun ProfileTab(
                             .fillMaxWidth()
                             .background(AuroraMist.copy(alpha = 0.8f))
                             .padding(horizontal = 16.dp, vertical = 12.dp),
-                        contentAlignment = Alignment.BottomEnd
+                        contentAlignment = Alignment.Center
                     ) {
-                        OutlinedButton(
-                            onClick = { editing = true },
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Text("회원정보 수정", fontSize = 12.sp)
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(
+                                    "등급: ${gradeStatus.gradeName}",
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 12.sp
+                                )
+                                Text("누적 ${spentText}원", fontSize = 11.sp, color = Color.Gray)
+                                LinearProgressIndicator(
+                                    progress = { gradeStatus.progress },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(6.dp)
+                                        .clip(RoundedCornerShape(50)),
+                                    color = AuroraPurple,
+                                    trackColor = AuroraPurple.copy(alpha = 0.2f)
+                                )
+                                Text(
+                                    text = if (gradeStatus.remaining == 0 && gradeStatus.isMaxGrade) {
+                                        "최고 등급 달성"
+                                    } else if (gradeStatus.nextGradeName == null) {
+                                        "최고 등급까지 ${remainingText}원"
+                                    } else {
+                                        "다음 등급(${gradeStatus.nextGradeName})까지 ${remainingText}원"
+                                    },
+                                    fontSize = 10.sp,
+                                    color = Color.Gray
+                                )
+                            }
+                            OutlinedButton(
+                                onClick = { editing = true },
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                            ) {
+                                Text("회원정보 수정", fontSize = 12.sp)
+                            }
                         }
                     }
                 }
@@ -570,6 +625,49 @@ private fun EditProfileScreen(
             }
         }
     }
+}
+
+private data class SpendingTier(
+    val name: String,
+    val min: Int
+)
+
+private data class SpendingStatus(
+    val gradeName: String,
+    val nextGradeName: String?,
+    val progress: Float,
+    val remaining: Int,
+    val isMaxGrade: Boolean
+)
+
+private fun resolveSpendingStatus(total: Int): SpendingStatus {
+    val tiers = listOf(
+        SpendingTier("\uD83C\uDF31 모험가", 0),
+        SpendingTier("\uD83E\uDDED 탐험가", 50_000),
+        SpendingTier("\uD83D\uDEE1\uFE0F 수호자", 150_000),
+        SpendingTier("\uD83C\uDFC6 영웅", 300_000),
+        SpendingTier("\uD83D\uDC51 마스터", 500_000)
+    )
+    val maxGoal = 1_000_000
+    val currentIndex = tiers.indexOfLast { total >= it.min }.coerceAtLeast(0)
+    val current = tiers[currentIndex]
+    val next = tiers.getOrNull(currentIndex + 1)
+    val nextGoal = next?.min ?: maxGoal
+    val progress = if (total >= nextGoal) {
+        1f
+    } else {
+        val span = (nextGoal - current.min).coerceAtLeast(1)
+        ((total - current.min).toFloat() / span).coerceIn(0f, 1f)
+    }
+    val remaining = (nextGoal - total).coerceAtLeast(0)
+    val isMaxGrade = next == null && total >= maxGoal
+    return SpendingStatus(
+        gradeName = current.name,
+        nextGradeName = next?.name,
+        progress = progress,
+        remaining = remaining,
+        isMaxGrade = isMaxGrade
+    )
 }
 
 @Composable
