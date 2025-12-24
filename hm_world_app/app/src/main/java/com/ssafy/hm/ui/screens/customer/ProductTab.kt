@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -73,6 +75,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -89,6 +92,7 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Locale
 import java.util.Objects
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -146,11 +150,17 @@ fun ProductTab(
         }
     )
 
+    val layoutDirection = LocalLayoutDirection.current
+    val topInset = paddingValues.calculateTopPadding()
+    val startInset = paddingValues.calculateStartPadding(layoutDirection)
+    val endInset = paddingValues.calculateEndPadding(layoutDirection)
+
     Scaffold(
-        modifier = Modifier.padding(paddingValues),
+        modifier = Modifier.padding(start = startInset, top = topInset, end = endInset),
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showBottomSheet = true },
+                modifier = Modifier.padding(bottom = 56.dp),
                 containerColor = Color(0xFF6A5AE0),
                 shape = CircleShape
             ) {
@@ -176,9 +186,13 @@ fun ProductTab(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            val filteredList = list.filter {
-                (selectedCategory == "전체" || it.itemCategory == selectedCategory) &&
-                        (query.isBlank() || it.itemName.contains(query, ignoreCase = true))
+            val filteredList = list.filter { item ->
+                val matchesCategory = when (selectedCategory) {
+                    "전체" -> true
+                    "신상품" -> isNewItem(item.itemTime)
+                    else -> item.itemCategory == selectedCategory
+                }
+                matchesCategory && (query.isBlank() || item.itemName.contains(query, ignoreCase = true))
             }
 
             LazyVerticalGrid(
@@ -186,7 +200,7 @@ fun ProductTab(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(top = 8.dp, bottom = 30.dp)
+                contentPadding = PaddingValues(top = 8.dp, bottom = 68.dp)
             ) {
                 item(span = { GridItemSpan(2) }) {
                     ProductCarousel(images = buyImages)
@@ -492,6 +506,7 @@ fun CategoryButtons(selectedCategory: String, onCategorySelected: (String) -> Un
 
 @Composable
 fun ProductCard(item: Item, onAddToCartClick: () -> Unit, onCardClick: () -> Unit) {
+    val isNew = remember(item.itemTime) { isNewItem(item.itemTime) }
     Card(
         modifier = Modifier.clickable(onClick = onCardClick),
         shape = RoundedCornerShape(12.dp),
@@ -499,7 +514,7 @@ fun ProductCard(item: Item, onAddToCartClick: () -> Unit, onCardClick: () -> Uni
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column {
-            Box(contentAlignment = Alignment.TopEnd) {
+            Box(contentAlignment = Alignment.TopStart) {
                 AsyncImage(
                     model = item.itemPic?.takeIf { it.isNotBlank() },
                     contentDescription = item.itemName,
@@ -512,30 +527,28 @@ fun ProductCard(item: Item, onAddToCartClick: () -> Unit, onCardClick: () -> Uni
                     error = painterResource(id = R.drawable.noimage),
                     fallback = painterResource(id = R.drawable.noimage)
                 )
-                if (item.itemCategory == "신상품") {
-                    Surface(
-                        color = Color(0xFFE91E63).copy(alpha = 0.9f),
-                        shape = RoundedCornerShape(bottomStart = 8.dp),
-                        modifier = Modifier.padding(top = 8.dp, end = 8.dp)
+                if (isNew) {
+                    Box(
+                        modifier = Modifier
+                            .padding(top = 8.dp, start = 8.dp)
+                            .background(
+                                brush = Brush.linearGradient(
+                                    colors = listOf(
+                                        Color(0xFFFF6A88),
+                                        Color(0xFFFF8FB1),
+                                        Color(0xFFFFB6C1)
+                                    )
+                                ),
+                                shape = RoundedCornerShape(bottomEnd = 8.dp)
+                            )
                     ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Star,
-                                contentDescription = "New",
-                                tint = Color.White,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.width(2.dp))
-                            Text(
-                                text = "NEW",
-                                color = Color.White,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
+                        Text(
+                            text = "신상품!",
+                            color = Color.White,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
                     }
                 }
             }
@@ -567,4 +580,12 @@ fun ProductCard(item: Item, onAddToCartClick: () -> Unit, onCardClick: () -> Uni
             }
         }
     }
+}
+
+private fun isNewItem(itemTime: String): Boolean {
+    val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+    val parsed = runCatching { formatter.parse(itemTime) }.getOrNull() ?: return false
+    val diff = System.currentTimeMillis() - parsed.time
+    val threshold = 30L * 24 * 60 * 60 * 1000
+    return diff in 0..threshold
 }
