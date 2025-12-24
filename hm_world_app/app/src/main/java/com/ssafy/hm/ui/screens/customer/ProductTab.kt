@@ -54,7 +54,6 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -93,11 +92,16 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Objects
 import android.content.ContentResolver
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.provider.OpenableColumns
 import android.webkit.MimeTypeMap
+import com.ssafy.hm.ui.state.resizeBitmap
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.ByteArrayOutputStream
 import java.io.FileOutputStream
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -136,7 +140,11 @@ fun ProductTab(
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture(),
         onResult = { success ->
-            hasImage = success
+            if(success) {
+                // 🔥 핵심: imageUri를 다시 대입해서 상태 변경을 확실히 알림
+                imageUri = imageUri
+                hasImage = success
+            }
         }
     )
 
@@ -178,22 +186,14 @@ fun ProductTab(
         }
     }
 
-    Scaffold(
-        modifier = Modifier.padding(paddingValues),
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showBottomSheet = true },
-                containerColor = Color(0xFF6A5AE0),
-                shape = CircleShape
-            ) {
-                Icon(Icons.Default.AutoAwesome, contentDescription = "AI Image Search", tint = Color.White)
-            }
-        }
-    ) { innerPadding ->
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
                 .background(Color(0xFFF9F9F9))
         ) {
             ProductTopBar(
@@ -325,6 +325,17 @@ fun ProductTab(
             }
         }
 
+        FloatingActionButton(
+            onClick = { showBottomSheet = true },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp),
+            containerColor = Color(0xFF6A5AE0),
+            shape = CircleShape
+        ) {
+            Icon(Icons.Default.AutoAwesome, contentDescription = "AI Image Search", tint = Color.White)
+        }
+
         if (showAiDialog) {
             AlertDialog(
                 onDismissRequest = { showAiDialog = false },
@@ -428,15 +439,29 @@ private fun createImageUri(context: Context): Uri {
 }
 
 private fun createMultipart(context: Context, uri: Uri): MultipartBody.Part {
-    val resolver = context.contentResolver
-    val fileName = getFileName(resolver, uri)
-    val mimeType = resolver.getType(uri) ?: "image/jpeg"
-    val file = copyUriToFile(context, uri, fileName)
-    if (file.length() == 0L) {
-        throw IllegalStateException("Empty image file")
-    }
-    val requestBody = file.asRequestBody(mimeType.toMediaTypeOrNull())
-    return MultipartBody.Part.createFormData("file", file.name, requestBody)
+    // 1️⃣ Uri → Bitmap
+    val bitmap = context.contentResolver.openInputStream(uri)?.use { input ->
+        BitmapFactory.decodeStream(input)
+    } ?: throw IllegalStateException("Cannot decode bitmap")
+
+    // 2️⃣ 리사이즈
+    val resizedBitmap = resizeBitmap(bitmap, maxSize = 512)
+
+    // 3️⃣ JPEG 압축
+    val bos = ByteArrayOutputStream()
+    resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 75, bos)
+    val bytes = bos.toByteArray()
+
+    // (선택) 사이즈 로그
+    // Log.d("AI_IMG", "upload size=${bytes.size / 1024}KB")
+
+    // 4️⃣ Multipart 생성
+    val requestBody = bytes.toRequestBody("image/jpeg".toMediaTypeOrNull())
+    return MultipartBody.Part.createFormData(
+        "file",
+        "ai_image.jpg",
+        requestBody
+    )
 }
 
 private fun getFileName(resolver: ContentResolver, uri: Uri): String {
@@ -675,7 +700,7 @@ fun ProductCarousel(images: List<BuyImage>) {
 
 @Composable
 fun CategoryButtons(selectedCategory: String, onCategorySelected: (String) -> Unit) {
-    val categories = listOf("전체", "신상품", "문구/잡화", "액세서리", "악세사리", "의류", "인형", "휴대폰")
+    val categories = listOf("전체", "신상품", "의류", "악세사리", "인형", "휴대폰")
 
     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         items(categories) { category ->

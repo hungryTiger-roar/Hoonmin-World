@@ -16,7 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import com.ssafy.hm.service.AiCategoryService;
 
 @RestController
-@RequestMapping("/api/ai")
+@RequestMapping("/ai")
 @Tag(name = "AI", description = "AI 기반 API")
 public class AiCategoryController {
     private final AiCategoryService aiCategoryService;
