@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssafy.hm.data.model.Attraction
 import com.ssafy.hm.data.model.AttractionReview
-import com.ssafy.hm.data.model.AiSearchResult
 import com.ssafy.hm.data.model.BuyImage
 import com.ssafy.hm.data.model.Item
 import com.ssafy.hm.data.model.ItemReview
@@ -31,8 +30,8 @@ data class CatalogState(
     val attractionReviews: List<AttractionReview> = emptyList(),
     val itemReviews: List<ItemReview> = emptyList(),
     val aiLoading: Boolean = false,
-    val aiResultIds: List<Int> = emptyList(),
-    val aiResults: List<AiSearchResult> = emptyList()
+    val aiCategory: String? = null,
+    val aiCategoryItems: List<Item> = emptyList()
 )
 
 class CatalogViewModel(
@@ -95,27 +94,43 @@ class CatalogViewModel(
         }
     }
 
-    fun searchByImage(part: MultipartBody.Part) {
+    fun classifyImageCategory(part: MultipartBody.Part) {
         viewModelScope.launch {
             _state.update { it.copy(aiLoading = true, error = null) }
             runCatching {
-                itemRepo.searchByImage(part)
-            }.onSuccess { results ->
+                val response = itemRepo.classifyImageCategory(part)
+                val category = normalizeCategory(response.category)
+                val candidates = _state.value.items.filter { item ->
+                    val cat = item.itemCategory ?: ""
+                    val alias = listOf(category, category.replace("악세", "액세"))
+                    alias.any { aliasValue -> aliasValue.isNotBlank() && cat.contains(aliasValue, ignoreCase = true) }
+                }
+                Pair(category, candidates)
+            }.onSuccess { (category, matches) ->
                 _state.update {
-                    it.copy(
-                        aiLoading = false,
-                        aiResultIds = results.map { it.itemId },
-                        aiResults = results
-                    )
+                    it.copy(aiLoading = false, aiCategory = category, aiCategoryItems = matches)
                 }
             }.onFailure { e ->
-                _state.update { it.copy(aiLoading = false, error = e.message) }
+                _state.update {
+                    it.copy(aiLoading = false, aiCategory = null, aiCategoryItems = emptyList(), error = e.message)
+                }
             }
         }
     }
 
-    fun clearAiSearch() {
-        _state.update { it.copy(aiResultIds = emptyList(), aiResults = emptyList()) }
+    fun clearAiCategory() {
+        _state.update { it.copy(aiCategory = null, aiCategoryItems = emptyList()) }
+    }
+
+    private fun normalizeCategory(raw: String?): String {
+        val cleaned = raw?.replace("[^\\uAC00-\\uD7A3]".toRegex(), "")?.trim() ?: ""
+        if (cleaned.isBlank()) {
+            return "악세사리"
+        }
+        return when (cleaned) {
+            "액세서리" -> "악세사리"
+            else -> cleaned
+        }
     }
 
     fun clearSelection() {

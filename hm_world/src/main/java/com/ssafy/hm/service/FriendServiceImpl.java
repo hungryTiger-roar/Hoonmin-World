@@ -62,4 +62,10 @@ public class FriendServiceImpl implements FriendService {
 	public List<Friend> getFriendsTicketNoAtt(String userId) {
 		return friendRepo.selectByUserTicketNoAtt(userId);
 	}
+
+	@Override
+	public List<Friend> getFriendsTicketNotPurchased(String userId) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

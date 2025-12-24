@@ -84,7 +84,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
 import com.ssafy.hm.R
-import com.ssafy.hm.data.model.AiSearchResult
 import com.ssafy.hm.data.model.BuyImage
 import com.ssafy.hm.data.model.Item
 import kotlinx.coroutines.delay
@@ -106,8 +105,8 @@ import java.io.FileOutputStream
 fun ProductTab(
     list: List<Item>,
     buyImages: List<BuyImage>,
-    aiResultIds: List<Int>,
-    aiResults: List<AiSearchResult>,
+    aiCategory: String?,
+    aiCategoryItems: List<Item>,
     aiLoading: Boolean,
     onAiSearch: (MultipartBody.Part) -> Unit,
     onClearAiSearch: () -> Unit,
@@ -130,12 +129,9 @@ fun ProductTab(
     var hasImage by remember { mutableStateOf(false) }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var lastSearchedUri by remember { mutableStateOf<Uri?>(null) }
-    var lastDialogUri by remember { mutableStateOf<Uri?>(null) }
     var showAiDialog by remember { mutableStateOf(false) }
     var dialogItems by remember { mutableStateOf<List<Item>>(emptyList()) }
     var dialogIsFallback by remember { mutableStateOf(false) }
-    val aiScoreMap = remember(aiResults) { aiResults.associate { it.itemId to it.score } }
-    val itemMap = remember(list) { list.associateBy { it.itemId } }
 
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture(),
@@ -210,10 +206,10 @@ fun ProductTab(
                 ProductSearchBar(query = query, onQueryChange = { query = it })
                 Spacer(modifier = Modifier.height(16.dp))
                 if (aiLoading) {
-                    Text("AI searching...", color = Color.Gray, fontSize = 12.sp)
+                    Text("AI 이미지를 분석중입니다...", color = Color.Gray, fontSize = 12.sp)
                     Spacer(modifier = Modifier.height(8.dp))
                 }
-                if (aiResultIds.isNotEmpty()) {
+                if (aiCategory != null) {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
@@ -243,15 +239,20 @@ fun ProductTab(
                                 }
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Column {
-                                    Text("AI recommendations", fontWeight = FontWeight.SemiBold)
+                                    Text("AI 분류: $aiCategory", fontWeight = FontWeight.SemiBold)
                                     Text(
-                                        text = "${aiResultIds.size} items found",
+                                        text = "${aiCategoryItems.size}개의 상품",
                                         color = Color.Gray,
                                         fontSize = 12.sp
                                     )
                                 }
                             }
-                            TextButton(onClick = onClearAiSearch) { Text("Show all") }
+                            TextButton(onClick = {
+                                selectedCategory = "전체"
+                                onClearAiSearch()
+                            }) {
+                                Text("모두 보기")
+                            }
                         }
                     }
                     Spacer(modifier = Modifier.height(12.dp))
@@ -263,27 +264,26 @@ fun ProductTab(
                         (query.isBlank() || it.itemName.contains(query, ignoreCase = true))
             }
 
-            val aiResultSet = remember(aiResultIds) { aiResultIds.toSet() }
-            val displayList = if (aiResultIds.isNotEmpty()) {
-                list.filter { aiResultSet.contains(it.itemId) }
+            val displayList = if (aiCategoryItems.isNotEmpty()) {
+                aiCategoryItems
             } else {
                 filteredList
             }
 
-            LaunchedEffect(aiLoading, aiResults, lastSearchedUri, filteredList) {
-                val uri = lastSearchedUri
-                if (!aiLoading && uri != null && uri != lastDialogUri) {
-                    val ordered = aiResults.mapNotNull { itemMap[it.itemId] }
-                    val candidates = if (ordered.isNotEmpty()) {
-                        dialogIsFallback = false
-                        ordered
-                    } else {
-                        dialogIsFallback = true
-                        filteredList
-                    }
-                    dialogItems = candidates.take(3)
-                    showAiDialog = dialogItems.isNotEmpty()
-                    lastDialogUri = uri
+            LaunchedEffect(aiCategory, aiCategoryItems) {
+                if (!aiCategory.isNullOrBlank()) {
+                    dialogItems = aiCategoryItems.take(3)
+                    dialogIsFallback = aiCategoryItems.isEmpty()
+                    showAiDialog = true
+                } else {
+                    showAiDialog = false
+                    dialogItems = emptyList()
+                }
+            }
+
+            LaunchedEffect(aiCategory) {
+                if (!aiCategory.isNullOrBlank()) {
+                    selectedCategory = aiCategory
                 }
             }
 
@@ -306,7 +306,7 @@ fun ProductTab(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = if (aiResultIds.isNotEmpty()) "AI 추천 상품" else "추천 상품",
+                            text = if (aiCategoryItems.isNotEmpty()) "AI 추천 상품" else "추천 상품",
                             fontWeight = FontWeight.Bold,
                             fontSize = 18.sp,
                             modifier = Modifier.padding(bottom = 8.dp)
@@ -315,12 +315,11 @@ fun ProductTab(
                 }
 
                 items(displayList, key = { it.itemId }) { item ->
-                    val aiScore = aiScoreMap[item.itemId]
                     ProductCard(
                         item = item,
                         onAddToCartClick = { onAddCart(item) },
                         onCardClick = { onSelect(item.itemId) },
-                        aiScore = aiScore
+                        aiScore = null
                     )
                 }
             }
@@ -329,19 +328,19 @@ fun ProductTab(
         if (showAiDialog) {
             AlertDialog(
                 onDismissRequest = { showAiDialog = false },
-                title = { Text("AI 추천 결과") },
+                title = { Text("AI 분류 결과") },
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        if (dialogIsFallback) {
-                            Text(
-                                text = "사진과 유사한 상품을 추천해드려요.",
-                                color = Color.Gray,
-                                fontSize = 12.sp
-                            )
-                        }
+                        Text(
+                            text = if (dialogIsFallback) {
+                                "선택한 카테고리에 해당하는 상품이 없습니다."
+                            } else {
+                                "AI가 \"$aiCategory\" 카테고리 상품을 찾았어요."
+                            },
+                            color = Color.Gray,
+                            fontSize = 12.sp
+                        )
                         dialogItems.forEach { item ->
-                            val score = aiScoreMap[item.itemId]
-                            val matchPercent = score?.let { (it * 100).coerceIn(0.0, 100.0).toInt() }
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -366,14 +365,6 @@ fun ProductTab(
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(item.itemName, fontWeight = FontWeight.SemiBold, maxLines = 1)
                                     Text("${item.itemPrice}원", color = Color.Gray, fontSize = 12.sp)
-                                }
-                                if (matchPercent != null) {
-                                    Text(
-                                        text = "Match ${matchPercent}%",
-                                        color = Color(0xFF6A5AE0),
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
                                 }
                             }
                         }
@@ -445,7 +436,7 @@ private fun createMultipart(context: Context, uri: Uri): MultipartBody.Part {
         throw IllegalStateException("Empty image file")
     }
     val requestBody = file.asRequestBody(mimeType.toMediaTypeOrNull())
-    return MultipartBody.Part.createFormData("upload_file", file.name, requestBody)
+    return MultipartBody.Part.createFormData("file", file.name, requestBody)
 }
 
 private fun getFileName(resolver: ContentResolver, uri: Uri): String {
@@ -491,9 +482,9 @@ fun AiImageSearchSheet(onOpenCamera: () -> Unit, onOpenGallery: () -> Unit) {
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("AI 이미지 검색", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+        Text("AI 카테고리 분석", fontWeight = FontWeight.Bold, fontSize = 20.sp)
         Spacer(modifier = Modifier.height(8.dp))
-        Text("사진을 업로드하면 비슷한 상품을 찾아드려요", color = Color.Gray)
+        Text("사진을 올리면 카테고리를 판단해드립니다", color = Color.Gray)
         Spacer(modifier = Modifier.height(24.dp))
 
         Card(
@@ -684,7 +675,7 @@ fun ProductCarousel(images: List<BuyImage>) {
 
 @Composable
 fun CategoryButtons(selectedCategory: String, onCategorySelected: (String) -> Unit) {
-    val categories = listOf("전체", "신상품", "문구/잡화", "액세서리", "의류")
+    val categories = listOf("전체", "신상품", "문구/잡화", "액세서리", "악세사리", "의류", "인형", "휴대폰")
 
     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         items(categories) { category ->
