@@ -544,7 +544,7 @@ private fun AppNavHost(
                 onReceiveOrder = { orderVm.receiveOrder(it) },
                 onBoardClick = { board: HomeBoard -> navController.navigate(NavRoutes.NoticeDetail.create(board.boardId)) },
                 onTicketPurchaseClick = { navController.navigate(NavRoutes.TicketPurchase.route) },
-                onReserveAttraction = { attId, userIds -> lineVm.createLine(attId, userIds) },
+                onReserveAttraction = { attId, userIds -> lineVm.createLine(attId, userIds) {} },
                 onAddFriend = { friendVm.addFriend(it) },
                 onRemoveFriend = { friendVm.removeFriend(it) },
                 onToggleParty = { id, friendId, party -> friendVm.updateFriendParty(id, friendId, party) },

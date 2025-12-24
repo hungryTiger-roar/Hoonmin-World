@@ -114,8 +114,12 @@ fun AttractionReservationScreen(
             Button(
                 onClick = {
                     if (attraction != null && selectedFriends.isNotEmpty()) {
-                        lineViewModel.createLine(attraction.attId, selectedFriends.toList())
-                        onReservationComplete()
+                        lineViewModel.createLine(attraction.attId, selectedFriends.toList()) { success ->
+                            if (success) {
+                                authViewModel.refreshAccount()
+                                onReservationComplete()
+                            }
+                        }
                     }
                 },
                 modifier = Modifier

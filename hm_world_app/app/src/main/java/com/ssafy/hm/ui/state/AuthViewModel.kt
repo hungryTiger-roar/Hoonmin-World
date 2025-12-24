@@ -92,4 +92,19 @@ class AuthViewModel(
             _uiState.value = AuthUiState()
         }
     }
+
+    fun refreshAccount() {
+        _uiState.value.account?.let {
+            viewModelScope.launch {
+                _uiState.update { it.copy(loading = true, error = null) }
+                runCatching {
+                    repo.getAccount(it.userId)
+                }.onSuccess { account ->
+                    _uiState.update { it.copy(loading = false, account = account) }
+                }.onFailure { e ->
+                    _uiState.update { it.copy(loading = false, error = e.message) }
+                }
+            }
+        }
+    }
 }
