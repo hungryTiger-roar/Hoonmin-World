@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -78,22 +78,29 @@ fun CustomerRootScreen(
     onReceiveOrder: (Int) -> Unit,
     onBoardClick: (HomeBoard) -> Unit,
     onTicketPurchaseClick: () -> Unit,
+    onCancelReservation: () -> Unit,
     onReserveAttraction: (Int, List<String>) -> Unit,
     onAddFriend: (String) -> Unit,
     onRemoveFriend: (Int) -> Unit,
     onToggleParty: (Int, String, Boolean) -> Unit,
     onRefreshFriends: () -> Unit,
     onRefreshReservation: () -> Unit,
+    onRefreshWaitingCounts: (List<Int>) -> Unit,
     onFindReservation: (String, List<Int>) -> Unit,
     clearSelection: () -> Unit,
     clearToasts: () -> Unit
 ) {
     var tab by rememberSaveable { mutableStateOf(initialTab) }
-    var showChat by remember { mutableStateOf(false) }
+    var showRecommend by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     LaunchedEffect(tab) {
         if (tab == 4) onRefreshFriends()
+    }
+    LaunchedEffect(tab, catalogState.attractions) {
+        if (tab == 0) {
+            onRefreshWaitingCounts(catalogState.attractions.map { it.attId })
+        }
     }
     LaunchedEffect(tab, lineState.reservedAttId, lineState.reservedLineId, account?.userId) {
         if (tab != 2 || account?.ticket != true || account.userId.isNullOrBlank()) {
@@ -219,14 +226,25 @@ fun CustomerRootScreen(
         },
         floatingActionButton = {
             if (tab == 2) {
-                FloatingActionButton(onClick = { showChat = true }, containerColor = Color(0xFF6A5AE0)) {
-                    Icon(Icons.Default.Chat, contentDescription = "chat")
+                FloatingActionButton(
+                    onClick = { showRecommend = true },
+                    containerColor = Color(0xFF6A5AE0)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_magic_wand),
+                        contentDescription = "recommend"
+                    )
                 }
             }
         }
     ) { innerPadding ->
         when (tab) {
-            0 -> AttractionTab(catalogState.attractions, onOpenAttractionDetail, innerPadding)
+            0 -> AttractionTab(
+                list = catalogState.attractions,
+                waitingCounts = lineState.waitingCounts,
+                onSelect = onOpenAttractionDetail,
+                paddingValues = innerPadding
+            )
             1 -> ProductTab(
                 list = catalogState.items,
                 buyImages = catalogState.buyImages,
@@ -251,7 +269,8 @@ fun CustomerRootScreen(
                 reservedAheadCount = lineState.reservedAheadCount,
                 paddingValues = innerPadding,
                 onBoardClick = onBoardClick,
-                onTicketPurchaseClick = onTicketPurchaseClick
+                onTicketPurchaseClick = onTicketPurchaseClick,
+                onCancelReservation = onCancelReservation
             )
             3 -> MapTab(innerPadding)
             else -> ProfileTab(
@@ -271,7 +290,16 @@ fun CustomerRootScreen(
             )
         }
 
-        if (showChat) ChatbotOverlay { showChat = false }
+        if (showRecommend) {
+            val embedder = remember(context) { com.ssafy.hm.recommend.MiniLmEmbedder(context) }
+            val recommender = remember(embedder) { com.ssafy.hm.recommend.MiniLmRecommender(embedder) }
+            RecommendationDialog(
+                recommender = recommender,
+                attractions = catalogState.attractions,
+                items = catalogState.items,
+                onDismiss = { showRecommend = false }
+            )
+        }
     }
 }
 

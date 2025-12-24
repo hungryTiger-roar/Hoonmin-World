@@ -27,24 +27,37 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.ssafy.hm.data.model.Attraction
 import com.ssafy.hm.data.model.HomeBoard
 import com.ssafy.hm.data.model.HomeImage
+import com.ssafy.hm.ui.theme.AuroraGlow
+import com.ssafy.hm.ui.theme.AuroraPink
+import com.ssafy.hm.ui.theme.AuroraPurple
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -61,18 +74,24 @@ fun HomeTab(
     reservedAheadCount: Int?,
     paddingValues: PaddingValues,
     onBoardClick: (HomeBoard) -> Unit,
-    onTicketPurchaseClick: () -> Unit
+    onTicketPurchaseClick: () -> Unit,
+    onCancelReservation: () -> Unit
 ) {
-    val reservationMessage = if (hasTicket && reservedAttId != null && reservedAheadCount != null) {
+    val showNoShowDialog = remember { mutableStateOf(false) }
+    val reservationMessage = if (hasTicket && reservedAttId != null) {
         val attraction = attractions.firstOrNull { it.attId == reservedAttId }
         val attName = attraction?.attName ?: "놀이기구"
-        val capacity = (attraction?.attCapacity ?: 20).takeIf { it > 0 } ?: 20
-        val minutes = if (reservedAheadCount <= 0) {
-            0
+        if (reservedAheadCount == null) {
+            "${attName} \n대기 순번을 확인중입니다."
         } else {
-            ((reservedAheadCount + capacity - 1) / capacity) * 10
+            val capacity = (attraction?.attCapacity ?: 20).takeIf { it > 0 } ?: 20
+            val minutes = if (reservedAheadCount <= 0) {
+                0
+            } else {
+                ((reservedAheadCount + capacity - 1) / capacity) * 10
+            }
+            "${attName} \n탑승까지 약 ${minutes}분 남았습니다."
         }
-        "${attName} \n탑승까지 약 ${minutes}분 남았습니다."
     } else {
         null
     }
@@ -89,10 +108,32 @@ fun HomeTab(
         TicketStatusCard(
             hasTicket = hasTicket,
             reservationMessage = reservationMessage,
-            onClick = onTicketPurchaseClick
+            onClick = onTicketPurchaseClick,
+            onCancelClick = { showNoShowDialog.value = true }
         )
         Spacer(modifier = Modifier.height(24.dp))
         NoticeBoard(boards, onBoardClick = onBoardClick)
+    }
+
+    if (showNoShowDialog.value) {
+        AlertDialog(
+            onDismissRequest = { showNoShowDialog.value = false },
+            title = { Text("예약 취소") },
+            text = { Text("예약을 취소하면 다시 줄을 서야 합니다. 계속하시겠습니까?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showNoShowDialog.value = false
+                    onCancelReservation()
+                }) {
+                    Text("확인")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showNoShowDialog.value = false }) {
+                    Text("닫기")
+                }
+            }
+        )
     }
 }
 
@@ -160,7 +201,8 @@ fun HomeCarousel(images: List<HomeImage>) {
 fun TicketStatusCard(
     hasTicket: Boolean,
     reservationMessage: String?,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onCancelClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -175,13 +217,16 @@ fun TicketStatusCard(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = Icons.Default.ConfirmationNumber,
-                contentDescription = "Ticket Icon",
-                modifier = Modifier.size(32.dp),
-                tint = Color(0xFF6200EE)
-            )
-            Spacer(modifier = Modifier.width(16.dp))
+            val showTicketIcon = !hasTicket || reservationMessage.isNullOrBlank()
+            if (showTicketIcon) {
+                Icon(
+                    imageVector = Icons.Default.ConfirmationNumber,
+                    contentDescription = "Ticket Icon",
+                    modifier = Modifier.size(32.dp),
+                    tint = Color(0xFF6200EE)
+                )
+                Spacer(modifier = Modifier.width(16.dp))
+            }
             Column(modifier = Modifier.weight(1f)) {
                 if (hasTicket) {
                     if (!reservationMessage.isNullOrBlank()) {
@@ -205,7 +250,13 @@ fun TicketStatusCard(
                     }
                 } else {
                     Text(
-                        text = "현재 구매한 티켓이 없습니다.",
+                        text = buildAnnotatedString {
+                            append("현재 구매한 ")
+                            withStyle(SpanStyle(color = Color.Red, fontWeight = FontWeight.Bold)) {
+                                append("티켓")
+                            }
+                            append("이 없습니다.")
+                        },
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )
@@ -217,7 +268,22 @@ fun TicketStatusCard(
                     )
                 }
             }
-            if (!hasTicket) {
+
+            if (hasTicket && !reservationMessage.isNullOrBlank()) {
+                Button(
+                    onClick = onCancelClick,
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Red,   // 버튼 배경색
+                        contentColor = Color.White,           // 글자색
+                        disabledContainerColor = Color.LightGray,
+                        disabledContentColor = Color.DarkGray
+                    )
+
+                ) {
+                    Text("예약 취소", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+            } else if (!hasTicket) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
                     contentDescription = "Go to purchase",

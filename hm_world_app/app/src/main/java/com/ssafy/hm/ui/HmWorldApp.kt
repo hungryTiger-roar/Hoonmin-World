@@ -546,12 +546,16 @@ private fun AppNavHost(
                 onReceiveOrder = { orderVm.receiveOrder(it) },
                 onBoardClick = { board: HomeBoard -> navController.navigate(NavRoutes.NoticeDetail.create(board.boardId)) },
                 onTicketPurchaseClick = { navController.navigate(NavRoutes.TicketPurchase.route) },
+                onCancelReservation = {
+                    account?.userId?.let { lineVm.cancelReservation(it) }
+                },
                 onReserveAttraction = { attId, userIds -> lineVm.createLine(attId, userIds) {} },
                 onAddFriend = { friendVm.addFriend(it) },
                 onRemoveFriend = { friendVm.removeFriend(it) },
                 onToggleParty = { id, friendId, party -> friendVm.updateFriendParty(id, friendId, party) },
                 onRefreshFriends = { friendVm.loadFriends() },
                 onRefreshReservation = { lineVm.refreshReservationStatus() },
+                onRefreshWaitingCounts = { attIds -> lineVm.loadWaitingCounts(attIds) },
                 onFindReservation = { userId, attIds -> lineVm.findReservation(userId, attIds) },
                 clearSelection = { catalogVm.clearSelection() },
                 clearToasts = {
@@ -577,6 +581,8 @@ private fun AppNavHost(
         }
         composable(NavRoutes.TicketPurchase.route) {
             TicketPurchaseScreen(
+                authViewModel = authVm,
+                friendViewModel = friendVm,
                 onBack = { navController.popBackStack() }
             )
         }
@@ -682,6 +688,7 @@ private fun AppNavHost(
             val attraction = catalogState.attractions.firstOrNull { it.attId == attId }
             AttractionReservationScreen(
                 attraction = attraction,
+                attractions = catalogState.attractions,
                 onBack = { navController.popBackStack() },
                 onReservationComplete = {
                     Toast.makeText(context, "예약이 완료되었습니다.", Toast.LENGTH_SHORT).show()

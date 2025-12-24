@@ -63,6 +63,7 @@ import com.ssafy.hm.ui.theme.AuroraPurple
 @Composable
 fun AttractionReservationScreen(
     attraction: Attraction?,
+    attractions: List<Attraction>,
     onBack: () -> Unit,
     onReservationComplete: () -> Unit,
     friendViewModel: FriendViewModel,
@@ -71,6 +72,7 @@ fun AttractionReservationScreen(
 ) {
     val friendState by friendViewModel.state.collectAsState()
     val authState by authViewModel.uiState.collectAsState()
+    val lineState by lineViewModel.state.collectAsState()
     val currentUser = authState.account
 
     var selectedFriends by remember { mutableStateOf<Set<String>>(emptySet()) }
@@ -79,7 +81,19 @@ fun AttractionReservationScreen(
         friendViewModel.loadFriends()
     }
 
-    LaunchedEffect(friendState.friends, currentUser) {
+    LaunchedEffect(attractions) {
+        val attIds = attractions.map { it.attId }
+        if (attIds.isNotEmpty()) {
+            lineViewModel.loadWaitingUsers(attIds)
+        } else {
+            lineViewModel.clearWaitingUsers()
+        }
+    }
+
+    val waitingUserIds = lineState.waitingUserIds
+
+    LaunchedEffect(friendState.friends, currentUser, waitingUserIds) {
+
         val currentUserId = currentUser?.userId ?: ""
         val initialSelected = friendState.friends
             .filter { (it.account.ticket ?: false) && it.friend.friendParty }
