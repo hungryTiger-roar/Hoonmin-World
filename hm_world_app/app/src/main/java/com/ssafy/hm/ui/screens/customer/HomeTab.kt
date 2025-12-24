@@ -42,6 +42,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.ssafy.hm.data.model.Attraction
 import com.ssafy.hm.data.model.HomeBoard
 import com.ssafy.hm.data.model.HomeImage
 import kotlinx.coroutines.delay
@@ -54,11 +55,28 @@ import java.util.Locale
 fun HomeTab(
     images: List<HomeImage>,
     boards: List<HomeBoard>,
+    attractions: List<Attraction>,
     hasTicket: Boolean,
+    reservedAttId: Int?,
+    reservedAheadCount: Int?,
     paddingValues: PaddingValues,
     onBoardClick: (HomeBoard) -> Unit,
     onTicketPurchaseClick: () -> Unit
 ) {
+    val reservationMessage = if (hasTicket && reservedAttId != null && reservedAheadCount != null) {
+        val attraction = attractions.firstOrNull { it.attId == reservedAttId }
+        val attName = attraction?.attName ?: "놀이기구"
+        val capacity = (attraction?.attCapacity ?: 20).takeIf { it > 0 } ?: 20
+        val minutes = if (reservedAheadCount <= 0) {
+            0
+        } else {
+            ((reservedAheadCount + capacity - 1) / capacity) * 10
+        }
+        "${attName} \n탑승까지 약 ${minutes}분 남았습니다."
+    } else {
+        null
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -70,6 +88,7 @@ fun HomeTab(
         Spacer(modifier = Modifier.height(20.dp))
         TicketStatusCard(
             hasTicket = hasTicket,
+            reservationMessage = reservationMessage,
             onClick = onTicketPurchaseClick
         )
         Spacer(modifier = Modifier.height(24.dp))
@@ -138,7 +157,11 @@ fun HomeCarousel(images: List<HomeImage>) {
 }
 
 @Composable
-fun TicketStatusCard(hasTicket: Boolean, onClick: () -> Unit) {
+fun TicketStatusCard(
+    hasTicket: Boolean,
+    reservationMessage: String?,
+    onClick: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -161,16 +184,25 @@ fun TicketStatusCard(hasTicket: Boolean, onClick: () -> Unit) {
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
                 if (hasTicket) {
-                    Text(
-                        text = "훈민월드에 오신 것을 환영합니다!",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
-                    )
-                    Text(
-                        text = "행복 가득한 하루를 보내세요!",
-                        color = Color.Gray,
-                        fontSize = 14.sp
-                    )
+                    if (!reservationMessage.isNullOrBlank()) {
+                        Text(
+                            text = reservationMessage,
+                            color = Color(0xFF6A5AE0),
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    } else {
+                        Text(
+                            text = "훈민월드에 오신 것을 환영합니다!",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp
+                        )
+                        Text(
+                            text = "행복 가득한 하루를 보내세요!",
+                            color = Color.Gray,
+                            fontSize = 14.sp
+                        )
+                    }
                 } else {
                     Text(
                         text = "현재 구매한 티켓이 없습니다.",
