@@ -58,6 +58,7 @@ import com.ssafy.hm.R
 import com.ssafy.hm.data.model.Item
 import com.ssafy.hm.data.model.ItemReview
 import java.text.NumberFormat
+import com.ssafy.hm.ui.util.isNewItem
 import java.util.Locale
 
 @Composable
@@ -157,7 +158,7 @@ fun ProductDetailScreen(
         }
 
         val priceText = NumberFormat.getNumberInstance(Locale.KOREA).format(item.itemPrice)
-        val isNew = item.itemCategory == "신상품"
+        val isNew = isNewItem(item.itemTime)
 
         androidx.compose.foundation.lazy.LazyColumn(
             modifier = Modifier

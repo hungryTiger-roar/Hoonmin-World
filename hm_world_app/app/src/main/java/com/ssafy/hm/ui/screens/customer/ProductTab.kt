@@ -101,8 +101,12 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import com.ssafy.hm.ui.util.isNewItem
 import java.io.ByteArrayOutputStream
 import java.io.FileOutputStream
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -259,10 +263,19 @@ fun ProductTab(
                 }
             }
 
-            val filteredList = list.filter {
-                (selectedCategory == "전체" || it.itemCategory == selectedCategory) &&
-                        (query.isBlank() || it.itemName.contains(query, ignoreCase = true))
+            val filteredList = list.filter { item ->
+                val categoryMatch = when (selectedCategory) {
+                    "전체" -> true
+                    "신상품" -> isNewItem(item.itemTime)
+                    else -> item.itemCategory == selectedCategory
+                }
+
+                val queryMatch =
+                    query.isBlank() || item.itemName.contains(query, ignoreCase = true)
+
+                categoryMatch && queryMatch
             }
+
 
             val displayList = if (aiCategoryItems.isNotEmpty()) {
                 aiCategoryItems
@@ -319,7 +332,8 @@ fun ProductTab(
                         item = item,
                         onAddToCartClick = { onAddCart(item) },
                         onCardClick = { onSelect(item.itemId) },
-                        aiScore = null
+                        aiScore = null,
+                        isNew = isNewItem(item.itemTime)
                     )
                 }
             }
@@ -725,7 +739,8 @@ fun ProductCard(
     item: Item,
     onAddToCartClick: () -> Unit,
     onCardClick: () -> Unit,
-    aiScore: Double? = null
+    aiScore: Double? = null,
+    isNew: Boolean = false
 ) {
     val isAiMatch = aiScore != null
     val matchPercent = aiScore?.let { (it * 100).coerceIn(0.0, 100.0).toInt() }
@@ -755,6 +770,34 @@ fun ProductCard(
                     error = painterResource(id = R.drawable.noimage),
                     fallback = painterResource(id = R.drawable.noimage)
                 )
+                if (isNew) {
+                    Surface(
+                        color = Color(0xFFE91E63).copy(alpha = 0.9f),
+                        shape = RoundedCornerShape(bottomEnd = 8.dp),
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(top = 8.dp, start = 8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = "New",
+                                tint = Color.White,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(2.dp))
+                            Text(
+                                text = "NEW",
+                                color = Color.White,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
                 if (isAiMatch && matchPercent != null) {
                     Row(
                         modifier = Modifier
@@ -778,34 +821,6 @@ fun ProductCard(
                             fontSize = 10.sp,
                             fontWeight = FontWeight.SemiBold
                         )
-                    }
-                }
-                if (item.itemCategory == "신상품") {
-                    Surface(
-                        color = Color(0xFFE91E63).copy(alpha = 0.9f),
-                        shape = RoundedCornerShape(bottomStart = 8.dp),
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(top = 8.dp, end = 8.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Star,
-                                contentDescription = "New",
-                                tint = Color.White,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.width(2.dp))
-                            Text(
-                                text = "NEW",
-                                color = Color.White,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
                     }
                 }
             }

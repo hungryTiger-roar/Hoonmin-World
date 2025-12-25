@@ -12,7 +12,8 @@
 	<select id="selectByAttraction" parameterType="int" resultType="com.ssafy.hm.dto.AttractionReview">
 		select att_review_id as attReviewId, att_id as attId, user_id as userId, att_review_comment as attReviewComment, att_rating as attRating, att_time as attTime
 		from attraction_review
-		where att_id = #{attId};
+		where att_id = #{attId}
+		order by att_time desc;
 	</select>
 
 	<select id="selectById" parameterType="int" resultType="com.ssafy.hm.dto.AttractionReview">
