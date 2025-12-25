@@ -45,7 +45,10 @@ class UploadViewModel(
         viewModelScope.launch {
             _state.update { UploadUiState(loading = true) }
             runCatching {
-                withContext(Dispatchers.IO) { uploadRepo.uploadImage(part) }
+                val response = withContext(Dispatchers.IO) { uploadRepo.uploadImage(part) }
+                val link = extractDownloadLink(response)
+                    ?: throw IllegalStateException("업로드는 성공했지만 다운로드 링크를 찾을 수 없습니다.")
+                withContext(Dispatchers.IO) { homeRepo.createHomeImage(HomeImage(0, link)) }
             }.onSuccess {
                 _state.update { UploadUiState(message = "홈 이미지 등록 완료") }
             }.onFailure { e ->
