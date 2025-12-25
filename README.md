@@ -177,9 +177,13 @@ Hoonmin World는
 ## 🧱 시스템 아키텍처 (Architecture)
 
 [ Android App ]
+
 ↓
+
 [ Spring Boot REST API ]
+
 ↓
+
 [ MySQL Database ], [ firebase ], [ chat gpt]
 
 
