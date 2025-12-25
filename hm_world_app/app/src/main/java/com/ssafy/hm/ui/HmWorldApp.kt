@@ -547,7 +547,7 @@ private fun AppNavHost(
                 onBoardClick = { board: HomeBoard -> navController.navigate(NavRoutes.NoticeDetail.create(board.boardId)) },
                 onTicketPurchaseClick = { navController.navigate(NavRoutes.TicketPurchase.route) },
                 onCancelReservation = {
-                    account?.userId?.let { lineVm.cancelReservation(it) }
+                    account?.userId?.let { lineVm.cancelReservation(it) { authVm.refreshAccount() } }
                 },
                 onReserveAttraction = { attId, userIds -> lineVm.createLine(attId, userIds) {} },
                 onAddFriend = { friendVm.addFriend(it) },

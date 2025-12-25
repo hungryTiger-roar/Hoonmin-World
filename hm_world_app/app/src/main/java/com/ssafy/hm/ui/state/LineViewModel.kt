@@ -154,7 +154,7 @@ class LineViewModel(
         _state.update { it.copy(waitingAttId = null, waitingUserIds = emptySet()) }
     }
 
-    fun cancelReservation(userId: String) {
+    fun cancelReservation(userId: String, onSuccess: (() -> Unit)? = null) {
         val lineId = _state.value.reservedLineId ?: return
         viewModelScope.launch {
             runCatching { lineRepo.deleteLineMember(lineId, userId) }
@@ -169,6 +169,7 @@ class LineViewModel(
                             error = null
                         )
                     }
+                    onSuccess?.invoke()
                 }
                 .onFailure { e ->
                     val stillMember = runCatching {
@@ -185,6 +186,7 @@ class LineViewModel(
                                 error = null
                             )
                         }
+                        onSuccess?.invoke()
                     } else {
                         _state.update { it.copy(error = e.message) }
                     }

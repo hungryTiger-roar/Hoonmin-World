@@ -26,11 +26,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -45,6 +43,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -96,7 +95,7 @@ fun AttractionReservationScreen(
 
         val currentUserId = currentUser?.userId ?: ""
         val initialSelected = friendState.friends
-            .filter { (it.account.ticket ?: false) && it.friend.friendParty }
+            .filter { (it.account.ticket ?: false) && it.friend.friendParty && it.account.attId == null }
             .map { it.friend.friendId }
             .toMutableSet()
         // Add current user if they have a ticket and are in a party (or just always add them if they have a ticket)
@@ -140,7 +139,7 @@ fun AttractionReservationScreen(
                     .fillMaxWidth()
                     .navigationBarsPadding()
                     .padding(16.dp)
-                    .height(56.dp),
+                .height(56.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                 contentPadding = PaddingValues(0.dp),
@@ -230,7 +229,9 @@ fun AttractionReservationScreen(
                             FriendSelectItem(
                                 friendDetails = friendDetails,
                                 isSelected = friendDetails.friend.friendId in selectedFriends,
+                                isReserved = friendDetails.account.attId != null,
                                 onToggle = { isChecked ->
+                                    if (friendDetails.account.attId != null) return@FriendSelectItem
                                     val friendId = friendDetails.friend.friendId
                                     val newSelected = selectedFriends.toMutableSet()
                                     if (isChecked) {
@@ -258,44 +259,82 @@ fun AttractionReservationScreen(
 fun FriendSelectItem(
     friendDetails: FriendWithDetails,
     isSelected: Boolean,
+    isReserved: Boolean,
     onToggle: (Boolean) -> Unit
 ) {
+    val cardColor = if (isReserved) Color(0xFFF2F2F2) else Color.White
+    val contentAlpha = if (isReserved) 0.6f else 1f
     Card(
         modifier = Modifier
             .fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = cardColor),
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(16.dp)
         ) {
-            Box(
+            Row(
                 modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(AuroraGlow.copy(alpha = if (isSelected) 1f else 0.3f)),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .alpha(contentAlpha),
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (isReserved) {
+                                Color.LightGray.copy(alpha = 0.4f)
+                            } else {
+                                AuroraGlow.copy(alpha = if (isSelected) 1f else 0.3f)
+                            }
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = friendDetails.account.name?.firstOrNull()?.toString() ?: "",
+                        color = if (isReserved) Color.DarkGray else if (isSelected) Color.White else AuroraPurple,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = friendDetails.account.name ?: "",
+                        fontWeight = FontWeight.Bold,
+                        color = if (isReserved) Color.DarkGray else Color.Unspecified
+                    )
+                    Text(
+                        text = "@${friendDetails.account.userId}",
+                        color = Color.Gray,
+                        fontSize = 12.sp
+                    )
+                }
+                IconButton(
+                    onClick = { if (!isReserved) onToggle(!isSelected) },
+                    enabled = !isReserved
+                ) {
+                    Icon(
+                        imageVector = if (isSelected) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircleOutline,
+                        contentDescription = "선택",
+                        tint = when {
+                            isReserved -> Color.LightGray
+                            isSelected -> AuroraPurple
+                            else -> Color.LightGray
+                        },
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+            if (isReserved) {
+                Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = friendDetails.account.name?.firstOrNull()?.toString() ?: "",
-                    color = if (isSelected) Color.White else AuroraPurple,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = friendDetails.account.name ?: "", fontWeight = FontWeight.Bold)
-                Text(text = "@${friendDetails.account.userId}", color = Color.Gray, fontSize = 12.sp)
-            }
-            IconButton(onClick = { onToggle(!isSelected) }) {
-                Icon(
-                    imageVector = if (isSelected) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircleOutline,
-                    contentDescription = "선택",
-                    tint = if (isSelected) AuroraPurple else Color.LightGray,
-                    modifier = Modifier.size(24.dp)
+                    text = "이미 예약중입니다",
+                    color = Color.Gray,
+                    fontSize = 12.sp
                 )
             }
         }

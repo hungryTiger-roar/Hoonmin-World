@@ -12,7 +12,8 @@
 	<select id="selectByItem" parameterType="int" resultType="com.ssafy.hm.dto.ItemReview">
 		select item_review_id as itemReviewId, user_id as userId, item_id as itemId, item_review_comment as itemReviewComment, item_rating as itemRating, item_time as itemTime
 		from item_review
-		where item_id = #{itemId};
+		where item_id = #{itemId}
+		order by item_time desc;
 	</select>
 
 	<select id="selectById" parameterType="int" resultType="com.ssafy.hm.dto.ItemReview">
