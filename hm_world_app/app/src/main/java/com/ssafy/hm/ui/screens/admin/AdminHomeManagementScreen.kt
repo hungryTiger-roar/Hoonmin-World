@@ -46,7 +46,7 @@ fun AdminHomeManagementScreen(
             .background(Brush.verticalGradient(listOf(Color(0xFFF5F2FF), Color(0xFFEDE7FF))))
     ) {
         TopAppBar(
-            title = { Text("홈 화면 관리", fontWeight = FontWeight.Bold) },
+            title = { Text("홈페이지 관리", fontWeight = FontWeight.Bold) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
                     Icon(Icons.Default.ArrowBack, contentDescription = "back")
